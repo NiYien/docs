@@ -7,8 +7,8 @@
     },
     "frame_readout": {
         "name": "frame readout time",
-        "file": "",
-        "md5": ""
+        "file": "frame_readout_time.bin",
+        "md5": "613d4b1856bb4b8062f797ac89b33213"
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
