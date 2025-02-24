@@ -1,5 +1,0 @@
-Version: 1.2.6
-ZH_MAC:https://pan.baidu.com/s/1bv5rCbVwp48Q9VA2CVFOoA?pwd=xrm4
-ZH_WIN:https://pan.baidu.com/s/1lEwwFjmTKIQVuuGL6YMDcQ?pwd=t9bg
-EN_MAC:
-EN_WIN:

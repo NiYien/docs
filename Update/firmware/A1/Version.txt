@@ -1,2 +1,0 @@
-Version: 1.2.6
-Name: NiYien_Senseflow A1_V1.1.9.firmware
