@@ -4,19 +4,19 @@
         "file": "NiYien_Senseflow A1_V1.1.9.firmware",
         "version": "1.1.9",
         "md5": "8611805f87aadc0d299b42269b921526",
-		"info_zh":"https://www.niyien.com/update_A1_zh.html",
-		"info_en":"https://www.niyien.com/update_A1_zh.html"
+		"info_zh": "https://www.niyien.com/update_A1_zh.html",
+        "info_en": "https://www.niyien.com/update_A1_zh.html",
     },
     "frame_readout": {
         "name": "frame readout time",
         "file": "frame_readout_time.csv",
-        "md5": "d8fbd63bc1952c6a688d074d01960ccf"
+        "md5": "20689fa4611dfbe44ee37de2b288e364"
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
         "version": "V1.2.7",
-		"info_zh":"https://www.niyien.com/update_Niyien_tool_zh.html",
-		"info_en":"https://www.niyien.com/update_Niyien_tool_zh.html",		
+        "info_zh": "https://www.niyien.com/update_Niyien_tool_zh.html",
+        "info_en": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "mac_en": "https://pan.baidu.com/s/1bv5rCbVwp48Q9VA2CVFOoA?pwd=xrm4",
         "mac_zh": "https://pan.baidu.com/s/1bv5rCbVwp48Q9VA2CVFOoA?pwd=xrm4",
         "win_en": "https://pan.baidu.com/s/1lEwwFjmTKIQVuuGL6YMDcQ?pwd=t9bg",
