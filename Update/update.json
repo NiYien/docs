@@ -1,11 +1,11 @@
 {
     "firmware/A1": {
         "name": "NiYien Senseflow A1",
-        "file": "NiYien_Senseflow A1_V1.2.0.firmware",
-        "version": "1.2.0",
+        "file": "NiYien_Senseflow A1_V1.2.1.firmware",
+        "version": "1.2.1",
         "info_zh": "https://www.niyien.com/update_A1_zh.html",
         "info_en": "https://www.niyien.com/update_A1_zh.html",
-        "md5": "33297857c4bf05659852ec3358085654"
+        "md5": "6bd205356ad97fd55b4035e2b1f3429d"
     },
     "frame_readout": {
         "name": "frame readout time",
@@ -18,16 +18,16 @@
         "info_zh": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "info_en": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "mac_en": "https://drive.google.com/drive/folders/14lVHH6HA2oLJyfxAodWUDE8_jFBOleJf?usp=sharing",
-        "mac_zh": "https://pan.baidu.com/s/1bv5rCbVwp48Q9VA2CVFOoA?pwd=xrm4",
+        "mac_zh": "https://www.123865.com/s/pVNjTd-6olcv",
         "win_en": "https://drive.google.com/drive/folders/1JcgBvcy9HCDQzrZVCUgb1-XcJmI7s8ma?usp=sharing",
-        "win_zh": "https://pan.baidu.com/s/1lEwwFjmTKIQVuuGL6YMDcQ?pwd=t9bg"
+        "win_zh": "https://www.123865.com/s/pVNjTd-5olcv"
     },
     "Gyroflow": {
         "name": "Gyroflow",
         "version": 2296,
         "mac_en": "https://gyroflow.xyz/devbuild",
-        "mac_zh": "https://pan.baidu.com/s/1bv5rCbVwp48Q9VA2CVFOoA?pwd=xrm4",
+        "mac_zh": "https://www.123865.com/s/pVNjTd-6olcv",
         "win_en": "https://gyroflow.xyz/devbuild",
-        "win_zh": "https://pan.baidu.com/s/1lEwwFjmTKIQVuuGL6YMDcQ?pwd=t9bg"
+        "win_zh": "https://www.123865.com/s/pVNjTd-5olcv"
     }
 }
