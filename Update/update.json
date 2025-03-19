@@ -10,7 +10,7 @@
     "frame_readout": {
         "name": "frame readout time",
         "file": "frame_readout_time.csv",
-        "md5": "b2f7a0ceef48d16d1a4ca1ba4f3d561c"
+        "md5": "055a97646180141bcf008f7fd109570e"
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
@@ -18,7 +18,7 @@
         "info_zh": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "info_en": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "mac_en": "https://drive.google.com/drive/folders/14lVHH6HA2oLJyfxAodWUDE8_jFBOleJf?usp=sharing",
-        "mac_zh": "https://www.123865.com/s/pVNjTd-6olcv",
+        "mac_zh": "https://www.123865.com/s/pVNjTd-Pulcv",
         "win_en": "https://drive.google.com/drive/folders/1JcgBvcy9HCDQzrZVCUgb1-XcJmI7s8ma?usp=sharing",
         "win_zh": "https://www.123865.com/s/pVNjTd-5olcv"
     },
@@ -26,7 +26,7 @@
         "name": "Gyroflow",
         "version": 2296,
         "mac_en": "https://gyroflow.xyz/devbuild",
-        "mac_zh": "https://www.123865.com/s/pVNjTd-6olcv",
+        "mac_zh": "https://www.123865.com/s/pVNjTd-Xulcv",
         "win_en": "https://gyroflow.xyz/devbuild",
         "win_zh": "https://www.123865.com/s/pVNjTd-5olcv"
     }
