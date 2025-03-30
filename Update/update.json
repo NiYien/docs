@@ -1,11 +1,11 @@
 {
     "firmware/A1": {
         "name": "NiYien Senseflow A1",
-        "file": "NiYien_Senseflow A1_V1.2.2.firmware",
-        "version": "1.2.2",
+        "file": "NiYien_Senseflow A1_V1.2.3.firmware",
+        "version": "1.2.3",
         "info_zh": "https://www.niyien.com/update_A1_zh.html",
         "info_en": "https://www.niyien.com/update_A1_zh.html",
-        "md5": "046e6c18a63be39b236d98df91b10874"
+        "md5": "31af1169ec114aa20cea4b1f295e7b9a"
     },
     "frame_readout": {
         "name": "frame readout time",
