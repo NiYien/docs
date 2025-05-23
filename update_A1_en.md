@@ -1,4 +1,6 @@
 ## NiYien Senseflow A1 Update Log
+>V1.2.5:
+	1.Fixed the bug of occasional data loss.
 
 >V1.2.4:
 	1.Fixed the bug of continuous prompts for card formatting.
