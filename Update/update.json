@@ -1,11 +1,11 @@
 {
     "firmware/A1": {
         "name": "NiYien Senseflow A1",
-        "file": "NiYien_Senseflow A1_V1.2.3.firmware",
-        "version": "1.2.3",
+        "file": "NiYien_Senseflow A1_V1.2.5.firmware",
+        "version": "1.2.5",
         "info_zh": "https://www.niyien.com/update_A1_zh.html",
-        "info_en": "https://www.niyien.com/update_A1_zh.html",
-        "md5": "31af1169ec114aa20cea4b1f295e7b9a"
+        "info_en": "https://www.niyien.com/update_A1_en.html",
+        "md5": "ce00621b00f778070a25759c3bdcce5f"
     },
     "frame_readout": {
         "name": "frame readout time",
@@ -16,7 +16,7 @@
         "name": "NiYien_tool",
         "version": "V1.3.2",
         "info_zh": "https://www.niyien.com/update_Niyien_tool_zh.html",
-        "info_en": "https://www.niyien.com/update_Niyien_tool_zh.html",
+        "info_en": "https://www.niyien.com/update_Niyien_tool_en.html",
         "mac_en": "https://drive.google.com/drive/folders/14lVHH6HA2oLJyfxAodWUDE8_jFBOleJf?usp=sharing",
         "mac_zh": "https://www.123865.com/s/pVNjTd-Pulcv",
         "win_en": "https://drive.google.com/drive/folders/1JcgBvcy9HCDQzrZVCUgb1-XcJmI7s8ma?usp=sharing",
