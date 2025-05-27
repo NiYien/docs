@@ -5,12 +5,12 @@
         "version": "1.2.5",
         "info_zh": "https://www.niyien.com/update_A1_zh.html",
         "info_en": "https://www.niyien.com/update_A1_en.html",
-        "md5": "ce00621b00f778070a25759c3bdcce5f"
+        "md5": "02b2927b2e52300ec53cd2022ddb2cf5"
     },
     "frame_readout": {
         "name": "frame readout time",
         "file": "frame_readout_time.csv",
-        "md5": "5ace2fdeb499692619375ce13140395e"
+        "md5": "7da5c42bac9e927fda6e3b1d3f42907c"
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
