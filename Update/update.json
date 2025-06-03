@@ -10,7 +10,7 @@
     "frame_readout": {
         "name": "frame readout time",
         "file": "frame_readout_time.csv",
-        "md5": "b2ea6a7f101502dd23a698c1267ca20c"
+        "md5": "480a7315f25d07815fff6b5bb874b36e"
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
