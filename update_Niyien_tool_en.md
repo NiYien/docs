@@ -1,5 +1,9 @@
 ## NiYien Tool Update Log
+Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
+>1. Automatically search for gyroscope data in the same level and subfolders of the video folder.
+
 Version：V1.3.3 （minimum Gyroflow version: V1.6.1)
+
 >1. Optimized the interface display logic.
 >2. Retain project files outside the DNG folder for quick previews.
 >3. Added resolution output oversampling functionality.
