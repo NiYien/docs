@@ -1,6 +1,16 @@
 ## NiYien Tool Update Log
 Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
 >1. Automatically search for gyroscope data in the same level and subfolders of the video folder.
+>
+>2. Fix Zcam oversampling lens file bug.
+>
+>3. Fix bmpcc dng lens file bug.
+>
+>4. Added support for additional cameras:
+>
+>   ​	a. Sony RX1RM2
+>
+>   ​	b. RICOH GR IIIx GR III GR II GR
 
 Version：V1.3.3 （minimum Gyroflow version: V1.6.1)
 
