@@ -13,6 +13,8 @@ Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
 >​	a. Sony RX1RM2
 >
 >​	b. RICOH GR IIIx GR III GR II GR
+>
+>​	c. Fujifilm X-H1
 
 Version：V1.3.3 （minimum Gyroflow version: V1.6.1)
 
