@@ -8,7 +8,8 @@ Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
 >6. Add GPU decoding setting.
 >7. In semi-auto mode, changing the focal length can be achieved by taking a photo instead.
 >8. Support Z cam auto-mode.
->9. Add support for additional cameras:
+>9. Support Sony electrical zoom.
+>10. Add support for additional cameras:
 >
 >​	a. Sony RX1RM2
 >
