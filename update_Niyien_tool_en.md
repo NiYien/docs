@@ -20,6 +20,8 @@ Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
 >​	d. Lumix SIRM2 S1M2
 >
 >​	e. BMD bmpcc 6k
+>
+>​	f. Canon 1DX III 1DX II
 
 Version：V1.3.3 （minimum Gyroflow version: V1.6.1)
 
