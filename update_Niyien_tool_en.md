@@ -16,6 +16,10 @@ Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
 >​	b. RICOH GR IIIx GR III GR II GR
 >
 >​	c. Fujifilm X-H1
+>
+>​	d. Lumix SIRM2 S1M2
+>
+>​	e. BMD bmpcc 6k
 
 Version：V1.3.3 （minimum Gyroflow version: V1.6.1)
 
