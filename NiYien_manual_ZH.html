@@ -236,7 +236,7 @@
 
       /* 下载卡片样式 */
       .download-card {
-        @apply p-6 shadow-md rounded-lg border border-gray-200 min-h-[220px]; /* 增加内边距和最小高度 */
+        @apply p-4 shadow-md rounded-lg border border-gray-200 min-h-[180px]; /* 恢复原始内边距，移除最小高度 */
       }
 
       /* 更新日志区域样式 */
@@ -290,27 +290,27 @@
             <div class="w-full md:w-2/3">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Mac软件下载 -->
-                <div class="download-card compact-card min-w-[280px]">
-                  <div class="flex items-center mb-3">
+                <div class="download-card compact-card min-w-[280px] flex flex-col items-center">
+                  <div class="flex items-center mb-3 justify-center w-full">
                     <i class="fa fa-apple download-icon compact-icon mr-3"></i>
                     <h3 class="download-title compact-title whitespace-nowrap">NiYien A1 for Mac</h3>
                   </div>
-                  <p class="version-text text-sm text-gray-500 ml-10"></p> <!-- 新增版本号显示行 -->
-                  <p class="download-desc compact-desc ml-10 whitespace-nowrap">兼容 macOS 11.00 及以上版本</p>
-                  <button class="download-button compact-button ml-10 w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadMac)">
+                  <p class="version-text text-sm text-gray-500 text-center w-full"></p> <!-- 版本号居中 -->
+                  <p class="download-desc compact-desc text-center w-full">兼容 macOS 11.00 及以上版本</p> <!-- 兼容提示居中 -->
+                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadMac)">
                     <i class="fa fa-download mr-2"></i> 下载
                   </button>
                 </div>
 
                 <!-- Windows软件下载 -->
-                <div class="download-card compact-card min-w-[280px]">
-                  <div class="flex items-center mb-3">
+                <div class="download-card compact-card min-w-[280px] flex flex-col items-center">
+                  <div class="flex items-center mb-3 justify-center w-full">
                     <i class="fa fa-windows download-icon compact-icon mr-3"></i>
                     <h3 class="download-title compact-title whitespace-nowrap">NiYien A1 for Windows</h3>
                   </div>
-                  <p class="version-text text-sm text-gray-500 ml-10"></p> <!-- 新增版本号显示行 -->
-                  <p class="download-desc compact-desc ml-10 whitespace-nowrap">兼容 Windows 10 及以上版本</p>
-                  <button class="download-button compact-button ml-10 w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadWindows)">
+                  <p class="version-text text-sm text-gray-500 text-center w-full"></p> <!-- 版本号居中 -->
+                  <p class="download-desc compact-desc text-center w-full">兼容 Windows 10 及以上版本</p> <!-- 兼容提示居中 -->
+                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadWindows)">
                     <i class="fa fa-download mr-2"></i> 下载
                   </button>
                 </div>
@@ -564,17 +564,17 @@
     // 修复二维码图片显示问题
     document.addEventListener('DOMContentLoaded', function() {
       // 添加首次使用状态缓存逻辑
-      let firstUse = localStorage.getItem('firstUse');
-      if (firstUse === null) {
-        // 首次使用，设置默认状态为true
-        firstUse = 'true';
-        localStorage.setItem('firstUse', firstUse);
+      let firstUseMode = localStorage.getItem('firstUseMode');
+      
+      // 默认情况下启用首次使用模式
+      if (firstUseMode === null) {
+        firstUseMode = 'true';  // 设置默认值为true
+        localStorage.setItem('firstUseMode', firstUseMode);
       }
       
-      // 根据首次使用状态执行相应操作
-      if (firstUse === 'true') {
-        console.log('首次使用模式已启用');
-        // 自动激活首次使用模式
+      // 根据保存的状态显示对应模式
+      if (firstUseMode === 'true') {
+        // 首次使用模式
         firstUseBadge.classList.remove('hidden');
         firstUseBtn.classList.add('hidden');
         showAllBtn.classList.remove('hidden');
@@ -787,8 +787,8 @@
       const filteredVideos = videoData.filter(video => video.isRequired);
       renderVideos(filteredVideos);
       
-      // 更新缓存状态
-      localStorage.setItem('firstUse', 'false');
+      // 更新缓存状态 - 设置为首次使用模式
+      localStorage.setItem('firstUseMode', 'true');
     });
 
     // 显示全部按钮点击事件
@@ -801,8 +801,8 @@
       // 显示所有视频
       renderVideos(videoData);
       
-      // 更新缓存状态
-      localStorage.setItem('firstUse', 'true');
+      // 更新缓存状态 - 设置为显示全部模式
+      localStorage.setItem('firstUseMode', 'false');
     });
 
     // 打开视频模态框
