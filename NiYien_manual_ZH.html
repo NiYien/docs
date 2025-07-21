@@ -70,7 +70,9 @@
       }
 
       .first-use-badge {
-        @apply bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full;
+        @apply bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full;
+        transform: scale(0.8);
+        transform-origin: center;
       }
 
       /* 统一视频卡片宽度 - 修改为响应式 */
@@ -241,27 +243,27 @@
 <body class="font-inter bg-gray-50 min-h-screen flex flex-col">
   <!-- 顶部导航栏 -->
   <header class="bg-white shadow-sm sticky top-0 z-50">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center">
+    <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+      <div class="flex items-center min-w-0">
         <i class="fas fa-video text-primary text-3xl mr-3"></i>
-        <h1 class="header-title">NiYien A1 视频教程</h1>
+        <h1 class="header-title truncate">NiYien A1 视频教程</h1>
       </div>
-      <div class="flex flex-wrap gap-4 items-center">
+      <div class="flex flex-nowrap items-center justify-end min-w-0 gap-2 overflow-x-auto">
         <!-- 调整按钮顺序，将首次使用按钮放在左边 -->
-        <button id="firstUseBtn" class="bg-secondary hover:bg-secondary/90 text-white nav-button rounded-lg transition-all duration-300 flex items-center">
-          <i class="fa fa-rocket mr-2"></i> 首次使用
+        <button id="firstUseBtn" class="flex-shrink-0 bg-secondary hover:bg-secondary/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
+          <i class="fa fa-rocket mr-1 sm:mr-2"></i> 首次使用
         </button>
         <!-- 将首次使用模式字样移动到图文教程按钮左边 -->
-        <span id="firstUseBadge" class="hidden first-use-badge">首次使用</span>
-        <button id="textTutorialBtn" class="bg-accent hover:bg-accent/90 text-white nav-button rounded-lg transition-all duration-300 flex items-center">
-          <i class="fa fa-book mr-2"></i> 图文教程
+        <span id="firstUseBadge" class="flex-shrink-0 hidden first-use-badge text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center"">首次使用</span>
+        <button id="textTutorialBtn" class="flex-shrink-0 bg-accent hover:bg-accent/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
+          <i class="fa fa-book mr-1 sm:mr-2"></i> 图文教程
         </button>
-        <button id="showAllBtn" class="bg-primary hover:bg-primary/90 text-white nav-button rounded-lg transition-all duration-300 flex items-center hidden">
-          <i class="fa fa-th-large mr-2"></i> 展示全部教程
+        <button id="showAllBtn" class="flex-shrink-0 bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center hidden">
+          <i class="fa fa-th-large mr-1 sm:mr-2"></i> 展示全部
         </button>
         <!-- 添加语言切换按钮 -->
-		<a id="englishManualLink" href="#" class="bg-gray-800 hover:bg-gray-700 text-white nav-button rounded-lg transition-all duration-300 flex items-center">
-          <i class="fa fa-language mr-2"></i> English
+        <a id="englishManualLink" href="#" class="flex-shrink-0 bg-gray-800 hover:bg-gray-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
+          <i class="fa fa-language mr-1 sm:mr-2"></i> English
         </a>
       </div>
     </div>
