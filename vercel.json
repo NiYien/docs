@@ -14,7 +14,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, s-maxage=86400, max-age=86400"
+          "value": "public, max-age=0, must-revalidate"
         }, {
           "key": "Vercel-CDN-Cache-Control",
           "value": "max-age=31536000"
