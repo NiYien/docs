@@ -21,7 +21,7 @@ Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
 >
 >​	e. BMD bmpcc 6k
 >
->​	f. Canon 1DX III 1DX II
+>​	f. Canon 1DX III 1DX II G7X 6D
 
 Version：V1.3.3 （minimum Gyroflow version: V1.6.1)
 
