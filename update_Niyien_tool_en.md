@@ -1,5 +1,5 @@
 ## NiYien Tool Update Log
-Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
+Version：V1.3.4（minimum Gyroflow version: V1.6.1)
 >1. Automatically search for gyroscope data in the same level and subfolders of the video folder.
 >2. Fix Zcam oversampling lens file bug.
 >3. Fix bmpcc dng lens file bug.
@@ -10,8 +10,10 @@ Version：V1.3.3(RC) （minimum Gyroflow version: V1.6.1)
 >8. Support Z cam auto-mode.
 >9. Support Sony electrical zoom.
 >10. Support static zoom.
->11. Support for Multi-Time Zone Synchronization
->12. Add support for additional cameras:
+>11. Support auto mode for sigma fp.
+>12. Support manual smoothness.
+>13. Support canon, Sigma crop mode.
+>14. Add support for additional cameras:
 >
 >​	a. Sony RX1RM2
 >
