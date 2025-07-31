@@ -1,4 +1,9 @@
 ## NiYien Senseflow A1 Update Log
+>V1.2.6:
+1.Add Power-On Prompt.
+2.Add Power-Off Prompt Sound.
+3.Add timezone.
+
 >V1.2.5:
 	1.Fixed the bug of occasional data loss.
 
