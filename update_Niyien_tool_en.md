@@ -1,8 +1,16 @@
 ## NiYien Tool Update Log
 Version：V1.3.4(RC1)（minimum Gyroflow version: V1.6.1)
 >1. Support auto mode for BMPCC 6K and 4K.
+>
 >2. Support time synchronization for multiple time zones (UTC).
+>
 >3. Enhance user experience.
+>
+>4. Add support for additional cameras:
+>
+>   a. Canon 60D 70D
+>
+>   b. SIGMA BF
 
 Version：V1.3.4（minimum Gyroflow version: V1.6.1)
 >1. Automatically search for gyroscope data in the same level and subfolders of the video folder.
