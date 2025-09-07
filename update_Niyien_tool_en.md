@@ -3,8 +3,9 @@ Version：V1.3.6（minimum Gyroflow version: V1.6.3)
 >1. Fixed the issue with segment parsing errors in RED files.
 >2. Fixed the issue with loading DNG project files in the plugin.
 >3. Fixed several bugs
->4. 添加部分相机支持。
->   	a. Lumix LX100 LX100M2
+>4. Add support for additional cameras:
+>
+>​	a. Lumix LX100 LX100M2
 
 Version：V1.3.5（minimum Gyroflow version: V1.6.1)
 
@@ -22,9 +23,9 @@ Version：V1.3.5（minimum Gyroflow version: V1.6.1)
 >9. Support R3D and BRAW formats.
 >10. Add support for additional cameras:
 >
-> a. Canon 60D 70D
+>​	a. Canon 60D 70D
 >
-> b. SIGMA BF
+>​	b. SIGMA BF
 
 Version：V1.3.4（minimum Gyroflow version: V1.6.1)
 >1. Automatically search for gyroscope data in the same level and subfolders of the video folder.
