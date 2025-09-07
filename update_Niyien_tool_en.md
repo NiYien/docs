@@ -1,5 +1,13 @@
 ## NiYien Tool Update Log
+Version：V1.3.6（minimum Gyroflow version: V1.6.3)
+>1. Fixed the issue with segment parsing errors in RED files.
+>2. Fixed the issue with loading DNG project files in the plugin.
+>3. Fixed several bugs
+>4. 添加部分相机支持。
+>   	a. Lumix LX100 LX100M2
+
 Version：V1.3.5（minimum Gyroflow version: V1.6.1)
+
 >1. Support auto mode for BMPCC 6K and 4K.
 >
 >2. Support time synchronization for multiple time zones (UTC).
