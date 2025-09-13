@@ -10,6 +10,8 @@ Version：V1.3.6（minimum Gyroflow version: V1.6.3)
 >​	b. Nikon ZR
 >
 >​	c. Canon 5D2
+>
+>​	d. Fujifilm GFX100RF
 
 Version：V1.3.5（minimum Gyroflow version: V1.6.1)
 
