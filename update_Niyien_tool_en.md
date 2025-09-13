@@ -5,7 +5,7 @@ Version：V1.3.6（minimum Gyroflow version: V1.6.3)
 >3. Fixed several bugs
 >4. Add support for additional cameras:
 >
->​	a. Lumix LX100 LX100M2
+>​	a. Lumix LX100 LX100M2 GM5
 >
 >​	b. Nikon ZR
 >
