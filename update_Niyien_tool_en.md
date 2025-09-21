@@ -1,8 +1,9 @@
 ## NiYien Tool Update Log
+
 Version：V1.3.6（minimum Gyroflow version: V1.6.3)
 >1. Fixed the issue with segment parsing errors in RED files.
 >2. Fixed the issue with loading DNG project files in the plugin.
->3. Fixed several bugs
+>3. Fixed several bugs.
 >4. Add support for additional cameras:
 >
 >​	a. Lumix LX100 LX100M2 GM5
