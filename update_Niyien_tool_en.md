@@ -1,10 +1,14 @@
 ## NiYien Tool Update Log
+Version：V1.3.7rc（minimum Gyroflow version: V1.6.3)
+>1. Optimize the sync algorithm.
+>2. Add support for additional cameras:
+>	a. Canon C50  1000D 1200D 1300D 1500D 2000D 3000D 4000D M5 M6
+>	b. Fujifilm GFX ETERNA 55 GFX50S II GFX50S
+
 Version：V1.3.7（minimum Gyroflow version: V1.6.3)
 >1. Fix the sync issue for some Ricoh models.
 >2. Optimize the sync algorithm.
 >3. Support generating proxy files in post-production to stabilize RAW videos.
->4. Add support for additional cameras:
->	a. Canon C50  1000D 1200D 1300D 1500D 2000D 3000D 4000D M5 M6
 
 Version：V1.3.6（minimum Gyroflow version: V1.6.3)
 >1. Fixed the issue with segment parsing errors in RED files.
