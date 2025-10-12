@@ -10,11 +10,11 @@
     "frame_readout": {
         "name": "frame readout time",
         "file": "frame_readout_time.csv",
-        "md5": "824eebd68ef8ac03502c1614e4ba88a0"
+        "md5": "4198d110860e45ff627ab37ffb688b8c"
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
-        "version": "V1.3.7",
+        "version": "V1.3.8",
         "update": false,
         "info_zh": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "info_en": "https://www.niyien.com/update_Niyien_tool_en.html",

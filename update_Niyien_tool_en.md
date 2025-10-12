@@ -1,9 +1,10 @@
 ## NiYien Tool Update Log
-Version：V1.3.7rc（minimum Gyroflow version: V1.6.3)
+Version：V1.3.8（minimum Gyroflow version: V1.6.3)
 >1. Optimize the sync algorithm.
->2. Add support for additional cameras:
->	a. Canon C50  1000D 1200D 1300D 1500D 2000D 3000D 4000D M5 M6
->	b. Fujifilm GFX ETERNA 55 GFX50S II GFX50S
+>2. Add support for Magic Lantern(Uncompressed dng).
+>3. Add support for additional cameras:
+>  a. Canon C50  1000D 1200D 1300D 1500D 2000D 3000D 4000D M M5 M6
+>  b. Fujifilm GFX ETERNA 55 GFX50S II GFX50S
 
 Version：V1.3.7（minimum Gyroflow version: V1.6.3)
 >1. Fix the sync issue for some Ricoh models.
