@@ -3,8 +3,9 @@ Version：V1.3.8RC（minimum Gyroflow version: V1.6.3)
 >1. Add support for Magic Lantern(Prores).
 >2. Add support for vertical anamorphic lens.
 >3. Add HDMI resolutions for Lumix cameras.
->4. Add support for additional cameras:
->    a. Lumix G97 
+>4. Add auto mode for BMD video assist.
+>5. Add support for additional cameras:
+>   a. Lumix G97 
 
 Version：V1.3.8（minimum Gyroflow version: V1.6.3)
 >1. Optimize the sync algorithm.
