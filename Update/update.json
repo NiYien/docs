@@ -10,7 +10,7 @@
     "frame_readout": {
         "name": "frame readout time",
         "file": "frame_readout_time.csv",
-        "md5": "4d95ec17ccd6a10d3aea6acb31bf82d2"
+        "md5": "75ade9e788987bc2e7189474c5d0fefc"
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
@@ -31,6 +31,8 @@
         "mac_en": "https://gyroflow.xyz/devbuild",
         "mac_zh": "https://www.niyien.com/NiYien_manual_ZH.html",
         "win_en": "https://gyroflow.xyz/devbuild",
-        "win_zh": "https://www.niyien.com/NiYien_manual_ZH.html"
+        "win_zh": "https://www.niyien.com/NiYien_manual_ZH.html",
+        "sdk": "https://vip.123pan.cn/1846941948/Gyroflow_SDK/",
+        "plugins": "https://vip.123pan.cn/1846941948/Gyroflow_Plugins/"
     }
 }
