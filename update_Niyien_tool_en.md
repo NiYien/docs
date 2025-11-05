@@ -11,7 +11,7 @@ Version：V1.3.9（minimum Gyroflow version: V1.6.3)
 >5. Add support for additional cameras:
 >     a. Lumix G97 GX85
 >     b. BMD BMCC 4K
->	  C. RED EPIC GEMINI 5K MONSTRO 8K VV
+>	c. RED EPIC GEMINI 5K MONSTRO 8K VV
 >     
 
 Version：V1.3.8（minimum Gyroflow version: V1.6.3)
