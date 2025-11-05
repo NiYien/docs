@@ -1,5 +1,5 @@
 ## NiYien Tool Update Log
-Version：V1.3.8RC（minimum Gyroflow version: V1.6.3)
+Version：V1.3.9（minimum Gyroflow version: V1.6.3)
 >1. Add support for Magic Lantern(Prores).
 >
 >2. Add support for vertical anamorphic lens.
