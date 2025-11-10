@@ -9,10 +9,12 @@ Version：V1.3.9（minimum Gyroflow version: V1.6.3)
 >4. Add auto mode for BMD video assist.
 >
 >5. Add support for additional cameras:
->     a. Lumix G97 GX85
->     b. BMD BMCC 4K
->	c. RED EPIC GEMINI 5K MONSTRO 8K VV
->     
+>    a. Lumix G97 GX85
+>    b. BMD BMCC 4K
+>    c. RED EPIC GEMINI 5K MONSTRO 8K VV
+>
+>    d. Nikon Z5II
+>
 
 Version：V1.3.8（minimum Gyroflow version: V1.6.3)
 >1. Optimize the sync algorithm.
