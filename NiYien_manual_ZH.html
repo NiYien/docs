@@ -249,19 +249,11 @@
         <h1 class="header-title truncate">NiYien A1 视频教程</h1>
       </div>
       <div class="flex flex-nowrap items-center justify-end min-w-0 gap-2 overflow-x-auto">
-        <!-- 调整按钮顺序，将首次使用按钮放在左边 -->
-        <button id="firstUseBtn" class="flex-shrink-0 bg-secondary hover:bg-secondary/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
-          <i class="fa fa-rocket mr-1 sm:mr-2"></i> 首次使用
-        </button>
-        <!-- 将首次使用模式字样移动到图文教程按钮左边 -->
-        <span id="firstUseBadge" class="flex-shrink-0 hidden first-use-badge text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center"">首次使用</span>
-        <button id="textTutorialBtn" class="flex-shrink-0 bg-accent hover:bg-accent/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
-          <i class="fa fa-book mr-1 sm:mr-2"></i> 图文教程
-        </button>
-        <button id="showAllBtn" class="flex-shrink-0 bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center hidden">
-          <i class="fa fa-th-large mr-1 sm:mr-2"></i> 展示全部
-        </button>
-        <!-- 添加语言切换按钮 -->
+          <!-- 保留图文教程按钮 -->
+          <button id="textTutorialBtn" class="flex-shrink-0 bg-accent hover:bg-accent/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
+            <i class="fa fa-book mr-1 sm:mr-2"></i> 图文教程
+          </button>
+          <!-- 添加语言切换按钮 -->
         <a id="englishManualLink" href="#" class="flex-shrink-0 bg-gray-800 hover:bg-gray-700 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
           <i class="fa fa-language mr-1 sm:mr-2"></i> English
         </a>
@@ -357,6 +349,49 @@
       </div>
     </div>
   </section>
+
+<section class="bg-white border-b border-gray-100 mt-4 compact-section">
+    <div class="container mx-auto px-4 py-6">
+      <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
+        <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+          <i class="fa fa-info-circle text-blue-600 mr-2"></i>
+          视频教程观看指南
+        </h3>
+        <ul class="space-y-4 text-gray-700">
+          <li>
+            <div class="flex mb-1">
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">a</span>
+              <span><strong>常规视频</strong></span>
+            </div>
+            <div class="pl-9">
+              请看<a href="#video-1.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">1.2 - 软件下载与安装</a>、<a href="#video-2.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">2.1 - 陀螺仪按键操作</a>、<a href="#video-3.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">3.1 - 自动模式</a>或者<a href="#video-3.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">3.2 - 半自动与手动模式</a>。如果在达芬奇或者Pr中使用插件，那需要再看<a href="#video-4.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">4.1 - 视频编辑器插件</a>。
+            </div>
+          </li>
+          <li>
+            <div class="flex mb-1">
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">b</span>
+              <span><strong>RAW视频</strong></span>
+            </div>
+            <div class="pl-9">
+              佳能CRAW、尼康NRAW、RED、BRAW、DNG格式需要再观看<a href="#video-4.5" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">4.5 - RAW,Log,10-bit,12-bit视频</a>。
+            </div>
+          </li>
+          <li>
+            <div class="flex mb-1">
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">c</span>
+              <span><strong>魔灯</strong></span>
+            </div>
+            <div class="pl-9">
+              佳能魔灯固件的使用方法，请<a href="./advanced_usage/zh/Magic_Lantern.html" target="_blank" class="text-primary hover:underline">点击这里</a>。
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  </script>
 
   <script>
     // 集中管理所有URL和图片路径，方便后续修改
@@ -576,31 +611,9 @@
       if (englishManualLink) {
         englishManualLink.href = config.urls.englishManual;
       }
-      // 添加首次使用状态缓存逻辑
-      let firstUseMode = localStorage.getItem('firstUseMode');
-      
-      // 默认情况下启用首次使用模式
-      if (firstUseMode === null) {
-        firstUseMode = 'true';  // 设置默认值为true
-        localStorage.setItem('firstUseMode', firstUseMode);
-      }
-      
-      // 根据保存的状态显示对应模式
-      if (firstUseMode === 'true') {
-        // 首次使用模式
-        firstUseBadge.classList.remove('hidden');
-        firstUseBtn.classList.add('hidden');
-        showAllBtn.classList.remove('hidden');
-        const filteredVideos = videoData.filter(video => video.isRequired);
-        renderVideos(filteredVideos);
-      } else {
-        // 显示全部模式
-        firstUseBadge.classList.add('hidden');
-        showAllBtn.classList.add('hidden');
-        firstUseBtn.classList.remove('hidden');
+      // 默认渲染所有视频内容
         renderVideos(videoData);
-      }
-      const qrCodeImg = document.getElementById('wechatQrCodeImg');
+        const qrCodeImg = document.getElementById('wechatQrCodeImg');
       if (qrCodeImg) {
         qrCodeImg.src = config.images.wechatQrCode;
         // 添加错误处理，二维码加载失败时显示备用文本
@@ -719,6 +732,7 @@
             // 使用新的video-card类统一宽度
             card.className = 'rounded-lg overflow-hidden shadow-sm card-hover video-card';
             card.setAttribute('data-id', video.id);
+            card.id = 'video-' + video.id; // 添加ID属性以支持锚点跳转
             if (video.showConditions) {
               card.setAttribute('data-show', video.showConditions);
             }
@@ -778,45 +792,14 @@
         });
     }
 
-    const firstUseBtn = document.getElementById('firstUseBtn');
-    const showAllBtn = document.getElementById('showAllBtn');
-    const firstUseBadge = document.getElementById('firstUseBadge');
+    // 恢复图文教程按钮的点击事件逻辑
     const textTutorialBtn = document.getElementById('textTutorialBtn');
-
-    // 图文教程按钮点击事件
-    textTutorialBtn.addEventListener('click', () => {
-    // 在新窗口打开图文教程页面
-    window.open(config.urls.textTutorial, '_blank');
-    });
-
-    // 首次使用按钮点击事件
-    firstUseBtn.addEventListener('click', () => {
-      // 切换到首次使用模式
-      firstUseBadge.classList.remove('hidden');
-      firstUseBtn.classList.add('hidden');
-      showAllBtn.classList.remove('hidden');
-
-      // 过滤显示必要的视频
-      const filteredVideos = videoData.filter(video => video.isRequired);
-      renderVideos(filteredVideos);
-      
-      // 更新缓存状态 - 设置为首次使用模式
-      localStorage.setItem('firstUseMode', 'true');
-    });
-
-    // 显示全部按钮点击事件
-    showAllBtn.addEventListener('click', () => {
-      // 切换回显示全部模式
-      firstUseBadge.classList.add('hidden');
-      showAllBtn.classList.add('hidden');
-      firstUseBtn.classList.remove('hidden');
-
-      // 显示所有视频
-      renderVideos(videoData);
-      
-      // 更新缓存状态 - 设置为显示全部模式
-      localStorage.setItem('firstUseMode', 'false');
-    });
+    if (textTutorialBtn) {
+      textTutorialBtn.addEventListener('click', () => {
+        // 在新窗口打开图文教程页面
+        window.open(config.urls.textTutorial, '_blank');
+      });
+    }
 
     // 打开视频模态框
     function openVideoModal(embedCode) {
@@ -876,6 +859,65 @@
       }
     }
 
+    // 增强renderVideos函数，添加ID属性支持锚点跳转
+    const originalRenderVideos = renderVideos;
+    renderVideos = function(videos) {
+      originalRenderVideos(videos);
+      // 为每个视频卡片添加ID属性，用于锚点跳转
+      videos.forEach(video => {
+        const card = document.querySelector(`[data-id="${video.id}"]`);
+        if (card) {
+          card.id = `video-${video.id}`;
+        }
+      });
+    };
+    
+    // 自定义锚点跳转逻辑，确保视频卡左上角标题可见并添加高亮效果
+    document.addEventListener('DOMContentLoaded', function() {
+      // 首先添加高亮样式
+      const style = document.createElement('style');
+      style.textContent = `
+        .video-highlight {
+          border: 2px solid #FDE68A !important;
+          box-shadow: 0 0 0 2px rgba(253, 230, 138, 0.5);
+          transition: all 0.3s ease;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // 监听所有锚点链接的点击事件
+      document.querySelectorAll('a[href^="#video-"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          const targetId = this.getAttribute('href').substring(1);
+          const targetElement = document.getElementById(targetId);
+          
+          if (targetElement) {
+            // 计算偏移量，确保整个视频卡完全显示在视口顶部
+            const rect = targetElement.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            // 增加更大的负偏移量，确保视频卡顶部完全可见
+            const targetPosition = scrollTop + rect.top - 100; // 调整为-100px的上边距
+            
+            // 平滑滚动到目标位置
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'smooth'
+            });
+            
+            // 添加高亮效果
+            targetElement.classList.add('video-highlight');
+            
+            // 3秒后移除高亮效果
+            setTimeout(() => {
+              targetElement.classList.remove('video-highlight');
+            }, 2000);
+          }
+        });
+      });
+    });
+    
     // 初始渲染所有视频
     renderVideos(videoData);
   </script>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳能魔灯陀螺仪增稳</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .main-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            text-align: center;
+            margin: 30px 0 40px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #eee;
+        }
+        .note, .important {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid;
+        }
+        .note {
+            background-color: #eef7ff;
+            border-color: #4285f4;
+        }
+        .important {
+            background-color: #fff8e6;
+            border-color: #ff9800;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin: 30px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+        }
+        .step {
+            margin: 15px 0;
+            padding-left: 10px;
+        }
+        .video-links {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #fff3cd; /* 黄色背景 */
+            border-radius: 6px;
+            border: 1px solid #ffeeba;
+        }
+        .video-link {
+            color: #856404; /* 深色文字搭配黄色背景 */
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .video-link:hover {
+            color: #66512c;
+            background-color: #ffeeba;
+            text-decoration: underline;
+        }
+        .image-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .tutorial-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 10px 0;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .main-title {
+                font-size: 1.7rem;
+            }
+            .section-title {
+                font-size: 1.3rem;
+            }
+            .video-links {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="main-title">佳能魔灯陀螺仪增稳</h1>
+
+    <div class="note">
+        <strong>注意：</strong><br>
+        MLV App的版本至少为V1.15
+    </div>
+
+    <p>请先看以下视频，了解常规视频的增稳流程。</p>
+    
+    <div class="video-links">
+        <a href="https://www.niyien.com/NiYien_manual_ZH.html#video-1.2" class="video-link" target="_blank">1.2 - 软件下载与安装</a>、
+        <a href="https://www.niyien.com/NiYien_manual_ZH.html#video-2.1" class="video-link" target="_blank">2.1 - 陀螺仪按键操作</a>、
+        <a href="https://www.niyien.com/NiYien_manual_ZH.html#video-3.1" class="video-link" target="_blank">3.1 - 自动模式</a>或者
+        <a href="https://www.niyien.com/NiYien_manual_ZH.html#video-3.2" class="video-link" target="_blank">3.2 - 半自动与手动模式</a>。
+    </div>
+
+    <h2 class="section-title">Prores流程：</h2>
+    
+    <div class="step">
+        <strong>步骤1：</strong>将MLV视频通过MLV APP导出为Prores视频。
+    </div>
+    
+    <div class="step">
+        <strong>步骤2：</strong>选择全部MLV视频，点击File，选择Save Session Metadata，保存为mlv.csv。
+    </div>
+    
+    <div class="important">
+        <strong>重要提示：</strong><br>
+        在MLV app中，每一个视频都要双击点击一下，最后再导出mlv.csv。<br>
+        或者导出Prores后，再导出mlv.csv。
+    </div>
+    
+    <div class="image-container">
+        <img src="./export_metadata.png" class="tutorial-image" alt="导出元数据">
+        <img src="./save_mlv_csv.png" class="tutorial-image" alt="保存mlv.csv">
+    </div>
+    
+    <div class="step">
+        <strong>步骤3：</strong>将Prores视频和mlv.csv一起导入尼影工具中。
+    </div>
+    
+    <div class="image-container">
+        <img src="./add_mlv_csv.png" class="tutorial-image" alt="添加mlv.csv">
+    </div>
+    
+    <p>其他步骤和视频教程中一样。</p>
+
+    <h2 class="section-title">CDNG流程：</h2>
+    
+    <p>CDNG需要在达芬奇或者Pr中使用插件，那需要再看
+        <span class="video-links" style="display: inline-block; padding: 5px 10px; margin: 0 5px;">
+            <a href="https://www.niyien.com/NiYien_manual_ZH.html#video-4.1" class="video-link" target="_blank">4.1 - 视频编辑器插件</a>
+        </span>，
+        <span class="video-links" style="display: inline-block; padding: 5px 10px; margin: 0 5px;">
+            <a href="https://www.niyien.com/NiYien_manual_ZH.html#video-4.5" class="video-link" target="_blank">4.5 - RAW,Log,10-bit,12-bit视频</a>
+        </span>。
+    </p>
+    
+    <p>如果使用了Squeeze或者变宽镜头，那还需要看一下
+        <span class="video-links" style="display: inline-block; padding: 5px 10px; margin: 0 5px;">
+            <a href="https://www.niyien.com/NiYien_manual_ZH.html#video-4.3" class="video-link" target="_blank">4.3 - 变宽</a>
+        </span>
+    </p>
+</body>
+</html>

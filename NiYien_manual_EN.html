@@ -253,17 +253,8 @@
         <h1 class="header-title truncate">NiYien A1 Video Tutorial</h1>
       </div>
       <div class="flex flex-nowrap items-center justify-end min-w-0 gap-2 overflow-x-auto">
-        <!-- Adjust button order, place the first use button on the left -->
-        <button id="firstUseBtn" class="flex-shrink-0 bg-secondary hover:bg-secondary/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
-          <i class="fa fa-rocket mr-1 sm:mr-2"></i> First Use
-        </button>
-        <!-- Move the first use mode label to the left of the text tutorial button -->
-        <span id="firstUseBadge" class="flex-shrink-0 hidden first-use-badge text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">First Use</span>
         <button id="textTutorialBtn" class="flex-shrink-0 bg-accent hover:bg-accent/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center">
           <i class="fa fa-book mr-1 sm:mr-2"></i> Text
-        </button>
-        <button id="showAllBtn" class="flex-shrink-0 bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-300 flex items-center hidden">
-          <i class="fa fa-th-large mr-1 sm:mr-2"></i> Show All
         </button>
         <!-- Add language switch button -->
 
@@ -352,6 +343,49 @@
     </div>
   </section>
 
+<section class="bg-white border-b border-gray-100 mt-4 compact-section">
+    <div class="container mx-auto px-4 py-6">
+      <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
+        <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+          <i class="fa fa-info-circle text-blue-600 mr-2"></i>
+          Video Tutorial Watching Guide
+        </h3>
+        <ul class="space-y-4 text-gray-700">
+          <li>
+            <div class="flex mb-1">
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">a</span>
+              <span><strong>Normal Videos</strong></span>
+            </div>
+            <div class="pl-9">
+              Watch <a href="#video-1.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">1.2 - Software Download and Installation</a>, <a href="#video-2.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">2.1 - Gyroscope Button Operations</a>, <a href="#video-3.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">3.1 - Auto Mode</a> or <a href="#video-3.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">3.2 - Semi-auto and Manual Modes</a>. If using the plugin in DaVinci or Pr, you also need to watch <a href="#video-4.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">4.1 - Video Editor Plugin</a>.
+            </div>
+          </li>
+          <li>
+            <div class="flex mb-1">
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">b</span>
+              <span><strong>RAW Videos</strong></span>
+            </div>
+            <div class="pl-9">
+              For Canon CRAW, Nikon NRAW, RED, BRAW and DNG formats, watch <a href="#video-4.5" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">4.5 - RAW, Log, 10-bit, 12-bit video</a>.
+            </div>
+          </li>
+          <li>
+            <div class="flex mb-1">
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">c</span>
+              <span><strong>Magic Lantern</strong></span>
+            </div>
+            <div class="pl-9">
+              For Canon cameras with Magic Lantern firmware, <a href="./advanced_usage/en/Magic_Lantern.html" class="text-primary hover:underline">Click here</a>.
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  </script>
+  
   <script>
     // Centralized management of all URLs and image paths for easy modification
     const config = {
@@ -572,31 +606,7 @@
       if (chineseManualLink) {
         chineseManualLink.href = config.urls.chineseManual;
       }
-
-      // Add first use state caching logic
-      let firstUseMode = localStorage.getItem('firstUseMode');
-
-      // Enable first use mode by default
-      if (firstUseMode === null) {
-        firstUseMode = 'true';  // Set the default value to true
-        localStorage.setItem('firstUseMode', firstUseMode);
-      }
-
-      // Display the corresponding mode based on the saved state
-      if (firstUseMode === 'true') {
-        // First use mode
-        firstUseBadge.classList.remove('hidden');
-        firstUseBtn.classList.add('hidden');
-        showAllBtn.classList.remove('hidden');
-        const filteredVideos = videoData.filter(video => video.isRequired);
-        renderVideos(filteredVideos);
-      } else {
-        // Show all mode
-        firstUseBadge.classList.add('hidden');
-        showAllBtn.classList.add('hidden');
-        firstUseBtn.classList.remove('hidden');
-        renderVideos(videoData);
-      }
+    renderVideos(videoData);
       const qrCodeImg = document.getElementById('wechatQrCodeImg');
       if (qrCodeImg) {
         qrCodeImg.src = config.images.wechatQrCode;
@@ -716,6 +726,7 @@
           // Use the new video-card class to unify the width
           card.className = 'rounded-lg overflow-hidden shadow-sm card-hover video-card';
           card.setAttribute('data-id', video.id);
+          card.id = 'video-' + video.id;
           if (video.showConditions) {
             card.setAttribute('data-show', video.showConditions);
           }
@@ -774,46 +785,15 @@
         });
       });
     }
-
-    const firstUseBtn = document.getElementById('firstUseBtn');
-    const showAllBtn = document.getElementById('showAllBtn');
-    const firstUseBadge = document.getElementById('firstUseBadge');
+    
     const textTutorialBtn = document.getElementById('textTutorialBtn');
 
-    // Text tutorial button click event
-    textTutorialBtn.addEventListener('click', () => {
-      // Open the text tutorial page in a new window
-      window.open(config.urls.textTutorial, '_blank');
-    });
-
-    // First use button click event
-    firstUseBtn.addEventListener('click', () => {
-      // Switch to first use mode
-      firstUseBadge.classList.remove('hidden');
-      firstUseBtn.classList.add('hidden');
-      showAllBtn.classList.remove('hidden');
-
-      // Filter and display necessary videos
-      const filteredVideos = videoData.filter(video => video.isRequired);
-      renderVideos(filteredVideos);
-
-      // Update the cache state - Set to first use mode
-      localStorage.setItem('firstUseMode', 'true');
-    });
-
-    // Show all button click event
-    showAllBtn.addEventListener('click', () => {
-      // Switch back to show all mode
-      firstUseBadge.classList.add('hidden');
-      showAllBtn.classList.add('hidden');
-      firstUseBtn.classList.remove('hidden');
-
-      // Show all videos
-      renderVideos(videoData);
-
-      // Update the cache state - Set to show all mode
-      localStorage.setItem('firstUseMode', 'false');
-    });
+    if (textTutorialBtn) {
+        textTutorialBtn.addEventListener('click', () => {
+          // Open the text tutorial page in a new window
+          window.open(config.urls.textTutorial, '_blank');
+        });
+    }
 
     // Open the video modal
     function openVideoModal(embedCode) {
@@ -872,7 +852,56 @@
         }
       }
     }
+    
+    const originalRenderVideos = renderVideos;
+    renderVideos = function(videos) {
+      originalRenderVideos(videos);
+      videos.forEach(video => {
+        const card = document.querySelector(`[data-id="${video.id}"]`);
+        if (card) {
+          card.id = `video-${video.id}`;
+        }
+      });
+    };
 
+    document.addEventListener('DOMContentLoaded', function() {
+      const style = document.createElement('style');
+      style.textContent = `
+        .video-highlight {
+          border: 2px solid #FDE68A !important;
+          box-shadow: 0 0 0 2px rgba(253, 230, 138, 0.5);
+          transition: all 0.3s ease;
+        }
+      `;
+      document.head.appendChild(style);
+
+      document.querySelectorAll('a[href^="#video-"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          const targetId = this.getAttribute('href').substring(1);
+          const targetElement = document.getElementById(targetId);
+
+          if (targetElement) {
+            const rect = targetElement.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const targetPosition = scrollTop + rect.top - 100;
+
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'smooth'
+            });
+
+            targetElement.classList.add('video-highlight');
+
+            setTimeout(() => {
+              targetElement.classList.remove('video-highlight');
+            }, 2000);
+          }
+        });
+      });
+    });
+    
     // Initial rendering of all videos
     renderVideos(videoData);
   </script>
