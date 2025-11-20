@@ -1,9 +1,11 @@
 ## NiYien Tool Update Log
+
 Version：V1.3.9RC（minimum Gyroflow version: V1.6.3)
 >1. Fix some issues for Magic Lantern.
 >2. Fixed the bug that some long videos couldn't be stabilized.
->3. Add support for additional cameras:
->     a. Canon R6 III, RP
+>3. Optimize the parameters for Nikon rolling shutter correction
+>4. Add support for additional cameras:
+>    a. Canon R6 III, RP
 
 Version：V1.3.9（minimum Gyroflow version: V1.6.3)
 >1. Add support for Magic Lantern(Prores).
