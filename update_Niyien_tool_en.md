@@ -1,18 +1,22 @@
 ## NiYien Tool Update Log
 
-Version：V1.3.9RC（minimum Gyroflow version: V1.6.3)
+Version：V1.4.0（minimum Gyroflow version: V1.6.3)
 >1. Fix some issues for Magic Lantern.
 >
 >2. Fixed the bug that some long videos couldn't be stabilized.
 >
->3. Optimize the parameters for Nikon rolling shutter correction.
+>3. Optimize the parameters for Canon, Nikon, Lumix rolling shutter correction.
 >
 >4. Add support for pre-recording.
 >
->5. Add support for additional cameras:
->     a. Canon R6 III, RP
+>5. Fix the bug where error messages indicating improper installation of Gyroflow, Braw SDK, and Red SDK appear under MacOS.
 >
->     b. Lumix G85
+>6. Automatically skip processing videos shot with stationary equipment such as tripods or monopods.
+>
+>7. Add support for additional cameras:
+>   a. Canon R6 III, RP
+>
+>   b. Lumix G85
 
 Version：V1.3.9（minimum Gyroflow version: V1.6.3)
 >1. Add support for Magic Lantern(Prores).
