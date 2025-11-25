@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Settings Guide</title>
+    <style>
+        /* Basic Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Highlight Styles */
+        .highlight {
+            background-color: #ffffcc;
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+        
+        /* Heading Styles */
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-size: 22px;
+        }
+        
+        /* Step Styles */
+        .step {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .step-content {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        /* Image Styles */
+        .setting-image {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            margin: 15px 0;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        /* Brand-specific Styles */
+        .canon .step { border-left-color: #e74c3c; }
+        .canon .step-number { background: #e74c3c; }
+        
+        .nikon .step { border-left-color: #f39c12; }
+        .nikon .step-number { background: #f39c12; }
+        
+        .sony .step { border-left-color: #2c3e50; }
+        .sony .step-number { background: #2c3e50; }
+        
+        .panasonic .step { border-left-color: #3498db; }
+        .panasonic .step-number { background: #3498db; }
+        
+        .fujifilm .step { border-left-color: #27ae60; }
+        .fujifilm .step-number { background: #27ae60; }
+        
+        /* Reference Markers */
+        .reference {
+            font-style: italic;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            h2 {
+                font-size: 20px;
+            }
+            
+            .setting-image {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Camera Settings Guide</h1>
+    
+    <!-- Canon Cameras -->
+    <div class="canon">
+        <h2>Canon Cameras</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>Turn off Image Stabilization, Lens IS, and Digital IS</strong>
+                <p>Find <span class="highlight">"Image Stabilizer Mode"</span> and <span class="highlight">"Digital IS"</span> in the menu and turn them off</p>
+                <p>If there are switches on the lens, turn them off as well</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">2</span>
+            <div class="step-content">
+                <strong>Turn off Auto Leveling (if available)</strong>
+                <p>Find <span class="highlight">"Auto Level"</span> in the shooting menu and turn it off</p>
+                <img src="./canon_autolevel_disable.png" class="setting-image" alt="">
+            </div>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+                <strong>Set Pre-recording Time (if enabled)</strong>
+                <p>If pre-recording is enabled, set the pre-recording time in the matching list</p>
+                <img src="./canon_prerecording_off.jpg" class="setting-image" alt="">
+                <img src="./canon_prerecording_set.jpg" class="setting-image" alt="">
+                <p>Set the pre-recording time in the matching list, or it's recommended to turn it off entirely</p>
+                <img src="./niyien_pre1.png" class="setting-image" alt="">
+                <img src="./niyien_pre2.png" class="setting-image" alt="">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Nikon Cameras -->
+    <div class="nikon">
+        <h2>Nikon Cameras</h2>
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>Turn off Image Stabilization, Lens VR, and Electronic VR</strong>
+                <p>Find <span class="highlight">"Vibration Reduction"</span> and <span class="highlight">"Electronic VR"</span> in the menu and turn them off</p>
+                <p>If there are switches on the lens, turn them off as well</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sony Cameras -->
+    <div class="sony">
+        <h2>Sony Cameras</h2>
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>Turn off SteadyShot</strong>
+                <p>Find the <span class="highlight">"SteadyShot"</span> function in the shooting settings and set it to Off</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panasonic Cameras -->
+    <div class="panasonic">
+        <h2>Panasonic Cameras</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>Turn off Image Stabilization</strong>
+                <p>Find <span class="highlight">"Image Stabilizer"</span> in the menu and turn it off</p>
+                <p>If there are switches on the lens, turn them off as well</p>
+                <img src="./lumix_is_off.jpg" class="setting-image" alt="">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fujifilm Cameras -->
+    <div class="fujifilm">
+        <h2>Fujifilm Cameras</h2>
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>Turn off Image Stabilization</strong>
+                <p>Find <span class="highlight">"Image Stabilization Mode"</span> in the menu and turn it off</p>
+                <p>If there are switches on the lens, turn them off as well</p>
+                <img src="./fuji_is_off.png" class="setting-image" alt="">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

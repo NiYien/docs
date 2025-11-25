@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相机设置教程</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 高亮样式 */
+        .highlight {
+            background-color: #ffffcc;
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+        
+        /* 标题样式 */
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-size: 22px;
+        }
+        
+        /* 步骤样式 */
+        .step {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .step-content {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        /* 图片样式 */
+        .setting-image {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            margin: 15px 0;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        /* 品牌特定样式 */
+        .canon .step { border-left-color: #e74c3c; }
+        .canon .step-number { background: #e74c3c; }
+        
+        .nikon .step { border-left-color: #f39c12; }
+        .nikon .step-number { background: #f39c12; }
+        
+        .sony .step { border-left-color: #2c3e50; }
+        .sony .step-number { background: #2c3e50; }
+        
+        .panasonic .step { border-left-color: #3498db; }
+        .panasonic .step-number { background: #3498db; }
+        
+        .fujifilm .step { border-left-color: #27ae60; }
+        .fujifilm .step-number { background: #27ae60; }
+        
+        /* 引用标记 */
+        .reference {
+            font-style: italic;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            h2 {
+                font-size: 20px;
+            }
+            
+            .setting-image {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>相机设置教程</h1>
+    
+    <!-- 佳能相机 -->
+    <div class="canon">
+        <h2>佳能相机</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>关闭机身防抖、镜头防抖、数字防抖</strong>
+                <p>在菜单中找到<span class="highlight">"影像稳定器模式"</span>、<span class="highlight">"数码IS"</span>选项并关闭</p>
+                <p>镜头上如果有开关，也要关闭</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">2</span>
+            <div class="step-content">
+                <strong>关闭自动水平校准功能（如果有）</strong>
+                <p>在拍摄菜单中找到<span class="highlight">"自动水平校准"</span>选项并关闭</p>
+                <img src="./canon_autolevel_disable_zh.png" class="setting-image" alt="">
+            </div>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+                <strong>设置预录制时间（如果开启）</strong>
+                <p>如果开启的预录制功能，需要在匹配列表中设置预录制时间</p>
+                <img src="./canon_prerecording_off_zh.png" class="setting-image" alt="">
+                <img src="./canon_prerecording_set.png" class="setting-image" alt="">
+                <p>匹配列表中设置预录制时间，建议直接关闭</p>
+                <img src="./niyien_pre2.png" class="setting-image" alt="">
+                <img src="./niyien_pre1.png" class="setting-image" alt="">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 尼康相机 -->
+    <div class="nikon">
+        <h2>尼康相机</h2>
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>关闭机身防抖、镜头防抖、数字防抖</strong>
+                <p>在菜单中找到<span class="highlight">"减震"</span>、<span class="highlight">"电子减震"</span>选项并关闭</p>
+                <p>镜头上如果有开关，也要关闭</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 索尼相机 -->
+    <div class="sony">
+        <h2>索尼相机</h2>
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>关闭Steadyshot</strong>
+                <p>在拍摄设置中找到<span class="highlight">"Steadyshot"</span>功能并设为关闭</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 松下相机 -->
+    <div class="panasonic">
+        <h2>松下相机</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>关闭机身防抖、镜头防抖、数字防抖</strong>
+                <p>在菜单中找到<span class="highlight">"图像稳定器"</span>选项并关闭</p>
+                <p>镜头上如果有开关，也要关闭</p>
+                <img src="./lumix_is_off_zh.jpg" class="setting-image" alt="">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 富士相机 -->
+    <div class="fujifilm">
+        <h2>富士相机</h2>
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <strong>关闭机身防抖、镜头防抖、数字防抖</strong>
+                <p>在菜单中找到<span class="highlight">"图像稳定模式"</span>并关闭</p>
+                <p>镜头上如果有开关，也要关闭</p>
+                <img src="./fuji_is_off_zh.png" class="setting-image" alt="">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
