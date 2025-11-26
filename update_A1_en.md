@@ -1,4 +1,7 @@
 ## NiYien Senseflow A1 Update Log
+>V1.2.7:
+1.Fix the extremely low probability bug of failure to boot.
+
 >V1.2.6:
 1.Add Power-On Prompt.
 2.Add Power-Off Prompt Sound.
