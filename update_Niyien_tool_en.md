@@ -1,5 +1,11 @@
 ## NiYien Tool Update Log
 
+Version：V1.4.0RC（minimum Gyroflow version: V1.6.3)
+>1. Add detection for camera image stabilization.
+>
+>2. Add specific prompts for synchronization failures.
+>
+
 Version：V1.4.0（minimum Gyroflow version: V1.6.3)
 >1. Fix some issues for Magic Lantern.
 >
@@ -14,7 +20,7 @@ Version：V1.4.0（minimum Gyroflow version: V1.6.3)
 >6. Automatically skip processing videos shot with stationary equipment such as tripods or monopods.
 >
 >7. Add support for additional cameras:
->   a. Canon R6 III, RP
+>     a. Canon R6 III, RP
 >
 >   b. Lumix G85
 
