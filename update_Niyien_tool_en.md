@@ -1,9 +1,11 @@
 ## NiYien Tool Update Log
 
-Version：V1.4.0RC（minimum Gyroflow version: V1.6.3)
+Version：V1.4.1（minimum Gyroflow version: V1.6.3)
 >1. Add detection for camera image stabilization.
 >
 >2. Add specific prompts for synchronization failures.
+>
+>3. Add "Smart" sync speed, Significantly increase the synchronization success rate.
 >
 
 Version：V1.4.0（minimum Gyroflow version: V1.6.3)
