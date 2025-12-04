@@ -2,10 +2,8 @@
 
 Version：V1.4.1（minimum Gyroflow version: V1.6.3)
 >1. Add detection for camera image stabilization.
->
 >2. Add specific prompts for synchronization failures.
->
->3. Add "Smart" sync speed, Significantly increase the synchronization success rate.
+>3. Fix the bug that some cameras' image stabilization status is misdetected, resulting in non-processing.
 >
 
 Version：V1.4.0（minimum Gyroflow version: V1.6.3)
