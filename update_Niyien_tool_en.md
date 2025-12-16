@@ -4,6 +4,8 @@ Version：V1.4.1（minimum Gyroflow version: V1.6.3)
 >1. Add detection for camera image stabilization.
 >2. Add specific prompts for synchronization failures.
 >3. Fix the bug that some cameras' image stabilization status is misdetected, resulting in non-processing.
+>4. Add support for additional cameras:
+>   a. Canon M50
 >
 
 Version：V1.4.0（minimum Gyroflow version: V1.6.3)
@@ -20,9 +22,10 @@ Version：V1.4.0（minimum Gyroflow version: V1.6.3)
 >6. Automatically skip processing videos shot with stationary equipment such as tripods or monopods.
 >
 >7. Add support for additional cameras:
->     a. Canon R6 III, RP
+>    a. Canon R6 III, RP
+>    
+>    b. Lumix G85
 >
->   b. Lumix G85
 
 Version：V1.3.9（minimum Gyroflow version: V1.6.3)
 >1. Add support for Magic Lantern(Prores).
