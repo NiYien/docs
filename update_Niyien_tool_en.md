@@ -5,7 +5,8 @@ Version：V1.4.1（minimum Gyroflow version: V1.6.3)
 >2. Add specific prompts for synchronization failures.
 >3. Fix the bug that some cameras' image stabilization status is misdetected, resulting in non-processing.
 >4. Add support for additional cameras:
->   a. Canon M50
+>     a. Canon M50, 77D
+>5. b. Nikon D750
 >
 
 Version：V1.4.0（minimum Gyroflow version: V1.6.3)
