@@ -14,9 +14,9 @@
     },
     "NiYien_tool": {
         "name": "NiYien_tool",
-        "version": "V1.4.0",
+        "version": "V1.4.2",
         "min_version": "V1.4.0",
-        "update": true,
+        "update": false,
         "info_zh": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "info_en": "https://www.niyien.com/update_Niyien_tool_en.html",
         "mac_en": "https://drive.google.com/drive/folders/14lVHH6HA2oLJyfxAodWUDE8_jFBOleJf?usp=sharing",

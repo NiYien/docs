@@ -1,5 +1,12 @@
 ## NiYien Tool Update Log
 
+Version：V1.4.2（minimum Gyroflow version: V1.6.3)
+>1. Fix some setting issues.
+>2. Optimize the processing speed of Komodo and Komodo X.
+>3. Temporarily disable the auto-rotation function for vertically-shot Nikon ZR R3D videos.
+>4. Add support for additional cameras:
+>     a. Fujifilm GFX ETERNA 55
+
 Version：V1.4.1（minimum Gyroflow version: V1.6.3)
 >1. Add detection for camera image stabilization.
 >2. Add specific prompts for synchronization failures.
