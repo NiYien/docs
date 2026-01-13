@@ -1,5 +1,12 @@
 ## NiYien Tool Update Log
 
+Version：V1.4.2RC（minimum Gyroflow version: V1.6.3)
+>1. Fix some setting issues.
+>2. Add support for additional cameras:
+>	a. Fujifilm X-E5
+>	b. Nikon D5300
+>	C. Sony A7S 
+
 Version：V1.4.2（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
 >2. Optimize the processing speed of Komodo and Komodo X.
