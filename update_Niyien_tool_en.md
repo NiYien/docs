@@ -2,10 +2,13 @@
 
 Version：V1.4.2RC（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
+>
 >2. Add support for additional cameras:
->	a. Fujifilm X-E5
->	b. Nikon D5300
->	C. Sony A7S 
+>     a. Fujifilm X-E5
+>     b. Nikon D5300
+>     c. Sony A7S 
+>     d. RED HELIUM 8K S35
+>     e. BMD URSA Mini Pro 4.6K G2
 
 Version：V1.4.2（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
