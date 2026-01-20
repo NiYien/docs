@@ -1,6 +1,6 @@
 ## NiYien Tool Update Log
 
-Version：V1.4.2RC（minimum Gyroflow version: V1.6.3)
+Version：V1.4.3（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
 >2. Added a new update reminder icon.
 >3. Add support for additional cameras:
