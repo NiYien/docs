@@ -84,7 +84,20 @@
             border-radius: 6px;
             border: 1px solid #ddd;
         }
+
+        .image-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
         
+        .image-container .setting-image {
+            flex: 1;
+            min-width: 200px;
+            margin: 0;
+        }
+
         /* Brand-specific Styles */
         .canon .step { border-left-color: #e74c3c; }
         .canon .step-number { background: #e74c3c; }
@@ -144,9 +157,20 @@
                 <p>If there are switches on the lens, turn them off as well</p>
             </div>
         </div>
-        
+
         <div class="step">
             <span class="step-number">2</span>
+            <div class="step-content">
+                <strong>Turn on Lens aberration correction</strong>
+                <div class="image-container">
+                    <img src="./canon_distortion.png" class="setting-image" alt="">
+                    <img src="./canon_distortion_en.png" class="setting-image" alt="">
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
             <div class="step-content">
                 <strong>Turn off Auto Leveling (if available)</strong>
                 <p>Find <span class="highlight">"Auto Level"</span> in the shooting menu and turn it off</p>
@@ -155,7 +179,7 @@
         </div>
         
         <div class="step">
-            <span class="step-number">3</span>
+            <span class="step-number">4</span>
             <div class="step-content">
                 <strong>Set Pre-recording Time (if enabled)</strong>
                 <p>If pre-recording is enabled, set the pre-recording time in the matching list</p>
@@ -174,9 +198,10 @@
         <div class="step">
             <span class="step-number">1</span>
             <div class="step-content">
-                <strong>Turn off Image Stabilization, Lens VR, and Electronic VR</strong>
+                <strong>1.Turn off Image Stabilization, Lens VR, and Electronic VR</strong>
                 <p>Find <span class="highlight">"Vibration Reduction"</span> and <span class="highlight">"Electronic VR"</span> in the menu and turn them off</p>
                 <p>If there are switches on the lens, turn them off as well</p>
+                <strong>2. Turn on Auto Distortion Control (default is on)</strong>
             </div>
         </div>
     </div>
