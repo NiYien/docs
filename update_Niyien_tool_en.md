@@ -3,14 +3,16 @@
 Version：V1.4.3（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
 >2. Added a new update reminder icon.
->3. Add support for additional cameras:
->​	a. Fujifilm X-E5
->​	b. Nikon D5300
->​	c. Sony A7S 
->​	d. RED HELIUM 8K S35
->​	e. BMD URSA Mini Pro 4.6K G2
->​	f. Canon C300, C100 Mark ii, C100, R1
->​	g. Lumix EVA1, V35LT1
+>3. Fix the rolling shutter effect in Panasonic crop mode.
+>4. Fix the issue where the semi-auto mode of the Leica Q series cannot be processed properly.
+>5. Add support for additional cameras:
+>    ​	a. Fujifilm X-E5
+>     ​	b. Nikon D5300
+>     ​	c. Sony A7S 
+>     ​	d. RED HELIUM 8K S35
+>     ​	e. BMD URSA Mini Pro 4.6K G2
+>     ​	f. Canon C300, C100 Mark ii, C100, R1
+>     ​	g. Lumix EVA1, V35LT1
 
 Version：V1.4.2（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
