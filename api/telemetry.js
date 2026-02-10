@@ -110,8 +110,11 @@ async function lookupGeo(req, ip) {
 }
 
 function getVercelGeo(req) {
-  const city = String(req.headers["x-vercel-ip-city"] || "").trim();
-  const country = String(req.headers["x-vercel-ip-country"] || "").trim();
+  let city = String(req.headers["x-vercel-ip-city"] || "").trim();
+  let country = String(req.headers["x-vercel-ip-country"] || "").trim();
+
+  try { city = decodeURIComponent(city); } catch (e) {}
+  try { country = decodeURIComponent(country); } catch (e) {}
 
   return {
     city: city || "",

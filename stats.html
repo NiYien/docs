@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Telemetry Stats</title>
+  <title>Telemetry Atlas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -12,9 +12,10 @@
       color-scheme: light;
       --bg-1: #f6f2ea;
       --bg-2: #f2f6ff;
-      --ink-1: #1c1b1a;
-      --ink-2: #494845;
+      --ink-1: #171717;
+      --ink-2: #4c4a47;
       --accent: #ff6b2c;
+      --accent-2: #1d9bf0;
       --card: #ffffffcc;
       --border: #e7ded0;
     }
@@ -35,7 +36,7 @@
     }
 
     .shell {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
@@ -94,7 +95,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(12, 1fr);
       gap: 18px;
     }
 
@@ -112,8 +113,52 @@
       font-size: 18px;
     }
 
-    .wide {
-      grid-column: span 2;
+    .span-7 { grid-column: span 7; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-12 { grid-column: span 12; }
+
+    .map-shell {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: linear-gradient(120deg, #0f1b2d, #101b36 40%, #0a0f1f);
+      min-height: 360px;
+    }
+
+    .map-shell svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .map-point {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255, 107, 44, 0.9), rgba(255, 107, 44, 0.2));
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 12px rgba(255, 107, 44, 0.5);
+      cursor: pointer;
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(10, 12, 20, 0.9);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      max-width: 220px;
+      transform: translate(-50%, -120%);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .tooltip.visible {
+      opacity: 1;
     }
 
     table {
@@ -143,7 +188,7 @@
     .bar {
       height: 10px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #1d9bf0, var(--accent));
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
       min-width: 8px;
     }
 
@@ -152,13 +197,38 @@
       color: var(--ink-2);
     }
 
-    @media (max-width: 720px) {
-      body {
-        padding: 32px 16px 60px;
-      }
+    .legend {
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      color: #d7d7e5;
+      padding: 10px 12px;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(15, 18, 30, 0.65);
+      border-radius: 999px;
+    }
 
-      .wide {
-        grid-column: span 1;
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(255, 107, 44, 0.7);
+    }
+
+    @media (max-width: 980px) {
+      .span-7,
+      .span-5,
+      .span-6 {
+        grid-column: span 12;
       }
     }
   </style>
@@ -166,8 +236,8 @@
 <body>
   <div class="shell">
     <header>
-      <h1>Telemetry Summary</h1>
-      <p>Aggregated by city, camera brand, and hourly usage (UTC).</p>
+      <h1>Telemetry Atlas</h1>
+      <p>City opens, brand frequency, and hourly usage (UTC).</p>
       <div class="controls">
         <label>
           Token
@@ -189,20 +259,42 @@
     </header>
 
     <section class="grid">
-      <div class="card">
-        <h2>Top Cities</h2>
+      <div class="card span-7">
+        <h2>Global City Activity</h2>
+        <div class="map-shell" id="mapShell">
+          <svg viewBox="0 0 1000 520" aria-hidden="true">
+            <defs>
+              <linearGradient id="land" x1="0" x2="1">
+                <stop offset="0" stop-color="#1f2a44" />
+                <stop offset="1" stop-color="#253558" />
+              </linearGradient>
+            </defs>
+            <path fill="url(#land)" opacity="0.9" d="M82 132l160-50 90 40 60-20 80 40-30 40 60 30 70-20 70 40-40 60-90 10-40 50-120 20-60-30-60 10-60-40-90-50 20-50z" />
+            <path fill="url(#land)" opacity="0.85" d="M560 120l130-30 140 50 110-20 40 60-60 70-160 10-80 40-120-50 20-60-20-40z" />
+            <path fill="url(#land)" opacity="0.8" d="M140 320l120-20 110 40-30 60-120 40-120-20-30-60 70-40z" />
+            <path fill="url(#land)" opacity="0.8" d="M690 320l110-30 120 30-20 70-130 50-90-40 10-80z" />
+            <path fill="url(#land)" opacity="0.7" d="M820 420l80-10 60 40-20 50-80 10-60-30 20-60z" />
+          </svg>
+          <div class="legend">
+            <span><span class="dot"></span>More opens</span>
+          </div>
+          <div class="tooltip" id="mapTooltip"></div>
+        </div>
+      </div>
+      <div class="card span-5">
+        <h2>City Summary</h2>
         <div id="cities"></div>
       </div>
-      <div class="card">
+      <div class="card span-6">
         <h2>Top Camera Brands</h2>
         <div id="brands"></div>
       </div>
-      <div class="card">
+      <div class="card span-6">
         <h2>Hourly Distribution (UTC)</h2>
         <div id="hours"></div>
       </div>
-      <div class="card wide">
-        <h2>City x Brand Matrix (Top 8 Cities / Top 6 Brands)</h2>
+      <div class="card span-12">
+        <h2>City x Brand Matrix (Top 10 Cities / Top 8 Brands)</h2>
         <div id="matrix"></div>
       </div>
     </section>
@@ -215,7 +307,48 @@
     const tokenEl = document.getElementById("token");
     const exportJsonEl = document.getElementById("exportJson");
     const exportCsvEl = document.getElementById("exportCsv");
+    const mapShell = document.getElementById("mapShell");
+    const tooltipEl = document.getElementById("mapTooltip");
     let lastPayload = null;
+
+    const cityMap = {
+      Beijing: { x: 720, y: 170 },
+      Shanghai: { x: 760, y: 200 },
+      Guangzhou: { x: 720, y: 240 },
+      Shenzhen: { x: 735, y: 250 },
+      Chengdu: { x: 670, y: 210 },
+      Hangzhou: { x: 760, y: 210 },
+      Wuhan: { x: 720, y: 210 },
+      HongKong: { x: 745, y: 245 },
+      "Hong Kong": { x: 745, y: 245 },
+      Taipei: { x: 780, y: 230 },
+      Tokyo: { x: 840, y: 190 },
+      Seoul: { x: 810, y: 170 },
+      Singapore: { x: 780, y: 300 },
+      Bangkok: { x: 730, y: 260 },
+      Delhi: { x: 620, y: 220 },
+      Mumbai: { x: 600, y: 250 },
+      Dubai: { x: 560, y: 230 },
+      Moscow: { x: 590, y: 150 },
+      London: { x: 450, y: 170 },
+      Paris: { x: 470, y: 180 },
+      Berlin: { x: 500, y: 170 },
+      Madrid: { x: 450, y: 210 },
+      Rome: { x: 500, y: 210 },
+      Istanbul: { x: 530, y: 200 },
+      NewYork: { x: 260, y: 190 },
+      "New York": { x: 260, y: 190 },
+      Toronto: { x: 250, y: 170 },
+      LosAngeles: { x: 160, y: 210 },
+      "Los Angeles": { x: 160, y: 210 },
+      Chicago: { x: 230, y: 200 },
+      MexicoCity: { x: 200, y: 240 },
+      "Mexico City": { x: 200, y: 240 },
+      SaoPaulo: { x: 320, y: 320 },
+      "Sao Paulo": { x: 320, y: 320 },
+      Sydney: { x: 880, y: 370 },
+      Melbourne: { x: 850, y: 380 },
+    };
 
     tokenEl.value = localStorage.getItem("telemetry_stats_token") || "";
     tokenEl.addEventListener("change", () => {
@@ -243,10 +376,11 @@
 
         const data = await response.json();
         lastPayload = data;
-        renderTable("cities", data.city_totals || {});
-        renderTable("brands", data.brand_totals || {});
+        renderCitySummary(data.city_totals || {}, data.city_brand_totals || {});
+        renderTable("brands", data.brand_totals || {}, "Brand", "Opens");
         renderHours("hours", data.hour_totals || []);
         renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
+        renderMap(data.city_totals || {}, data.city_brand_totals || {});
         statusEl.textContent = `Updated (UTC days: ${data.days ? data.days.join(", ") : ""})`;
       } catch (error) {
         lastPayload = null;
@@ -254,7 +388,37 @@
       }
     }
 
-    function renderTable(targetId, rows) {
+    function renderCitySummary(cityTotals, cityBrandTotals) {
+      const container = document.getElementById("cities");
+      const entries = Object.entries(cityTotals)
+        .map(([city, count]) => {
+          const brands = Object.keys(cityBrandTotals[city] || {}).length;
+          return [city, count, brands];
+        })
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12);
+
+      if (!entries.length) {
+        container.innerHTML = "<p class=\"hint\">No data</p>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      const header = document.createElement("tr");
+      header.innerHTML = "<th>City</th><th>Opens</th><th>Brands</th>";
+      table.appendChild(header);
+
+      for (const [city, count, brands] of entries) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(city))}</td><td>${count}</td><td>${brands}</td>`;
+        table.appendChild(row);
+      }
+
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function renderTable(targetId, rows, labelTitle, countTitle) {
       const container = document.getElementById(targetId);
       const entries = Object.entries(rows)
         .sort((a, b) => b[1] - a[1])
@@ -267,12 +431,12 @@
 
       const table = document.createElement("table");
       const header = document.createElement("tr");
-      header.innerHTML = "<th>Label</th><th>Count</th>";
+      header.innerHTML = `<th>${labelTitle}</th><th>${countTitle}</th>`;
       table.appendChild(header);
 
       for (const [label, count] of entries) {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${escapeHtml(label)}</td><td>${count}</td>`;
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(label))}</td><td>${count}</td>`;
         table.appendChild(row);
       }
 
@@ -311,8 +475,8 @@
 
     function renderMatrix(targetId, matrix, cityTotals, brandTotals) {
       const container = document.getElementById(targetId);
-      const topCities = pickTop(cityTotals, 8);
-      const topBrands = pickTop(brandTotals, 6);
+      const topCities = pickTop(cityTotals, 10);
+      const topBrands = pickTop(brandTotals, 8);
 
       if (!topCities.length || !topBrands.length) {
         container.innerHTML = "<p class=\"hint\">No data</p>";
@@ -321,13 +485,13 @@
 
       const table = document.createElement("table");
       const headRow = document.createElement("tr");
-      headRow.innerHTML = `<th>City</th>${topBrands.map((b) => `<th>${escapeHtml(b)}</th>`).join("")}`;
+      headRow.innerHTML = `<th>City</th>${topBrands.map((b) => `<th>${escapeHtml(cleanLabel(b))}</th>`).join("")}`;
       table.appendChild(headRow);
 
       topCities.forEach((city) => {
         const row = document.createElement("tr");
         const cells = [
-          `<td>${escapeHtml(city)}</td>`,
+          `<td>${escapeHtml(cleanLabel(city))}</td>`,
           ...topBrands.map((brand) => {
             const value = matrix[city] && matrix[city][brand] ? matrix[city][brand] : 0;
             return `<td>${value}</td>`;
@@ -341,11 +505,78 @@
       container.appendChild(table);
     }
 
+    function renderMap(cityTotals, cityBrandTotals) {
+      clearMapPoints();
+      const entries = Object.entries(cityTotals)
+        .map(([city, count]) => {
+          const brands = Object.keys(cityBrandTotals[city] || {}).length;
+          return [city, count, brands];
+        })
+        .filter(([city]) => city && city !== "Unknown")
+        .sort((a, b) => b[1] - a[1]);
+
+      if (!entries.length) {
+        return;
+      }
+
+      const max = entries[0][1] || 1;
+      entries.forEach(([city, count, brands]) => {
+        const coords = cityMap[city] || cityMap[cleanLabel(city)];
+        if (!coords) {
+          return;
+        }
+
+        const size = Math.max(8, Math.round((count / max) * 26));
+        const point = document.createElement("div");
+        point.className = "map-point";
+        point.style.left = `${coords.x / 1000 * 100}%`;
+        point.style.top = `${coords.y / 520 * 100}%`;
+        point.style.width = `${size}px`;
+        point.style.height = `${size}px`;
+        point.dataset.city = city;
+        point.dataset.count = count;
+        point.dataset.brands = brands;
+
+        point.addEventListener("mouseenter", showTooltip);
+        point.addEventListener("mouseleave", hideTooltip);
+        mapShell.appendChild(point);
+      });
+    }
+
+    function clearMapPoints() {
+      const points = mapShell.querySelectorAll(".map-point");
+      points.forEach((point) => point.remove());
+    }
+
+    function showTooltip(event) {
+      const point = event.currentTarget;
+      const city = cleanLabel(point.dataset.city || "");
+      const count = point.dataset.count || "0";
+      const brands = point.dataset.brands || "0";
+      tooltipEl.textContent = `${city} · ${count} opens · ${brands} brands`;
+      tooltipEl.style.left = point.style.left;
+      tooltipEl.style.top = point.style.top;
+      tooltipEl.classList.add("visible");
+    }
+
+    function hideTooltip() {
+      tooltipEl.classList.remove("visible");
+    }
+
     function pickTop(totals, limit) {
       return Object.entries(totals)
         .sort((a, b) => b[1] - a[1])
         .slice(0, limit)
         .map(([label]) => label);
+    }
+
+    function cleanLabel(value) {
+      const text = String(value ?? "");
+      try {
+        return decodeURIComponent(text);
+      } catch (error) {
+        return text;
+      }
     }
 
     function exportJson() {
@@ -365,14 +596,19 @@
       }
 
       const lines = ["type,label1,label2,count"];
-      const { city_totals: cityTotals = {}, brand_totals: brandTotals = {}, hour_totals: hourTotals = [], city_brand_totals: cityBrand = {} } = lastPayload;
+      const {
+        city_totals: cityTotals = {},
+        brand_totals: brandTotals = {},
+        hour_totals: hourTotals = [],
+        city_brand_totals: cityBrand = {},
+      } = lastPayload;
 
       Object.entries(cityTotals).forEach(([city, count]) => {
-        lines.push(`city,${csvEscape(city)},,${count}`);
+        lines.push(`city,${csvEscape(cleanLabel(city))},,${count}`);
       });
 
       Object.entries(brandTotals).forEach(([brand, count]) => {
-        lines.push(`brand,${csvEscape(brand)},,${count}`);
+        lines.push(`brand,${csvEscape(cleanLabel(brand))},,${count}`);
       });
 
       hourTotals.forEach((count, hour) => {
@@ -381,7 +617,7 @@
 
       Object.entries(cityBrand).forEach(([city, brands]) => {
         Object.entries(brands || {}).forEach(([brand, count]) => {
-          lines.push(`city_brand,${csvEscape(city)},${csvEscape(brand)},${count}`);
+          lines.push(`city_brand,${csvEscape(cleanLabel(city))},${csvEscape(cleanLabel(brand))},${count}`);
         });
       });
 
