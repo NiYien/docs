@@ -281,7 +281,7 @@
           <div class="flex flex-col md:flex-row gap-8 w-full max-w-5xl items-center">
             <!-- Software download section - Widen the download bar -->
             <div class="w-full">
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Mac software download -->
                 <div class="download-card flex flex-col items-center h-full p-4">
                   <div class="flex items-center mb-3 justify-center w-full">
@@ -290,7 +290,7 @@
                   </div>
                   <p class="version-text text-sm text-gray-500 text-center w-full"></p>
                   <p class="download-desc compact-desc text-center w-full">Supports macOS 11 and above.</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="window.open(config.urls.downloadMac, '_blank')">
+                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadMac)">
                     <i class="fa fa-download mr-2"></i> Download
                   </button>
                 </div>
@@ -303,22 +303,9 @@
                   </div>
                   <p class="version-text text-sm text-gray-500 text-center w-full"></p>
                   <p class="download-desc compact-desc text-center w-full">Supports Win10 and above</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="window.open(config.urls.downloadWindows, '_blank')">
+                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadWindows)">
                     <i class="fa fa-download mr-2"></i> Download
                   </button>
-                </div>
-
-                <!-- Gyroflow download -->
-                <div class="download-card flex flex-col items-center h-full p-4">
-                  <div class="flex items-center mb-3 justify-center w-full">
-					<img src="assets/icon/gyroflow.svg" class="w-12 h-12 transform scale-[1.1] mr-3" alt="Gyroflow Icon">
-					<h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">Gyroflow</h3>
-				  </div>
-				  <p class="text-sm text-gray-500 text-center w-full">Nightly build</p>
-				  <p class="download-desc compact-desc text-center w-full">Supports macOS Win Linux</p>
-                  <a href="https://gyroflow.xyz/devbuild" target="_blank" class="download-button compact-button w-full md:w-auto">
-                    <i class="fa fa-download mr-2"></i> Download
-                  </a>
                 </div>
 				
                  <div class="download-card flex flex-col items-center h-full p-4">
@@ -431,9 +418,9 @@
         textTutorial: "NiYien_txt_manual_EN.html",
         firmwareChangelog: "https://www.niyien.com/update_A1_en.html",
         softwareChangelog: "https://www.niyien.com/update_Niyien_tool_en.html",
-        downloadMac: "https://drive.google.com/drive/folders/14lVHH6HA2oLJyfxAodWUDE8_jFBOleJf?usp=sharing",
-        downloadWindows: "https://drive.google.com/drive/folders/1JcgBvcy9HCDQzrZVCUgb1-XcJmI7s8ma?usp=sharing",
-        chineseManual: "NiYien_manual_ZH.html" // Add Chinese manual URL
+        downloadMac: "https://dl.niyien.com/niyien_gyroflow_macos.zip",
+        downloadWindows: "https://dl.niyien.com/niyien_gyroflow_windows.zip",
+        chineseManual: "NiYien_manual_ZH.html"
       },
       images: {
         wechatQrCode: "assets/qrcode/VX.png"
@@ -623,7 +610,7 @@
   <div id="downloadModal" class="download-modal">
     <div class="download-modal-content">
       <h3 class="text-lg font-bold mb-2">Confirm Download</h3>
-      <p class="text-gray-600 mb-4">Are you sure you want to download the NiYien A1 software?</p>
+      <p class="text-gray-600 mb-4">Download NiYien A1 software?</p>
       <div class="download-modal-buttons">
         <button id="downloadCancelBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-all duration-300">
           Cancel

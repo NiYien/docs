@@ -1,4 +1,7 @@
 ## NiYien Senseflow A1 Update Log
+>V1.2.8:
+1.Fixed the frequent drive label name change bug.
+
 >V1.2.7:
 1.Fix the extremely low probability bug of failure to boot.
 

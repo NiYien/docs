@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telemetry Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-1: #f6f2ea;
+      --bg-2: #f2f6ff;
+      --ink-1: #1c1b1a;
+      --ink-2: #494845;
+      --accent: #ff6b2c;
+      --card: #ffffffcc;
+      --border: #e7ded0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: var(--ink-1);
+      background: radial-gradient(circle at top left, var(--bg-2), transparent 45%),
+        radial-gradient(circle at 15% 20%, #ffe9da, transparent 40%),
+        linear-gradient(135deg, var(--bg-1), #f8f9ff);
+      min-height: 100vh;
+      padding: 48px 20px 72px;
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 3vw, 40px);
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--ink-2);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .controls input,
+    .controls select,
+    .controls button {
+      font: inherit;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink-1);
+    }
+
+    .controls button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .controls .ghost {
+      background: #fff;
+      color: var(--ink-1);
+      border: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #1d9bf0, var(--accent));
+      min-width: 8px;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 32px 16px 60px;
+      }
+
+      .wide {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1>Telemetry Summary</h1>
+      <p>Aggregated by city, camera brand, and hourly usage (UTC).</p>
+      <div class="controls">
+        <label>
+          Token
+          <input id="token" type="password" placeholder="Optional" />
+        </label>
+        <label>
+          Days
+          <select id="days">
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30">Last 30 days</option>
+          </select>
+        </label>
+        <button id="refresh">Refresh</button>
+        <button id="exportJson" class="ghost">Export JSON</button>
+        <button id="exportCsv" class="ghost">Export CSV</button>
+        <span class="hint" id="status">Loading...</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Top Cities</h2>
+        <div id="cities"></div>
+      </div>
+      <div class="card">
+        <h2>Top Camera Brands</h2>
+        <div id="brands"></div>
+      </div>
+      <div class="card">
+        <h2>Hourly Distribution (UTC)</h2>
+        <div id="hours"></div>
+      </div>
+      <div class="card wide">
+        <h2>City x Brand Matrix (Top 8 Cities / Top 6 Brands)</h2>
+        <div id="matrix"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const daysEl = document.getElementById("days");
+    const refreshEl = document.getElementById("refresh");
+    const tokenEl = document.getElementById("token");
+    const exportJsonEl = document.getElementById("exportJson");
+    const exportCsvEl = document.getElementById("exportCsv");
+    let lastPayload = null;
+
+    tokenEl.value = localStorage.getItem("telemetry_stats_token") || "";
+    tokenEl.addEventListener("change", () => {
+      localStorage.setItem("telemetry_stats_token", tokenEl.value.trim());
+    });
+
+    refreshEl.addEventListener("click", () => loadStats());
+    daysEl.addEventListener("change", () => loadStats());
+    exportJsonEl.addEventListener("click", () => exportJson());
+    exportCsvEl.addEventListener("click", () => exportCsv());
+
+    async function loadStats() {
+      statusEl.textContent = "Loading...";
+      const days = daysEl.value;
+      const token = tokenEl.value.trim();
+      const headers = token ? { "X-Stats-Token": token } : {};
+
+      try {
+        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}`, {
+          headers,
+        });
+        if (!response.ok) {
+          throw new Error("Bad response");
+        }
+
+        const data = await response.json();
+        lastPayload = data;
+        renderTable("cities", data.city_totals || {});
+        renderTable("brands", data.brand_totals || {});
+        renderHours("hours", data.hour_totals || []);
+        renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
+        statusEl.textContent = `Updated (UTC days: ${data.days ? data.days.join(", ") : ""})`;
+      } catch (error) {
+        lastPayload = null;
+        statusEl.textContent = "Failed to load stats (check token)";
+      }
+    }
+
+    function renderTable(targetId, rows) {
+      const container = document.getElementById(targetId);
+      const entries = Object.entries(rows)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 15);
+
+      if (!entries.length) {
+        container.innerHTML = "<p class=\"hint\">No data</p>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      const header = document.createElement("tr");
+      header.innerHTML = "<th>Label</th><th>Count</th>";
+      table.appendChild(header);
+
+      for (const [label, count] of entries) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${escapeHtml(label)}</td><td>${count}</td>`;
+        table.appendChild(row);
+      }
+
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function renderHours(targetId, totals) {
+      const container = document.getElementById(targetId);
+      if (!totals.length) {
+        container.innerHTML = "<p class=\"hint\">No data</p>";
+        return;
+      }
+
+      const max = Math.max(...totals, 1);
+      container.innerHTML = "";
+
+      totals.forEach((count, hour) => {
+        const row = document.createElement("div");
+        row.className = "bar-row";
+        const label = document.createElement("span");
+        label.textContent = String(hour).padStart(2, "0");
+        label.style.width = "32px";
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.width = `${(count / max) * 100}%`;
+
+        const value = document.createElement("span");
+        value.textContent = count;
+
+        row.append(label, bar, value);
+        container.appendChild(row);
+      });
+    }
+
+    function renderMatrix(targetId, matrix, cityTotals, brandTotals) {
+      const container = document.getElementById(targetId);
+      const topCities = pickTop(cityTotals, 8);
+      const topBrands = pickTop(brandTotals, 6);
+
+      if (!topCities.length || !topBrands.length) {
+        container.innerHTML = "<p class=\"hint\">No data</p>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      const headRow = document.createElement("tr");
+      headRow.innerHTML = `<th>City</th>${topBrands.map((b) => `<th>${escapeHtml(b)}</th>`).join("")}`;
+      table.appendChild(headRow);
+
+      topCities.forEach((city) => {
+        const row = document.createElement("tr");
+        const cells = [
+          `<td>${escapeHtml(city)}</td>`,
+          ...topBrands.map((brand) => {
+            const value = matrix[city] && matrix[city][brand] ? matrix[city][brand] : 0;
+            return `<td>${value}</td>`;
+          }),
+        ];
+        row.innerHTML = cells.join("");
+        table.appendChild(row);
+      });
+
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function pickTop(totals, limit) {
+      return Object.entries(totals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([label]) => label);
+    }
+
+    function exportJson() {
+      if (!lastPayload) {
+        statusEl.textContent = "No data to export";
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(lastPayload, null, 2)], { type: "application/json" });
+      downloadBlob(blob, "telemetry-stats.json");
+    }
+
+    function exportCsv() {
+      if (!lastPayload) {
+        statusEl.textContent = "No data to export";
+        return;
+      }
+
+      const lines = ["type,label1,label2,count"];
+      const { city_totals: cityTotals = {}, brand_totals: brandTotals = {}, hour_totals: hourTotals = [], city_brand_totals: cityBrand = {} } = lastPayload;
+
+      Object.entries(cityTotals).forEach(([city, count]) => {
+        lines.push(`city,${csvEscape(city)},,${count}`);
+      });
+
+      Object.entries(brandTotals).forEach(([brand, count]) => {
+        lines.push(`brand,${csvEscape(brand)},,${count}`);
+      });
+
+      hourTotals.forEach((count, hour) => {
+        lines.push(`hour,${String(hour).padStart(2, "0")},,${count}`);
+      });
+
+      Object.entries(cityBrand).forEach(([city, brands]) => {
+        Object.entries(brands || {}).forEach(([brand, count]) => {
+          lines.push(`city_brand,${csvEscape(city)},${csvEscape(brand)},${count}`);
+        });
+      });
+
+      const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+      downloadBlob(blob, "telemetry-stats.csv");
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      if (/[",\n]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>

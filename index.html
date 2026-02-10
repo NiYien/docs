@@ -3,19 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Language Redirect</title>
+    <title>Redirecting...</title>
     <script type="text/javascript">
-        var userLang = navigator.language || navigator.userLanguage;
-        if (userLang.startsWith("zh")) {
-            window.location.href = "https://www.niyien.com/NiYien_manual_ZH.html";
-        } else if (userLang.startsWith("en")) {
-            window.location.href = "https://www.niyien.com/NiYien_manual_EN.html";
-        } else {
-            window.location.href = "https://www.niyien.com/NiYien_manual_EN.html";
-        }
+        (function () {
+            var targets = {
+                zh: "NiYien_manual_ZH.html",
+                en: "NiYien_manual_EN.html"
+            };
+
+            var params = new URLSearchParams(window.location.search);
+            var forced = (params.get("lang") || "").toLowerCase();
+            if (targets[forced]) {
+                window.location.replace(targets[forced]);
+                return;
+            }
+
+            var languages = navigator.languages && navigator.languages.length
+                ? navigator.languages
+                : [navigator.language || navigator.userLanguage || "en"];
+
+            var chosen = "en";
+            for (var i = 0; i < languages.length; i += 1) {
+                var lang = String(languages[i] || "").toLowerCase();
+                if (lang.indexOf("zh") === 0) {
+                    chosen = "zh";
+                    break;
+                }
+                if (lang.indexOf("en") === 0) {
+                    chosen = "en";
+                    break;
+                }
+            }
+
+            window.location.replace(targets[chosen] || targets.en);
+        })();
     </script>
 </head>
 <body>
-    <p>If you are not redirected automatically, follow the <a href='https://www.niyien.com/NiYien_manual_EN.html'>link to your default page</a>.</p>
+    <p>
+        If you are not redirected automatically, choose a language:
+        <a href="NiYien_manual_EN.html">English</a> /
+        <a href="NiYien_manual_ZH.html">中文</a>
+    </p>
+    <noscript>
+        <p>JavaScript is required for auto-redirect.</p>
+    </noscript>
 </body>
 </html>
