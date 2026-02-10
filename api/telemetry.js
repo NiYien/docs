@@ -49,8 +49,8 @@ export default async function handler(req, res) {
     return res.status(500).json({
       error: "Storage error",
       detail: error.message || String(error),
-      has_url: !!process.env.UPSTASH_REDIS_REST_URL,
-      has_token: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+      has_url: !!(process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL),
+      has_token: !!(process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN),
     });
   }
 
@@ -139,8 +139,8 @@ function buildKeys({ day, hour, city, brand, event }) {
 }
 
 async function upstashIncr(keys, ttlSeconds) {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
     throw new Error("Missing Upstash config");
