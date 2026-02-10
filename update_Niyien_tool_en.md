@@ -1,4 +1,10 @@
 ## NiYien Tool Update Log
+Version：V1.4.4（minimum Gyroflow version: V1.6.3)
+>1. Fix some setting issues.
+>2. Add support for additional cameras:
+>     a. Nikon D500
+>     b. Sony A7S, RX100 VA
+>     c. RIOCH GR IV
 
 Version：V1.4.3（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
