@@ -9,22 +9,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid JSON" });
   }
   
-  const event = String(body.event || "").trim();
-  const appVersion = String(body.app_version || "").trim();
-  const os = String(body.os || "").trim();
-  const cameraBrand = String(body.camera_brand || "").trim() || "Other";
-  const cameraModel = String(body.camera_model || "").trim() || "Unknown";
-  const language = String(body.language || "").trim() || "Unknown";
-  const anonId = String(body.anon_id || "").trim();
-
-  if (!event || event !== "open") {
-    return res.status(400).json({ error: "Invalid event" });
-  }
-
-  if (!anonId || anonId.length > 64) {
-    return res.status(400).json({ error: "Invalid anon_id" });
-  }
-
   const now = new Date();
   const iso = now.toISOString();
   const day = iso.slice(0, 10);
@@ -34,37 +18,89 @@ export default async function handler(req, res) {
   const city = geo.city || "Unknown";
   const country = geo.country || "Unknown";
   const weekKey = getIsoWeekKey(now);
-
-  const keyParts = {
-    day,
-    hour,
-    city: normalizeKeyPart(city),
-    country: normalizeKeyPart(country),
-    brand: normalizeKeyPart(cameraBrand),
-    model: normalizeKeyPart(cameraModel),
-    language: normalizeKeyPart(language),
-    event: normalizeKeyPart(event),
-  };
-
-  const keys = buildKeys(keyParts);
   const ttlDays = parseInt(process.env.TELEMETRY_TTL_DAYS || "90", 10);
   const ttlSeconds = Math.max(ttlDays, 1) * 86400;
-  const uniqueKeys = buildUniqueKeys(keyParts.city);
   const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "0", 10);
   const uniqueTtlSeconds = uniqueTtlDays > 0 ? uniqueTtlDays * 86400 : 0;
-  const weekUserKey = buildWeekUserKey(weekKey, anonId);
   const weekTtlDays = parseInt(process.env.TELEMETRY_USER_TTL_DAYS || "120", 10);
   const weekTtlSeconds = Math.max(weekTtlDays, 1) * 86400;
 
+  const isBatch = Array.isArray(body.events);
+  if (isBatch) {
+    if (body.events.length === 0) {
+      return res.status(400).json({ error: "Empty events" });
+    }
+
+    const fallbackAnonId = String(body.anon_id || "").trim();
+    const items = body.events.map((item, index) => {
+      const fields = extractEventFields(item, fallbackAnonId);
+      const error = validateEventFields(fields);
+      return { index, fields, error };
+    });
+
+    const invalid = items.find((item) => item.error);
+    if (invalid) {
+      return res.status(400).json({
+        error: invalid.error,
+        index: invalid.index,
+      });
+    }
+
+    try {
+      for (const item of items) {
+        await processEvent(
+          item.fields,
+          {
+            day,
+            hour,
+            city,
+            country,
+            weekKey,
+            ttlSeconds,
+            uniqueTtlSeconds,
+            weekTtlSeconds,
+          }
+        );
+      }
+    } catch (error) {
+      return res.status(500).json({
+        error: "Storage error",
+        detail: error.message || String(error),
+        has_url: !!(process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL),
+        has_token: !!(process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN),
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      batch: true,
+      processed: items.length,
+      day,
+      hour,
+      city,
+      country,
+    });
+  }
+
+  const fields = extractEventFields(body, "");
+  const error = validateEventFields(fields);
+  if (error) {
+    return res.status(400).json({ error });
+  }
+
   try {
-    await upstashWrite(
-      keys,
-      ttlSeconds,
-      uniqueKeys,
-      uniqueTtlSeconds,
-      anonId,
-      weekUserKey,
-      weekTtlSeconds
+    await processEvent(
+      fields,
+      {
+        day,
+        hour,
+        city,
+        country,
+        weekKey,
+        ttlSeconds,
+        uniqueTtlSeconds,
+        weekTtlSeconds,
+      }
     );
   } catch (error) {
     return res.status(500).json({
@@ -81,10 +117,69 @@ export default async function handler(req, res) {
     hour,
     city,
     country,
-    event,
-    app_version: appVersion || undefined,
-    os: os || undefined,
+    event: fields.event,
+    app_version: fields.appVersion || undefined,
+    os: fields.os || undefined,
   });
+}
+
+function extractEventFields(payload, fallbackAnonId) {
+  const event = String(payload?.event || "").trim();
+  const appVersion = String(payload?.app_version || "").trim();
+  const os = String(payload?.os || "").trim();
+  const cameraBrand = String(payload?.camera_brand || "").trim() || "Other";
+  const cameraModel = String(payload?.camera_model || "").trim() || "Unknown";
+  const language = String(payload?.language || "").trim() || "Unknown";
+  const anonId = String(payload?.anon_id || fallbackAnonId || "").trim();
+
+  return {
+    event,
+    appVersion,
+    os,
+    cameraBrand,
+    cameraModel,
+    language,
+    anonId,
+  };
+}
+
+function validateEventFields(fields) {
+  if (!fields.event || fields.event !== "open") {
+    return "Invalid event";
+  }
+
+  if (!fields.anonId || fields.anonId.length > 64) {
+    return "Invalid anon_id";
+  }
+
+  return "";
+}
+
+async function processEvent(fields, context) {
+  const keyParts = {
+    day: context.day,
+    hour: context.hour,
+    city: normalizeKeyPart(context.city),
+    country: normalizeKeyPart(context.country),
+    brand: normalizeKeyPart(fields.cameraBrand),
+    model: normalizeKeyPart(fields.cameraModel),
+    language: normalizeKeyPart(fields.language),
+    event: normalizeKeyPart(fields.event),
+  };
+
+  const keys = buildKeys(keyParts);
+  const uniqueKeys = buildUniqueKeys(keyParts.city);
+  const weekUserKey = buildWeekUserKey(context.weekKey, fields.anonId);
+
+  await upstashWrite(
+    keys,
+    context.ttlSeconds,
+    uniqueKeys,
+    context.uniqueTtlSeconds,
+    fields.anonId,
+    weekUserKey,
+    context.weekTtlSeconds
+  );
 }
 
 function safeJsonParse(value) {
