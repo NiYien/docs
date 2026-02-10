@@ -148,7 +148,13 @@
       font-size: 20px;
     }
 
+    .map-card {
+      display: flex;
+      flex-direction: column;
+    }
+
     .map-shell {
+      flex: 1;
       position: relative;
       border-radius: 18px;
       overflow: hidden;
@@ -285,7 +291,7 @@
     </header>
 
     <section class="grid">
-      <div class="card span-7">
+      <div class="card span-7 map-card">
         <h2>Global Activity</h2>
         <div class="map-shell" id="mapShell">
           <div class="map-overlay"></div>
