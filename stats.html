@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Telemetry Atlas</title>
+  <title>遥测统计面板</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -268,64 +268,64 @@
 <body>
   <div class="shell">
     <header>
-      <h1>Telemetry Atlas</h1>
-      <p>People, opens, brand frequency, and hourly usage (UTC).</p>
+      <h1>遥测统计面板</h1>
+      <p>人数、打开次数、品牌分布与小时使用情况（UTC）。</p>
       <div class="controls">
         <label>
           Token
-          <input id="token" type="password" placeholder="Optional" />
+          <input id="token" type="password" placeholder="可选" />
         </label>
         <label>
-          Days
+          天数
           <select id="days">
-            <option value="7">Last 7 days</option>
-            <option value="14">Last 14 days</option>
-            <option value="30">Last 30 days</option>
+            <option value="7">最近 7 天</option>
+            <option value="14">最近 14 天</option>
+            <option value="30">最近 30 天</option>
           </select>
         </label>
-        <button id="refresh">Refresh</button>
-        <button id="exportJson" class="ghost">Export JSON</button>
-        <button id="exportCsv" class="ghost">Export CSV</button>
-        <span class="hint" id="status">Loading...</span>
+        <button id="refresh">刷新</button>
+        <button id="exportJson" class="ghost">导出 JSON</button>
+        <button id="exportCsv" class="ghost">导出 CSV</button>
+        <span class="hint" id="status">加载中...</span>
       </div>
       <div class="kpi" id="kpi"></div>
     </header>
 
     <section class="grid">
       <div class="card span-7 map-card">
-        <h2>Global Activity</h2>
+        <h2>全球活跃度</h2>
         <div class="map-shell" id="mapShell">
           <div class="map-overlay"></div>
-          <div class="map-legend"><span class="legend-dot"></span>More opens</div>
+          <div class="map-legend"><span class="legend-dot"></span>打开越多</div>
           <div class="tooltip" id="mapTooltip"></div>
         </div>
       </div>
       <div class="card span-5">
-        <h2>City Summary</h2>
+        <h2>城市概览</h2>
         <div id="cities"></div>
       </div>
       <div class="card span-4">
-        <h2>Top Camera Brands</h2>
+        <h2>相机品牌排行</h2>
         <div id="brands"></div>
       </div>
       <div class="card span-4">
-        <h2>Top Camera Models</h2>
+        <h2>相机型号排行</h2>
         <div id="models"></div>
       </div>
       <div class="card span-4">
-        <h2>Top Countries</h2>
+        <h2>国家/地区排行</h2>
         <div id="countries"></div>
       </div>
       <div class="card span-6">
-        <h2>Hourly Distribution (UTC)</h2>
+        <h2>小时分布 (UTC)</h2>
         <div id="hours"></div>
       </div>
       <div class="card span-6">
-        <h2>Weekly Usage (People)</h2>
+        <h2>周使用 (人数)</h2>
         <div id="weeklyUsage"></div>
       </div>
       <div class="card span-12">
-        <h2>City x Brand Matrix (Top 10 Cities / Top 8 Brands)</h2>
+        <h2>城市 x 品牌矩阵（Top 10 城市 / Top 8 品牌）</h2>
         <div id="matrix"></div>
       </div>
     </section>
@@ -400,13 +400,14 @@
     });
 
     async function loadStats() {
-      statusEl.textContent = "Loading...";
+      statusEl.textContent = "加载中...";
       const days = daysEl.value;
       const token = tokenEl.value.trim();
       const headers = token ? { "X-Stats-Token": token } : {};
 
       try {
-        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}`, { headers });
+        const cacheBuster = Date.now();
+        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}&_ts=${cacheBuster}`, { headers });
         if (!response.ok) {
           throw new Error("Bad response");
         }
@@ -415,17 +416,25 @@
         lastPayload = data;
         renderKpis(data);
         renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {});
-        renderTable("brands", data.brand_totals || {}, "Brand", "Opens");
-        renderTable("models", data.model_totals || {}, "Model", "Opens");
-        renderTable("countries", data.country_totals || {}, "Country", "Opens");
+        renderTable("brands", data.brand_totals || {}, "品牌", "打开次数");
+        renderTable("models", data.model_totals || {}, "型号", "打开次数");
+        renderTable("countries", data.country_totals || {}, "国家/地区", "打开次数");
         renderHours("hours", data.hour_totals || []);
         renderWeeklyUsage("weeklyUsage", data.weekly_usage || {});
         renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
         await renderMap(data);
-        statusEl.textContent = `Updated (UTC days: ${data.days ? data.days.join(", ") : ""})`;
+        statusEl.textContent = `已更新 (UTC 日期: ${data.days ? data.days.join(", ") : ""})`;
       } catch (error) {
         lastPayload = null;
-        statusEl.textContent = "Failed to load stats (check token)";
+        statusEl.textContent = "加载失败（检查 Token）";
+        kpiEl.innerHTML = "";
+        document.getElementById("cities").innerHTML = "";
+        document.getElementById("brands").innerHTML = "";
+        document.getElementById("models").innerHTML = "";
+        document.getElementById("countries").innerHTML = "";
+        document.getElementById("hours").innerHTML = "";
+        document.getElementById("weeklyUsage").innerHTML = "";
+        document.getElementById("matrix").innerHTML = "";
       }
     }
 
@@ -441,12 +450,12 @@
       const heavyRatio = weeklyUsage.heavy_ratio || 0;
 
       kpiEl.innerHTML = [
-        buildKpi("Unique People", uniquePeople),
-        buildKpi("Total Opens", totalOpens),
-        buildKpi("Active Cities", activeCities),
-        buildKpi("Active Brands", activeBrands),
-        buildKpi("Weekly Active Users", weeklyUsers),
-        buildKpi("Heavy Ratio", `${Math.round(heavyRatio * 100)}%`),
+        buildKpi("独立人数", uniquePeople),
+        buildKpi("总打开次数", totalOpens),
+        buildKpi("活跃城市", activeCities),
+        buildKpi("活跃品牌", activeBrands),
+        buildKpi("周活跃用户", weeklyUsers),
+        buildKpi("重度占比", `${Math.round(heavyRatio * 100)}%`),
       ].join("");
     }
 
@@ -466,13 +475,13 @@
         .slice(0, 12);
 
       if (!entries.length) {
-        container.innerHTML = "<p class=\"hint\">No data</p>";
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
         return;
       }
 
       const table = document.createElement("table");
       const header = document.createElement("tr");
-      header.innerHTML = "<th>City</th><th>People</th><th>Opens</th><th>Brands</th>";
+      header.innerHTML = "<th>城市</th><th>人数</th><th>打开次数</th><th>品牌数</th>";
       table.appendChild(header);
 
       for (const [city, people, count, brands] of entries) {
@@ -492,7 +501,7 @@
         .slice(0, 15);
 
       if (!entries.length) {
-        container.innerHTML = "<p class=\"hint\">No data</p>";
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
         return;
       }
 
@@ -514,7 +523,7 @@
     function renderHours(targetId, totals) {
       const container = document.getElementById(targetId);
       if (!totals.length) {
-        container.innerHTML = "<p class=\"hint\">No data</p>";
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
         return;
       }
 
@@ -546,7 +555,7 @@
       const total = weeklyUsage.total_users || 0;
 
       if (!total) {
-        container.innerHTML = "<p class=\"hint\">No data</p>";
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
         return;
       }
 
@@ -560,7 +569,7 @@
 
       const table = document.createElement("table");
       const header = document.createElement("tr");
-      header.innerHTML = `<th>Opens/Week</th><th>People</th><th>Share</th>`;
+      header.innerHTML = `<th>每周打开</th><th>人数</th><th>占比</th>`;
       table.appendChild(header);
 
       rows.forEach(([label, count]) => {
@@ -572,7 +581,7 @@
 
       const summary = document.createElement("p");
       summary.className = "hint";
-      summary.textContent = `Week ${weeklyUsage.week || ""} · Heavy >= ${weeklyUsage.heavy_threshold || 0}`;
+      summary.textContent = `周 ${weeklyUsage.week || ""} · 重度 >= ${weeklyUsage.heavy_threshold || 0}`;
 
       container.innerHTML = "";
       container.appendChild(table);
@@ -585,13 +594,13 @@
       const topBrands = pickTop(brandTotals, 8);
 
       if (!topCities.length || !topBrands.length) {
-        container.innerHTML = "<p class=\"hint\">No data</p>";
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
         return;
       }
 
       const table = document.createElement("table");
       const headRow = document.createElement("tr");
-      headRow.innerHTML = `<th>City</th>${topBrands.map((b) => `<th>${escapeHtml(cleanLabel(b))}</th>`).join("")}`;
+      headRow.innerHTML = `<th>城市</th>${topBrands.map((b) => `<th>${escapeHtml(cleanLabel(b))}</th>`).join("")}`;
       table.appendChild(headRow);
 
       topCities.forEach((city) => {
@@ -706,7 +715,7 @@
 
     function showTooltip(event, data) {
       const city = cleanLabel(data.city || "");
-      tooltipEl.textContent = `${city} · ${data.people} people · ${data.opens} opens · ${data.brands} brands`;
+      tooltipEl.textContent = `${city} · ${data.people} 人 · ${data.opens} 次 · ${data.brands} 品牌`;
       const rect = mapShell.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -737,7 +746,7 @@
 
     function exportJson() {
       if (!lastPayload) {
-        statusEl.textContent = "No data to export";
+        statusEl.textContent = "没有可导出的数据";
         return;
       }
 
@@ -747,7 +756,7 @@
 
     function exportCsv() {
       if (!lastPayload) {
-        statusEl.textContent = "No data to export";
+        statusEl.textContent = "没有可导出的数据";
         return;
       }
 
