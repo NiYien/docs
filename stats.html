@@ -102,6 +102,13 @@
       grid-template-columns: repeat(12, 1fr);
       gap: 18px;
       align-items: start;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    body.loading .grid {
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
     }
 
     .card {
@@ -265,10 +272,10 @@
     }
   </style>
 </head>
-<body>
+<body class="loading">
   <div class="shell">
     <header>
-      <h1>遥测统计面板</h1>
+      <h1>统计面板</h1>
       <p>人数、打开次数、品牌分布与小时使用情况（UTC）。</p>
       <div class="controls">
         <label>
@@ -296,7 +303,7 @@
         <h2>全球活跃度</h2>
         <div class="map-shell" id="mapShell">
           <div class="map-overlay"></div>
-          <div class="map-legend"><span class="legend-dot"></span>打开越多</div>
+          <div class="map-legend"><span class="legend-dot"></span>城市数据</div>
           <div class="tooltip" id="mapTooltip"></div>
         </div>
       </div>
@@ -400,6 +407,7 @@
     });
 
     async function loadStats() {
+      document.body.classList.add("loading");
       statusEl.textContent = "加载中...";
       const days = daysEl.value;
       const token = tokenEl.value.trim();
@@ -435,6 +443,8 @@
         document.getElementById("hours").innerHTML = "";
         document.getElementById("weeklyUsage").innerHTML = "";
         document.getElementById("matrix").innerHTML = "";
+      } finally {
+        document.body.classList.remove("loading");
       }
     }
 
