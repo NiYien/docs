@@ -13,6 +13,8 @@ export default async function handler(req, res) {
   const appVersion = String(body.app_version || "").trim();
   const os = String(body.os || "").trim();
   const cameraBrand = String(body.camera_brand || "").trim() || "Other";
+  const cameraModel = String(body.camera_model || "").trim() || "Unknown";
+  const language = String(body.language || "").trim() || "Unknown";
   const anonId = String(body.anon_id || "").trim();
 
   if (!event || event !== "open") {
@@ -30,12 +32,17 @@ export default async function handler(req, res) {
   const ip = getClientIp(req);
   const geo = await lookupGeo(req, ip);
   const city = geo.city || "Unknown";
+  const country = geo.country || "Unknown";
+  const weekKey = getIsoWeekKey(now);
 
   const keyParts = {
     day,
     hour,
     city: normalizeKeyPart(city),
+    country: normalizeKeyPart(country),
     brand: normalizeKeyPart(cameraBrand),
+    model: normalizeKeyPart(cameraModel),
+    language: normalizeKeyPart(language),
     event: normalizeKeyPart(event),
   };
 
@@ -45,9 +52,20 @@ export default async function handler(req, res) {
   const uniqueKeys = buildUniqueKeys(keyParts.city);
   const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "0", 10);
   const uniqueTtlSeconds = uniqueTtlDays > 0 ? uniqueTtlDays * 86400 : 0;
+  const weekUserKey = buildWeekUserKey(weekKey, anonId);
+  const weekTtlDays = parseInt(process.env.TELEMETRY_USER_TTL_DAYS || "120", 10);
+  const weekTtlSeconds = Math.max(weekTtlDays, 1) * 86400;
 
   try {
-    await upstashWrite(keys, ttlSeconds, uniqueKeys, uniqueTtlSeconds, anonId);
+    await upstashWrite(
+      keys,
+      ttlSeconds,
+      uniqueKeys,
+      uniqueTtlSeconds,
+      anonId,
+      weekUserKey,
+      weekTtlSeconds
+    );
   } catch (error) {
     return res.status(500).json({
       error: "Storage error",
@@ -62,6 +80,7 @@ export default async function handler(req, res) {
     day,
     hour,
     city,
+    country,
     event,
     app_version: appVersion || undefined,
     os: os || undefined,
@@ -87,7 +106,7 @@ function getClientIp(req) {
 
 async function lookupGeo(req, ip) {
   const vercelGeo = getVercelGeo(req);
-  if (vercelGeo.city) {
+  if (vercelGeo.city || vercelGeo.country) {
     return vercelGeo;
   }
 
@@ -106,9 +125,13 @@ async function lookupGeo(req, ip) {
 
     const data = await response.json();
     const city = typeof data.city === "string" ? data.city.trim() : "Unknown";
-    return { city: city || "Unknown" };
+    const country = typeof data.country === "string" ? data.country.trim() : "Unknown";
+    return {
+      city: city || "Unknown",
+      country: country || "Unknown",
+    };
   } catch (error) {
-    return { city: "Unknown" };
+    return { city: "Unknown", country: "Unknown" };
   }
 }
 
@@ -134,11 +157,14 @@ function normalizeKeyPart(value) {
   return encodeURIComponent(trimmed);
 }
 
-function buildKeys({ day, hour, city, brand, event }) {
+function buildKeys({ day, hour, city, country, brand, model, language, event }) {
   return [
     `telemetry:day:${day}:city:${city}:brand:${brand}:event:${event}`,
     `telemetry:day:${day}:city:${city}:event:${event}`,
     `telemetry:day:${day}:brand:${brand}:event:${event}`,
+    `telemetry:day:${day}:model:${model}:event:${event}`,
+    `telemetry:day:${day}:lang:${language}:event:${event}`,
+    `telemetry:day:${day}:country:${country}:event:${event}`,
     `telemetry:day:${day}:event:${event}`,
     `telemetry:day:${day}:hour:${hour}:event:${event}`,
   ];
@@ -151,7 +177,29 @@ function buildUniqueKeys(city) {
   ];
 }
 
-async function upstashWrite(keys, ttlSeconds, uniqueKeys, uniqueTtlSeconds, anonId) {
+function buildWeekUserKey(weekKey, anonId) {
+  return `telemetry:week:${weekKey}:user:${anonId}`;
+}
+
+function getIsoWeekKey(date) {
+  const temp = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = temp.getUTCDay() || 7;
+  temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((temp - yearStart) / 86400000 + 1) / 7);
+  const year = temp.getUTCFullYear();
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+
+async function upstashWrite(
+  keys,
+  ttlSeconds,
+  uniqueKeys,
+  uniqueTtlSeconds,
+  anonId,
+  weekUserKey,
+  weekTtlSeconds
+) {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -171,6 +219,9 @@ async function upstashWrite(keys, ttlSeconds, uniqueKeys, uniqueTtlSeconds, anon
       pipeline.push(["EXPIRE", key, uniqueTtlSeconds]);
     }
   }
+
+  pipeline.push(["INCR", weekUserKey]);
+  pipeline.push(["EXPIRE", weekUserKey, weekTtlSeconds]);
 
   const response = await fetch(`${url}/pipeline`, {
     method: "POST",

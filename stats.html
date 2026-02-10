@@ -120,6 +120,7 @@
     .span-7 { grid-column: span 7; }
     .span-5 { grid-column: span 5; }
     .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
     .span-12 { grid-column: span 12; }
 
     .kpi {
@@ -296,13 +297,25 @@
         <h2>City Summary</h2>
         <div id="cities"></div>
       </div>
-      <div class="card span-6">
+      <div class="card span-4">
         <h2>Top Camera Brands</h2>
         <div id="brands"></div>
+      </div>
+      <div class="card span-4">
+        <h2>Top Camera Models</h2>
+        <div id="models"></div>
+      </div>
+      <div class="card span-4">
+        <h2>Top Countries</h2>
+        <div id="countries"></div>
       </div>
       <div class="card span-6">
         <h2>Hourly Distribution (UTC)</h2>
         <div id="hours"></div>
+      </div>
+      <div class="card span-6">
+        <h2>Weekly Usage (People)</h2>
+        <div id="weeklyUsage"></div>
       </div>
       <div class="card span-12">
         <h2>City x Brand Matrix (Top 10 Cities / Top 8 Brands)</h2>
@@ -396,7 +409,10 @@
         renderKpis(data);
         renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {});
         renderTable("brands", data.brand_totals || {}, "Brand", "Opens");
+        renderTable("models", data.model_totals || {}, "Model", "Opens");
+        renderTable("countries", data.country_totals || {}, "Country", "Opens");
         renderHours("hours", data.hour_totals || []);
+        renderWeeklyUsage("weeklyUsage", data.weekly_usage || {});
         renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
         await renderMap(data);
         statusEl.textContent = `Updated (UTC days: ${data.days ? data.days.join(", ") : ""})`;
@@ -413,12 +429,17 @@
       const uniquePeople = data.global_unique_total || 0;
       const activeCities = Object.keys(cityTotals).length;
       const activeBrands = Object.keys(brandTotals).length;
+      const weeklyUsage = data.weekly_usage || {};
+      const weeklyUsers = weeklyUsage.total_users || 0;
+      const heavyRatio = weeklyUsage.heavy_ratio || 0;
 
       kpiEl.innerHTML = [
         buildKpi("Unique People", uniquePeople),
         buildKpi("Total Opens", totalOpens),
         buildKpi("Active Cities", activeCities),
         buildKpi("Active Brands", activeBrands),
+        buildKpi("Weekly Active Users", weeklyUsers),
+        buildKpi("Heavy Ratio", `${Math.round(heavyRatio * 100)}%`),
       ].join("");
     }
 
@@ -512,6 +533,45 @@
       });
     }
 
+    function renderWeeklyUsage(targetId, weeklyUsage) {
+      const container = document.getElementById(targetId);
+      const buckets = weeklyUsage.buckets || {};
+      const total = weeklyUsage.total_users || 0;
+
+      if (!total) {
+        container.innerHTML = "<p class=\"hint\">No data</p>";
+        return;
+      }
+
+      const rows = [
+        ["1", buckets["1"] || 0],
+        ["2-3", buckets["2-3"] || 0],
+        ["4-6", buckets["4-6"] || 0],
+        ["7-9", buckets["7-9"] || 0],
+        ["10+", buckets["10+"] || 0],
+      ];
+
+      const table = document.createElement("table");
+      const header = document.createElement("tr");
+      header.innerHTML = `<th>Opens/Week</th><th>People</th><th>Share</th>`;
+      table.appendChild(header);
+
+      rows.forEach(([label, count]) => {
+        const ratio = total ? Math.round((count / total) * 100) : 0;
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${label}</td><td>${count}</td><td>${ratio}%</td>`;
+        table.appendChild(row);
+      });
+
+      const summary = document.createElement("p");
+      summary.className = "hint";
+      summary.textContent = `Week ${weeklyUsage.week || ""} · Heavy >= ${weeklyUsage.heavy_threshold || 0}`;
+
+      container.innerHTML = "";
+      container.appendChild(table);
+      container.appendChild(summary);
+    }
+
     function renderMatrix(targetId, matrix, cityTotals, brandTotals) {
       const container = document.getElementById(targetId);
       const topCities = pickTop(cityTotals, 10);
@@ -589,8 +649,10 @@
     async function initMap() {
       const width = mapShell.clientWidth;
       const height = Math.max(mapShell.clientHeight, 360);
-      mapShell.innerHTML = "";
-      mapShell.appendChild(tooltipEl);
+      const existingSvg = mapShell.querySelector("svg");
+      if (existingSvg) {
+        existingSvg.remove();
+      }
 
       mapSvg = d3
         .select(mapShell)
@@ -686,9 +748,13 @@
       const {
         city_totals: cityTotals = {},
         brand_totals: brandTotals = {},
+        model_totals: modelTotals = {},
+        language_totals: languageTotals = {},
+        country_totals: countryTotals = {},
         hour_totals: hourTotals = [],
         city_brand_totals: cityBrand = {},
         city_unique_totals: cityUnique = {},
+        weekly_usage: weeklyUsage = {},
       } = lastPayload;
 
       Object.entries(cityTotals).forEach(([city, count]) => {
@@ -703,6 +769,18 @@
         lines.push(`brand,${csvEscape(cleanLabel(brand))},,${count}`);
       });
 
+      Object.entries(modelTotals).forEach(([model, count]) => {
+        lines.push(`model,${csvEscape(cleanLabel(model))},,${count}`);
+      });
+
+      Object.entries(languageTotals).forEach(([lang, count]) => {
+        lines.push(`language,${csvEscape(cleanLabel(lang))},,${count}`);
+      });
+
+      Object.entries(countryTotals).forEach(([country, count]) => {
+        lines.push(`country,${csvEscape(cleanLabel(country))},,${count}`);
+      });
+
       hourTotals.forEach((count, hour) => {
         lines.push(`hour,${String(hour).padStart(2, "0")},,${count}`);
       });
@@ -712,6 +790,12 @@
           lines.push(`city_brand,${csvEscape(cleanLabel(city))},${csvEscape(cleanLabel(brand))},${count}`);
         });
       });
+
+      if (weeklyUsage && weeklyUsage.buckets) {
+        Object.entries(weeklyUsage.buckets).forEach(([bucket, count]) => {
+          lines.push(`weekly_bucket,${bucket},,${count}`);
+        });
+      }
 
       const blob = new Blob([lines.join("\n")], { type: "text/csv" });
       downloadBlob(blob, "telemetry-stats.csv");

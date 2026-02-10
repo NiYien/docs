@@ -14,6 +14,7 @@ export default async function handler(req, res) {
 
   const dayQuery = String(req.query.day || "").trim();
   const daysQuery = String(req.query.days || "7").trim();
+  const weekQuery = String(req.query.week || "").trim();
   const days = clampNumber(parseInt(daysQuery, 10) || 7, 1, 30);
 
   const dayList = dayQuery ? [normalizeDay(dayQuery)] : buildDayList(days);
@@ -22,7 +23,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const results = await collectStats(dayList);
+    const results = await collectStats(dayList, weekQuery);
     return res.status(200).json({ ok: true, days: dayList, ...results });
   } catch (error) {
     return res.status(500).json({ error: "Stats error" });
@@ -54,32 +55,49 @@ function buildDayList(days) {
   return list;
 }
 
-async function collectStats(dayList) {
+async function collectStats(dayList, weekQuery) {
   const cityTotals = {};
   const brandTotals = {};
+  const modelTotals = {};
+  const languageTotals = {};
+  const countryTotals = {};
   const cityBrandTotals = {};
   const hourTotals = Array.from({ length: 24 }, () => 0);
 
   for (const day of dayList) {
     const cityBrandPattern = `telemetry:day:${day}:city:*:brand:*:event:open`;
+    const modelPattern = `telemetry:day:${day}:model:*:event:open`;
+    const languagePattern = `telemetry:day:${day}:lang:*:event:open`;
+    const countryPattern = `telemetry:day:${day}:country:*:event:open`;
     const hourPattern = `telemetry:day:${day}:hour:*:event:open`;
 
     const cityBrandKeys = await scanKeys(cityBrandPattern);
+    const modelKeys = await scanKeys(modelPattern);
+    const languageKeys = await scanKeys(languagePattern);
+    const countryKeys = await scanKeys(countryPattern);
     const hourKeys = await scanKeys(hourPattern);
 
     await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals);
+    await accumulateSingleTotals(modelKeys, modelTotals, "model");
+    await accumulateSingleTotals(languageKeys, languageTotals, "lang");
+    await accumulateSingleTotals(countryKeys, countryTotals, "country");
     await accumulateHours(hourKeys, hourTotals);
   }
 
   const uniqueTotals = await collectUniqueTotals(cityTotals);
+  const weeklyUsage = await collectWeeklyUsage(weekQuery);
 
   return {
     city_totals: cityTotals,
     brand_totals: brandTotals,
+    model_totals: modelTotals,
+    language_totals: languageTotals,
+    country_totals: countryTotals,
     city_brand_totals: cityBrandTotals,
     hour_totals: hourTotals,
     city_unique_totals: uniqueTotals.cityUniqueTotals,
     global_unique_total: uniqueTotals.globalUniqueTotal,
+    weekly_usage: weeklyUsage,
   };
 }
 
@@ -105,6 +123,27 @@ async function accumulateCityBrand(keys, cityTotals, brandTotals, cityBrandTotal
     }
     cityBrandTotals[parsed.city][parsed.brand] =
       (cityBrandTotals[parsed.city][parsed.brand] || 0) + count;
+  }
+}
+
+async function accumulateSingleTotals(keys, totals, label) {
+  if (!keys.length) {
+    return;
+  }
+
+  const values = await getValues(keys);
+  for (let i = 0; i < keys.length; i += 1) {
+    const count = parseInt(values[i] || "0", 10);
+    if (!count) {
+      continue;
+    }
+
+    const item = parseSingleKey(keys[i], label);
+    if (!item) {
+      continue;
+    }
+
+    totals[item] = (totals[item] || 0) + count;
   }
 }
 
@@ -164,6 +203,17 @@ function parseHourKey(key) {
   return hour;
 }
 
+function parseSingleKey(key, label) {
+  const parts = key.split(":");
+  const index = parts.indexOf(label);
+
+  if (index < 0) {
+    return "";
+  }
+
+  return decodeKeyPart(parts[index + 1]);
+}
+
 function decodeKeyPart(value) {
   try {
     return decodeURIComponent(value || "");
@@ -179,46 +229,6 @@ function encodeKeyPart(value) {
   }
 
   return encodeURIComponent(text);
-}
-
-async function collectUniqueTotals(cityTotals) {
-  const cityNames = Object.keys(cityTotals);
-  const cityUniqueTotals = await getCityUniqueTotals(cityNames);
-  const globalUniqueTotal = await getGlobalUniqueTotal();
-
-  return { cityUniqueTotals, globalUniqueTotal };
-}
-
-async function getGlobalUniqueTotal() {
-  const [response] = await upstashPipeline([["SCARD", "telemetry:unique:all"]]);
-  const total = response && response.result ? response.result : 0;
-  return parseInt(total, 10) || 0;
-}
-
-async function getCityUniqueTotals(cityNames) {
-  if (!cityNames.length) {
-    return {};
-  }
-
-  const result = {};
-  const chunkSize = 200;
-
-  for (let i = 0; i < cityNames.length; i += chunkSize) {
-    const chunk = cityNames.slice(i, i + chunkSize);
-    const commands = chunk.map((city) => {
-      const key = `telemetry:unique:city:${encodeKeyPart(city)}`;
-      return ["SCARD", key];
-    });
-
-    const responses = await upstashPipeline(commands);
-    for (let j = 0; j < chunk.length; j += 1) {
-      const response = responses[j];
-      const total = response && response.result ? response.result : 0;
-      result[chunk[j]] = parseInt(total, 10) || 0;
-    }
-  }
-
-  return result;
 }
 
 async function scanKeys(pattern) {
@@ -263,6 +273,113 @@ async function getValues(keys) {
   }
 
   return result;
+}
+
+async function collectUniqueTotals(cityTotals) {
+  const cityNames = Object.keys(cityTotals);
+  const cityUniqueTotals = await getCityUniqueTotals(cityNames);
+  const globalUniqueTotal = await getGlobalUniqueTotal();
+
+  return { cityUniqueTotals, globalUniqueTotal };
+}
+
+async function getGlobalUniqueTotal() {
+  const [response] = await upstashPipeline([["SCARD", "telemetry:unique:all"]]);
+  const total = response && response.result ? response.result : 0;
+  return parseInt(total, 10) || 0;
+}
+
+async function getCityUniqueTotals(cityNames) {
+  if (!cityNames.length) {
+    return {};
+  }
+
+  const result = {};
+  const chunkSize = 200;
+
+  for (let i = 0; i < cityNames.length; i += chunkSize) {
+    const chunk = cityNames.slice(i, i + chunkSize);
+    const commands = chunk.map((city) => {
+      const key = `telemetry:unique:city:${encodeKeyPart(city)}`;
+      return ["SCARD", key];
+    });
+
+    const responses = await upstashPipeline(commands);
+    for (let j = 0; j < chunk.length; j += 1) {
+      const response = responses[j];
+      const total = response && response.result ? response.result : 0;
+      result[chunk[j]] = parseInt(total, 10) || 0;
+    }
+  }
+
+  return result;
+}
+
+async function collectWeeklyUsage(weekQuery) {
+  const weekKey = weekQuery && /^\d{4}-W\d{2}$/.test(weekQuery)
+    ? weekQuery
+    : getIsoWeekKey(new Date());
+
+  const pattern = `telemetry:week:${weekKey}:user:*`;
+  const keys = await scanKeys(pattern);
+  const values = await getValues(keys);
+
+  const buckets = {
+    "1": 0,
+    "2-3": 0,
+    "4-6": 0,
+    "7-9": 0,
+    "10+": 0,
+  };
+
+  let totalUsers = 0;
+  let heavyUsers = 0;
+  const heavyThreshold = 6;
+
+  for (let i = 0; i < values.length; i += 1) {
+    const count = parseInt(values[i] || "0", 10);
+    if (!count) {
+      continue;
+    }
+
+    totalUsers += 1;
+    if (count >= heavyThreshold) {
+      heavyUsers += 1;
+    }
+
+    if (count === 1) {
+      buckets["1"] += 1;
+    } else if (count <= 3) {
+      buckets["2-3"] += 1;
+    } else if (count <= 6) {
+      buckets["4-6"] += 1;
+    } else if (count <= 9) {
+      buckets["7-9"] += 1;
+    } else {
+      buckets["10+"] += 1;
+    }
+  }
+
+  const ratio = totalUsers ? Math.round((heavyUsers / totalUsers) * 1000) / 1000 : 0;
+
+  return {
+    week: weekKey,
+    total_users: totalUsers,
+    heavy_users: heavyUsers,
+    heavy_ratio: ratio,
+    heavy_threshold: heavyThreshold,
+    buckets,
+  };
+}
+
+function getIsoWeekKey(date) {
+  const temp = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = temp.getUTCDay() || 7;
+  temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((temp - yearStart) / 86400000 + 1) / 7);
+  const year = temp.getUTCFullYear();
+  return `${year}-W${String(week).padStart(2, "0")}`;
 }
 
 async function upstashPipeline(commands) {
