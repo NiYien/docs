@@ -46,7 +46,12 @@ export default async function handler(req, res) {
   try {
     await upstashIncr(keys, ttlSeconds);
   } catch (error) {
-    return res.status(500).json({ error: "Storage error" });
+    return res.status(500).json({
+      error: "Storage error",
+      detail: error.message || String(error),
+      has_url: !!process.env.UPSTASH_REDIS_REST_URL,
+      has_token: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
   }
 
   return res.status(200).json({
