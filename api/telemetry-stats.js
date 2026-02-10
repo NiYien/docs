@@ -71,11 +71,15 @@ async function collectStats(dayList) {
     await accumulateHours(hourKeys, hourTotals);
   }
 
+  const uniqueTotals = await collectUniqueTotals(cityTotals);
+
   return {
     city_totals: cityTotals,
     brand_totals: brandTotals,
     city_brand_totals: cityBrandTotals,
     hour_totals: hourTotals,
+    city_unique_totals: uniqueTotals.cityUniqueTotals,
+    global_unique_total: uniqueTotals.globalUniqueTotal,
   };
 }
 
@@ -166,6 +170,55 @@ function decodeKeyPart(value) {
   } catch (error) {
     return "";
   }
+}
+
+function encodeKeyPart(value) {
+  const text = String(value || "").trim().slice(0, 64);
+  if (!text) {
+    return "Unknown";
+  }
+
+  return encodeURIComponent(text);
+}
+
+async function collectUniqueTotals(cityTotals) {
+  const cityNames = Object.keys(cityTotals);
+  const cityUniqueTotals = await getCityUniqueTotals(cityNames);
+  const globalUniqueTotal = await getGlobalUniqueTotal();
+
+  return { cityUniqueTotals, globalUniqueTotal };
+}
+
+async function getGlobalUniqueTotal() {
+  const [response] = await upstashPipeline([["SCARD", "telemetry:unique:all"]]);
+  const total = response && response.result ? response.result : 0;
+  return parseInt(total, 10) || 0;
+}
+
+async function getCityUniqueTotals(cityNames) {
+  if (!cityNames.length) {
+    return {};
+  }
+
+  const result = {};
+  const chunkSize = 200;
+
+  for (let i = 0; i < cityNames.length; i += chunkSize) {
+    const chunk = cityNames.slice(i, i + chunkSize);
+    const commands = chunk.map((city) => {
+      const key = `telemetry:unique:city:${encodeKeyPart(city)}`;
+      return ["SCARD", key];
+    });
+
+    const responses = await upstashPipeline(commands);
+    for (let j = 0; j < chunk.length; j += 1) {
+      const response = responses[j];
+      const total = response && response.result ? response.result : 0;
+      result[chunk[j]] = parseInt(total, 10) || 0;
+    }
+  }
+
+  return result;
 }
 
 async function scanKeys(pattern) {

@@ -42,9 +42,12 @@ export default async function handler(req, res) {
   const keys = buildKeys(keyParts);
   const ttlDays = parseInt(process.env.TELEMETRY_TTL_DAYS || "90", 10);
   const ttlSeconds = Math.max(ttlDays, 1) * 86400;
+  const uniqueKeys = buildUniqueKeys(keyParts.city);
+  const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "0", 10);
+  const uniqueTtlSeconds = uniqueTtlDays > 0 ? uniqueTtlDays * 86400 : 0;
 
   try {
-    await upstashIncr(keys, ttlSeconds);
+    await upstashWrite(keys, ttlSeconds, uniqueKeys, uniqueTtlSeconds, anonId);
   } catch (error) {
     return res.status(500).json({
       error: "Storage error",
@@ -141,7 +144,14 @@ function buildKeys({ day, hour, city, brand, event }) {
   ];
 }
 
-async function upstashIncr(keys, ttlSeconds) {
+function buildUniqueKeys(city) {
+  return [
+    "telemetry:unique:all",
+    `telemetry:unique:city:${city}`,
+  ];
+}
+
+async function upstashWrite(keys, ttlSeconds, uniqueKeys, uniqueTtlSeconds, anonId) {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -153,6 +163,13 @@ async function upstashIncr(keys, ttlSeconds) {
   for (const key of keys) {
     pipeline.push(["INCR", key]);
     pipeline.push(["EXPIRE", key, ttlSeconds]);
+  }
+
+  for (const key of uniqueKeys) {
+    pipeline.push(["SADD", key, anonId]);
+    if (uniqueTtlSeconds > 0) {
+      pipeline.push(["EXPIRE", key, uniqueTtlSeconds]);
+    }
   }
 
   const response = await fetch(`${url}/pipeline`, {

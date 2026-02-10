@@ -18,6 +18,10 @@
       --accent-2: #1d9bf0;
       --card: #ffffffcc;
       --border: #e7ded0;
+      --map-bg-1: #0f1626;
+      --map-bg-2: #0a0f1f;
+      --map-land: #1f2a44;
+      --map-grid: rgba(255, 255, 255, 0.08);
     }
 
     * {
@@ -36,7 +40,7 @@
     }
 
     .shell {
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
@@ -118,12 +122,38 @@
     .span-6 { grid-column: span 6; }
     .span-12 { grid-column: span 12; }
 
+    .kpi {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .kpi div {
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+    }
+
+    .kpi h3 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+
+    .kpi strong {
+      font-size: 20px;
+    }
+
     .map-shell {
       position: relative;
-      border-radius: 16px;
+      border-radius: 18px;
       overflow: hidden;
-      background: linear-gradient(120deg, #0f1b2d, #101b36 40%, #0a0f1f);
+      background: radial-gradient(circle at top, #1b2c4a, var(--map-bg-1));
       min-height: 360px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .map-shell svg {
@@ -132,14 +162,35 @@
       display: block;
     }
 
-    .map-point {
+    .map-overlay {
       position: absolute;
-      transform: translate(-50%, -50%);
+      inset: 0;
+      background-image: radial-gradient(var(--map-grid) 1px, transparent 1px);
+      background-size: 26px 26px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .map-legend {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(10, 14, 24, 0.75);
+      color: #d7d7e5;
+      font-size: 12px;
+      padding: 8px 12px;
       border-radius: 999px;
-      background: radial-gradient(circle, rgba(255, 107, 44, 0.9), rgba(255, 107, 44, 0.2));
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      box-shadow: 0 0 12px rgba(255, 107, 44, 0.5);
-      cursor: pointer;
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(255, 107, 44, 0.8);
     }
 
     .tooltip {
@@ -150,11 +201,11 @@
       padding: 8px 10px;
       border-radius: 10px;
       font-size: 12px;
-      max-width: 220px;
-      transform: translate(-50%, -120%);
+      transform: translate(-50%, -130%);
       opacity: 0;
       transition: opacity 0.15s ease;
       white-space: nowrap;
+      z-index: 2;
     }
 
     .tooltip.visible {
@@ -197,33 +248,6 @@
       color: var(--ink-2);
     }
 
-    .legend {
-      display: flex;
-      gap: 12px;
-      font-size: 13px;
-      color: #d7d7e5;
-      padding: 10px 12px;
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: rgba(15, 18, 30, 0.65);
-      border-radius: 999px;
-    }
-
-    .legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 10px rgba(255, 107, 44, 0.7);
-    }
-
     @media (max-width: 980px) {
       .span-7,
       .span-5,
@@ -237,7 +261,7 @@
   <div class="shell">
     <header>
       <h1>Telemetry Atlas</h1>
-      <p>City opens, brand frequency, and hourly usage (UTC).</p>
+      <p>People, opens, brand frequency, and hourly usage (UTC).</p>
       <div class="controls">
         <label>
           Token
@@ -256,28 +280,15 @@
         <button id="exportCsv" class="ghost">Export CSV</button>
         <span class="hint" id="status">Loading...</span>
       </div>
+      <div class="kpi" id="kpi"></div>
     </header>
 
     <section class="grid">
       <div class="card span-7">
-        <h2>Global City Activity</h2>
+        <h2>Global Activity</h2>
         <div class="map-shell" id="mapShell">
-          <svg viewBox="0 0 1000 520" aria-hidden="true">
-            <defs>
-              <linearGradient id="land" x1="0" x2="1">
-                <stop offset="0" stop-color="#1f2a44" />
-                <stop offset="1" stop-color="#253558" />
-              </linearGradient>
-            </defs>
-            <path fill="url(#land)" opacity="0.9" d="M82 132l160-50 90 40 60-20 80 40-30 40 60 30 70-20 70 40-40 60-90 10-40 50-120 20-60-30-60 10-60-40-90-50 20-50z" />
-            <path fill="url(#land)" opacity="0.85" d="M560 120l130-30 140 50 110-20 40 60-60 70-160 10-80 40-120-50 20-60-20-40z" />
-            <path fill="url(#land)" opacity="0.8" d="M140 320l120-20 110 40-30 60-120 40-120-20-30-60 70-40z" />
-            <path fill="url(#land)" opacity="0.8" d="M690 320l110-30 120 30-20 70-130 50-90-40 10-80z" />
-            <path fill="url(#land)" opacity="0.7" d="M820 420l80-10 60 40-20 50-80 10-60-30 20-60z" />
-          </svg>
-          <div class="legend">
-            <span><span class="dot"></span>More opens</span>
-          </div>
+          <div class="map-overlay"></div>
+          <div class="map-legend"><span class="legend-dot"></span>More opens</div>
           <div class="tooltip" id="mapTooltip"></div>
         </div>
       </div>
@@ -300,6 +311,8 @@
     </section>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script>
     const statusEl = document.getElementById("status");
     const daysEl = document.getElementById("days");
@@ -309,45 +322,46 @@
     const exportCsvEl = document.getElementById("exportCsv");
     const mapShell = document.getElementById("mapShell");
     const tooltipEl = document.getElementById("mapTooltip");
+    const kpiEl = document.getElementById("kpi");
     let lastPayload = null;
+    let mapReady = false;
+    let mapSvg = null;
+    let mapProjection = null;
+    let mapPath = null;
+    let mapPointsLayer = null;
 
-    const cityMap = {
-      Beijing: { x: 720, y: 170 },
-      Shanghai: { x: 760, y: 200 },
-      Guangzhou: { x: 720, y: 240 },
-      Shenzhen: { x: 735, y: 250 },
-      Chengdu: { x: 670, y: 210 },
-      Hangzhou: { x: 760, y: 210 },
-      Wuhan: { x: 720, y: 210 },
-      HongKong: { x: 745, y: 245 },
-      "Hong Kong": { x: 745, y: 245 },
-      Taipei: { x: 780, y: 230 },
-      Tokyo: { x: 840, y: 190 },
-      Seoul: { x: 810, y: 170 },
-      Singapore: { x: 780, y: 300 },
-      Bangkok: { x: 730, y: 260 },
-      Delhi: { x: 620, y: 220 },
-      Mumbai: { x: 600, y: 250 },
-      Dubai: { x: 560, y: 230 },
-      Moscow: { x: 590, y: 150 },
-      London: { x: 450, y: 170 },
-      Paris: { x: 470, y: 180 },
-      Berlin: { x: 500, y: 170 },
-      Madrid: { x: 450, y: 210 },
-      Rome: { x: 500, y: 210 },
-      Istanbul: { x: 530, y: 200 },
-      NewYork: { x: 260, y: 190 },
-      "New York": { x: 260, y: 190 },
-      Toronto: { x: 250, y: 170 },
-      LosAngeles: { x: 160, y: 210 },
-      "Los Angeles": { x: 160, y: 210 },
-      Chicago: { x: 230, y: 200 },
-      MexicoCity: { x: 200, y: 240 },
-      "Mexico City": { x: 200, y: 240 },
-      SaoPaulo: { x: 320, y: 320 },
-      "Sao Paulo": { x: 320, y: 320 },
-      Sydney: { x: 880, y: 370 },
-      Melbourne: { x: 850, y: 380 },
+    const cityCoords = {
+      Beijing: [116.4074, 39.9042],
+      Shanghai: [121.4737, 31.2304],
+      Guangzhou: [113.2644, 23.1291],
+      Shenzhen: [114.0579, 22.5431],
+      Chengdu: [104.0665, 30.5723],
+      Hangzhou: [120.1551, 30.2741],
+      Wuhan: [114.3055, 30.5928],
+      "Hong Kong": [114.1694, 22.3193],
+      Taipei: [121.5654, 25.0330],
+      Tokyo: [139.6503, 35.6762],
+      Seoul: [126.9780, 37.5665],
+      Singapore: [103.8198, 1.3521],
+      Bangkok: [100.5018, 13.7563],
+      Delhi: [77.1025, 28.7041],
+      Mumbai: [72.8777, 19.0760],
+      Dubai: [55.2708, 25.2048],
+      Moscow: [37.6173, 55.7558],
+      London: [-0.1276, 51.5072],
+      Paris: [2.3522, 48.8566],
+      Berlin: [13.4050, 52.5200],
+      Madrid: [-3.7038, 40.4168],
+      Rome: [12.4964, 41.9028],
+      Istanbul: [28.9784, 41.0082],
+      "New York": [-74.0060, 40.7128],
+      Toronto: [-79.3832, 43.6532],
+      "Los Angeles": [-118.2437, 34.0522],
+      Chicago: [-87.6298, 41.8781],
+      "Mexico City": [-99.1332, 19.4326],
+      "Sao Paulo": [-46.6333, -23.5505],
+      Sydney: [151.2093, -33.8688],
+      Melbourne: [144.9631, -37.8136],
     };
 
     tokenEl.value = localStorage.getItem("telemetry_stats_token") || "";
@@ -359,6 +373,11 @@
     daysEl.addEventListener("change", () => loadStats());
     exportJsonEl.addEventListener("click", () => exportJson());
     exportCsvEl.addEventListener("click", () => exportCsv());
+    window.addEventListener("resize", () => {
+      if (mapReady && lastPayload) {
+        renderMap(lastPayload);
+      }
+    });
 
     async function loadStats() {
       statusEl.textContent = "Loading...";
@@ -367,20 +386,19 @@
       const headers = token ? { "X-Stats-Token": token } : {};
 
       try {
-        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}`, {
-          headers,
-        });
+        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}`, { headers });
         if (!response.ok) {
           throw new Error("Bad response");
         }
 
         const data = await response.json();
         lastPayload = data;
-        renderCitySummary(data.city_totals || {}, data.city_brand_totals || {});
+        renderKpis(data);
+        renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {});
         renderTable("brands", data.brand_totals || {}, "Brand", "Opens");
         renderHours("hours", data.hour_totals || []);
         renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
-        renderMap(data.city_totals || {}, data.city_brand_totals || {});
+        await renderMap(data);
         statusEl.textContent = `Updated (UTC days: ${data.days ? data.days.join(", ") : ""})`;
       } catch (error) {
         lastPayload = null;
@@ -388,14 +406,35 @@
       }
     }
 
-    function renderCitySummary(cityTotals, cityBrandTotals) {
+    function renderKpis(data) {
+      const cityTotals = data.city_totals || {};
+      const brandTotals = data.brand_totals || {};
+      const totalOpens = Object.values(cityTotals).reduce((sum, val) => sum + (val || 0), 0);
+      const uniquePeople = data.global_unique_total || 0;
+      const activeCities = Object.keys(cityTotals).length;
+      const activeBrands = Object.keys(brandTotals).length;
+
+      kpiEl.innerHTML = [
+        buildKpi("Unique People", uniquePeople),
+        buildKpi("Total Opens", totalOpens),
+        buildKpi("Active Cities", activeCities),
+        buildKpi("Active Brands", activeBrands),
+      ].join("");
+    }
+
+    function buildKpi(label, value) {
+      return `<div><h3>${label}</h3><strong>${value}</strong></div>`;
+    }
+
+    function renderCitySummary(cityTotals, cityUniqueTotals, cityBrandTotals) {
       const container = document.getElementById("cities");
       const entries = Object.entries(cityTotals)
         .map(([city, count]) => {
           const brands = Object.keys(cityBrandTotals[city] || {}).length;
-          return [city, count, brands];
+          const people = cityUniqueTotals[city] || 0;
+          return [city, people, count, brands];
         })
-        .sort((a, b) => b[1] - a[1])
+        .sort((a, b) => b[2] - a[2])
         .slice(0, 12);
 
       if (!entries.length) {
@@ -405,12 +444,12 @@
 
       const table = document.createElement("table");
       const header = document.createElement("tr");
-      header.innerHTML = "<th>City</th><th>Opens</th><th>Brands</th>";
+      header.innerHTML = "<th>City</th><th>People</th><th>Opens</th><th>Brands</th>";
       table.appendChild(header);
 
-      for (const [city, count, brands] of entries) {
+      for (const [city, people, count, brands] of entries) {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${escapeHtml(cleanLabel(city))}</td><td>${count}</td><td>${brands}</td>`;
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(city))}</td><td>${people}</td><td>${count}</td><td>${brands}</td>`;
         table.appendChild(row);
       }
 
@@ -505,57 +544,105 @@
       container.appendChild(table);
     }
 
-    function renderMap(cityTotals, cityBrandTotals) {
-      clearMapPoints();
+    async function renderMap(data) {
+      const cityTotals = data.city_totals || {};
+      const cityUniqueTotals = data.city_unique_totals || {};
+      const cityBrandTotals = data.city_brand_totals || {};
+
+      if (!mapReady) {
+        await initMap();
+      }
+
+      mapPointsLayer.selectAll("circle").remove();
+
       const entries = Object.entries(cityTotals)
-        .map(([city, count]) => {
+        .map(([city, opens]) => {
+          const people = cityUniqueTotals[city] || 0;
           const brands = Object.keys(cityBrandTotals[city] || {}).length;
-          return [city, count, brands];
+          return { city, opens, people, brands };
         })
-        .filter(([city]) => city && city !== "Unknown")
-        .sort((a, b) => b[1] - a[1]);
+        .filter((item) => item.city && item.city !== "Unknown" && cityCoords[cleanLabel(item.city)]);
 
       if (!entries.length) {
         return;
       }
 
-      const max = entries[0][1] || 1;
-      entries.forEach(([city, count, brands]) => {
-        const coords = cityMap[city] || cityMap[cleanLabel(city)];
-        if (!coords) {
-          return;
-        }
+      const maxOpens = Math.max(...entries.map((item) => item.opens || 1));
+      const sizeScale = d3.scaleSqrt().domain([1, maxOpens]).range([4, 18]);
 
-        const size = Math.max(8, Math.round((count / max) * 26));
-        const point = document.createElement("div");
-        point.className = "map-point";
-        point.style.left = `${coords.x / 1000 * 100}%`;
-        point.style.top = `${coords.y / 520 * 100}%`;
-        point.style.width = `${size}px`;
-        point.style.height = `${size}px`;
-        point.dataset.city = city;
-        point.dataset.count = count;
-        point.dataset.brands = brands;
-
-        point.addEventListener("mouseenter", showTooltip);
-        point.addEventListener("mouseleave", hideTooltip);
-        mapShell.appendChild(point);
-      });
+      mapPointsLayer
+        .selectAll("circle")
+        .data(entries)
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[0])
+        .attr("cy", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[1])
+        .attr("r", (d) => sizeScale(d.opens))
+        .attr("fill", "rgba(255,107,44,0.7)")
+        .attr("stroke", "rgba(255,255,255,0.6)")
+        .attr("stroke-width", 1)
+        .attr("filter", "url(#glow)")
+        .on("mouseenter", (event, d) => showTooltip(event, d))
+        .on("mouseleave", hideTooltip);
     }
 
-    function clearMapPoints() {
-      const points = mapShell.querySelectorAll(".map-point");
-      points.forEach((point) => point.remove());
+    async function initMap() {
+      const width = mapShell.clientWidth;
+      const height = Math.max(mapShell.clientHeight, 360);
+      mapShell.innerHTML = "";
+      mapShell.appendChild(tooltipEl);
+
+      mapSvg = d3
+        .select(mapShell)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`);
+
+      const defs = mapSvg.append("defs");
+      const filter = defs.append("filter").attr("id", "glow");
+      filter.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "blur");
+      const merge = filter.append("feMerge");
+      merge.append("feMergeNode").attr("in", "blur");
+      merge.append("feMergeNode").attr("in", "SourceGraphic");
+
+      mapProjection = d3.geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
+      mapPath = d3.geoPath().projection(mapProjection);
+
+      const world = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then((res) => res.json());
+      const land = topojson.feature(world, world.objects.countries);
+
+      mapSvg.append("rect").attr("width", width).attr("height", height).attr("fill", "none");
+
+      mapSvg
+        .append("path")
+        .datum(land)
+        .attr("fill", "var(--map-land)")
+        .attr("opacity", 0.9)
+        .attr("d", mapPath);
+
+      const graticule = d3.geoGraticule().step([20, 20]);
+      mapSvg
+        .append("path")
+        .datum(graticule())
+        .attr("fill", "none")
+        .attr("stroke", "rgba(255,255,255,0.12)")
+        .attr("stroke-width", 0.5)
+        .attr("opacity", 0.6)
+        .attr("d", mapPath);
+
+      mapPointsLayer = mapSvg.append("g");
+      mapReady = true;
     }
 
-    function showTooltip(event) {
-      const point = event.currentTarget;
-      const city = cleanLabel(point.dataset.city || "");
-      const count = point.dataset.count || "0";
-      const brands = point.dataset.brands || "0";
-      tooltipEl.textContent = `${city} · ${count} opens · ${brands} brands`;
-      tooltipEl.style.left = point.style.left;
-      tooltipEl.style.top = point.style.top;
+    function showTooltip(event, data) {
+      const city = cleanLabel(data.city || "");
+      tooltipEl.textContent = `${city} · ${data.people} people · ${data.opens} opens · ${data.brands} brands`;
+      const rect = mapShell.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      tooltipEl.style.left = `${x}px`;
+      tooltipEl.style.top = `${y}px`;
       tooltipEl.classList.add("visible");
     }
 
@@ -601,10 +688,15 @@
         brand_totals: brandTotals = {},
         hour_totals: hourTotals = [],
         city_brand_totals: cityBrand = {},
+        city_unique_totals: cityUnique = {},
       } = lastPayload;
 
       Object.entries(cityTotals).forEach(([city, count]) => {
         lines.push(`city,${csvEscape(cleanLabel(city))},,${count}`);
+      });
+
+      Object.entries(cityUnique).forEach(([city, count]) => {
+        lines.push(`city_unique,${csvEscape(cleanLabel(city))},,${count}`);
       });
 
       Object.entries(brandTotals).forEach(([brand, count]) => {
