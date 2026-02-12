@@ -14,6 +14,16 @@ export default async function handler(req, res) {
   const day = iso.slice(0, 10);
   const hour = iso.slice(11, 13);
   const ip = getClientIp(req);
+  const debugGeo = shouldLogGeo(req);
+  if (debugGeo) {
+    console.log("[telemetry] headers", {
+      x_forwarded_for: req.headers["x-forwarded-for"],
+      x_vercel_ip_city: req.headers["x-vercel-ip-city"],
+      x_vercel_ip_country: req.headers["x-vercel-ip-country"],
+      remote_address: req.socket?.remoteAddress || "",
+      ip,
+    });
+  }
   const geo = await lookupGeo(req, ip);
   const city = geo.city || "Unknown";
   const country = geo.country || "Unknown";
@@ -211,6 +221,7 @@ async function lookupGeo(req, ip) {
   }
 
   const url = `https://ipinfo.io/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
+  const debugGeo = shouldLogGeo(req);
 
   try {
     const response = await fetch(url, { method: "GET" });
@@ -221,6 +232,9 @@ async function lookupGeo(req, ip) {
     const data = await response.json();
     const city = typeof data.city === "string" ? data.city.trim() : "Unknown";
     const country = typeof data.country === "string" ? data.country.trim() : "Unknown";
+    if (debugGeo) {
+      console.log("[telemetry] ipinfo", { ip, city, country, url });
+    }
     return {
       city: city || "Unknown",
       country: country || "Unknown",
@@ -237,10 +251,24 @@ function getVercelGeo(req) {
   try { city = decodeURIComponent(city); } catch (e) {}
   try { country = decodeURIComponent(country); } catch (e) {}
 
+  const debugGeo = shouldLogGeo(req);
+  if (debugGeo) {
+    console.log("[telemetry] vercel-geo", { city, country });
+  }
+
   return {
     city: city || "",
     country: country || "",
   };
+}
+
+function shouldLogGeo(req) {
+  const enabled = String(process.env.TELEMETRY_DEBUG_GEO || "").toLowerCase() === "true";
+  if (!enabled) {
+    return false;
+  }
+
+  return String(req.headers["x-telemetry-debug"] || "") === "1";
 }
 
 function normalizeKeyPart(value) {
