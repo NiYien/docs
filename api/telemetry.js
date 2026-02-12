@@ -220,9 +220,11 @@ function getClientIp(req) {
 }
 
 async function lookupGeo(req, ip) {
-  const vercelGeo = getVercelGeo(req);
-  if (vercelGeo.city || vercelGeo.country) {
-    return vercelGeo;
+  if (shouldUseVercelGeo(req)) {
+    const vercelGeo = getVercelGeo(req);
+    if (vercelGeo.city || vercelGeo.country) {
+      return vercelGeo;
+    }
   }
 
   const token = process.env.IPINFO_TOKEN;
@@ -270,6 +272,20 @@ function getVercelGeo(req) {
     city: city || "",
     country: country || "",
   };
+}
+
+function shouldUseVercelGeo(req) {
+  const cfConnectingIp = req.headers["cf-connecting-ip"];
+  if (typeof cfConnectingIp === "string" && cfConnectingIp.length > 0) {
+    return false;
+  }
+
+  const trueClientIp = req.headers["true-client-ip"];
+  if (typeof trueClientIp === "string" && trueClientIp.length > 0) {
+    return false;
+  }
+
+  return true;
 }
 
 function shouldLogGeo(req) {
