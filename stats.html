@@ -724,9 +724,9 @@
         .attr("cx", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[0])
         .attr("cy", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[1])
         .attr("r", (d) => hitScale(d.opens))
-        .attr("fill", "transparent")
-        .attr("stroke", "rgba(255,255,255,0.4)")
-        .attr("stroke-width", 1)
+        .attr("fill", "rgba(20, 30, 55, 0.9)")
+        .attr("stroke", "rgba(255, 255, 255, 0.9)")
+        .attr("stroke-width", 1.6)
         .attr("cursor", "pointer")
         .on("mouseenter", (event, d) => showTooltip(event, d))
         .on("mouseleave", hideTooltip)
@@ -833,7 +833,7 @@
       const max = Math.max(1, maxOpens);
       const heatScale = d3.scaleQuantize()
         .domain([0, 1])
-        .range(["#1e3a8a", "#2563eb", "#22c55e", "#fbbf24", "#f97316", "#ef4444"]);
+        .range(["#1e3a8a", "#2563eb", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#b91c1c"]);
 
       entries.forEach((item) => {
         const coord = mapProjection(cityCoords[cleanLabel(item.city)]);
@@ -841,24 +841,34 @@
           return;
         }
 
-        const intensity = Math.max(0.1, item.opens / max);
-        const radius = 14 + 30 * intensity;
+        const intensity = Math.max(0.12, item.opens / max);
+        const radius = 16 + 36 * intensity;
         const x = coord[0];
         const y = coord[1];
         const baseColor = d3.color(heatScale(intensity));
         if (!baseColor) {
           return;
         }
-        baseColor.opacity = 0.35 + 0.45 * intensity;
-        const outerColor = baseColor.copy({ opacity: 0.12 * intensity });
+        baseColor.opacity = 0.5 + 0.4 * intensity;
+        const outerColor = baseColor.copy({ opacity: 0.2 * intensity });
         const gradient = mapHeatCtx.createRadialGradient(x, y, 0, x, y, radius);
         gradient.addColorStop(0, baseColor.formatRgb());
-        gradient.addColorStop(0.6, outerColor.formatRgb());
+        gradient.addColorStop(0.7, outerColor.formatRgb());
         gradient.addColorStop(1, "rgba(0,0,0,0)");
         mapHeatCtx.fillStyle = gradient;
         mapHeatCtx.beginPath();
         mapHeatCtx.arc(x, y, radius, 0, Math.PI * 2);
         mapHeatCtx.fill();
+
+        mapHeatCtx.save();
+        mapHeatCtx.shadowBlur = 10 + 10 * intensity;
+        mapHeatCtx.shadowColor = baseColor.formatRgb();
+        mapHeatCtx.strokeStyle = baseColor.formatRgb();
+        mapHeatCtx.lineWidth = 1.2;
+        mapHeatCtx.beginPath();
+        mapHeatCtx.arc(x, y, radius * 0.55, 0, Math.PI * 2);
+        mapHeatCtx.stroke();
+        mapHeatCtx.restore();
       });
 
       mapHeatCtx.globalCompositeOperation = "source-over";
