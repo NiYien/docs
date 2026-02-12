@@ -201,6 +201,16 @@ function safeJsonParse(value) {
 }
 
 function getClientIp(req) {
+  const cfConnectingIp = req.headers["cf-connecting-ip"];
+  if (typeof cfConnectingIp === "string" && cfConnectingIp.length > 0) {
+    return cfConnectingIp.trim();
+  }
+
+  const trueClientIp = req.headers["true-client-ip"];
+  if (typeof trueClientIp === "string" && trueClientIp.length > 0) {
+    return trueClientIp.trim();
+  }
+
   const forwarded = req.headers["x-forwarded-for"]; 
   if (typeof forwarded === "string" && forwarded.length > 0) {
     return forwarded.split(",")[0].trim();
