@@ -71,6 +71,20 @@
       align-items: center;
     }
 
+    .controls .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--ink-2);
+    }
+
+    .controls .toggle input {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+    }
+
     .controls input,
     .controls select,
     .controls button {
@@ -171,10 +185,24 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    .map-heat {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.9;
+      mix-blend-mode: screen;
+      z-index: 1;
+    }
+
     .map-shell svg {
       width: 100%;
       height: 100%;
       display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
     }
 
     .map-overlay {
@@ -184,6 +212,7 @@
       background-size: 26px 26px;
       opacity: 0.5;
       pointer-events: none;
+      z-index: 2;
     }
 
     .map-legend {
@@ -198,6 +227,7 @@
       display: inline-flex;
       gap: 10px;
       align-items: center;
+      z-index: 3;
     }
 
     .legend-dot {
@@ -220,7 +250,7 @@
       opacity: 0;
       transition: opacity 0.15s ease;
       white-space: nowrap;
-      z-index: 2;
+      z-index: 4;
     }
 
     .tooltip.visible {
@@ -282,6 +312,10 @@
           Token
           <input id="token" type="password" placeholder="可选" />
         </label>
+        <label class="toggle">
+          <input id="tokenInQuery" type="checkbox" />
+          Token 传 query
+        </label>
         <label>
           天数
           <select id="days">
@@ -303,7 +337,7 @@
         <h2>全球活跃度</h2>
         <div class="map-shell" id="mapShell">
           <div class="map-overlay"></div>
-          <div class="map-legend"><span class="legend-dot"></span>城市数据</div>
+          <div class="map-legend"><span class="legend-dot"></span>热力分布 · 点击城市查看</div>
           <div class="tooltip" id="mapTooltip"></div>
         </div>
       </div>
@@ -345,6 +379,7 @@
     const daysEl = document.getElementById("days");
     const refreshEl = document.getElementById("refresh");
     const tokenEl = document.getElementById("token");
+    const tokenInQueryEl = document.getElementById("tokenInQuery");
     const exportJsonEl = document.getElementById("exportJson");
     const exportCsvEl = document.getElementById("exportCsv");
     const mapShell = document.getElementById("mapShell");
@@ -356,6 +391,9 @@
     let mapProjection = null;
     let mapPath = null;
     let mapPointsLayer = null;
+    let mapHeatCanvas = null;
+    let mapHeatCtx = null;
+    let tooltipPinned = false;
 
     const cityCoords = {
       Beijing: [116.4074, 39.9042],
@@ -392,8 +430,13 @@
     };
 
     tokenEl.value = localStorage.getItem("telemetry_stats_token") || "";
-    tokenEl.addEventListener("change", () => {
+    tokenEl.addEventListener("input", () => {
       localStorage.setItem("telemetry_stats_token", tokenEl.value.trim());
+    });
+
+    tokenInQueryEl.checked = localStorage.getItem("telemetry_stats_token_in_query") === "true";
+    tokenInQueryEl.addEventListener("change", () => {
+      localStorage.setItem("telemetry_stats_token_in_query", String(tokenInQueryEl.checked));
     });
 
     refreshEl.addEventListener("click", () => loadStats());
@@ -412,10 +455,12 @@
       const days = daysEl.value;
       const token = tokenEl.value.trim();
       const headers = token ? { "X-Stats-Token": token } : {};
+      const includeTokenInQuery = tokenInQueryEl.checked;
 
       try {
         const cacheBuster = Date.now();
-        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}&_ts=${cacheBuster}`, { headers });
+        const tokenParam = includeTokenInQuery && token ? `&token=${encodeURIComponent(token)}` : "";
+        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}&_ts=${cacheBuster}${tokenParam}`, { headers });
         if (!response.ok) {
           throw new Error("Bad response");
         }
@@ -654,8 +699,9 @@
       }
 
       const maxOpens = Math.max(...entries.map((item) => item.opens || 1));
-      const sizeScale = d3.scaleSqrt().domain([1, maxOpens]).range([4, 18]);
+      renderHeatmap(entries, maxOpens);
 
+      const hitScale = d3.scaleSqrt().domain([1, maxOpens]).range([4, 10]);
       mapPointsLayer
         .selectAll("circle")
         .data(entries)
@@ -663,13 +709,18 @@
         .append("circle")
         .attr("cx", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[0])
         .attr("cy", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[1])
-        .attr("r", (d) => sizeScale(d.opens))
-        .attr("fill", "rgba(255,107,44,0.7)")
-        .attr("stroke", "rgba(255,255,255,0.6)")
+        .attr("r", (d) => hitScale(d.opens))
+        .attr("fill", "transparent")
+        .attr("stroke", "rgba(255,255,255,0.4)")
         .attr("stroke-width", 1)
-        .attr("filter", "url(#glow)")
+        .attr("cursor", "pointer")
         .on("mouseenter", (event, d) => showTooltip(event, d))
-        .on("mouseleave", hideTooltip);
+        .on("mouseleave", hideTooltip)
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          tooltipPinned = true;
+          showTooltip(event, d, true);
+        });
     }
 
     async function initMap() {
@@ -686,6 +737,13 @@
         .attr("width", width)
         .attr("height", height)
         .attr("viewBox", `0 0 ${width} ${height}`);
+
+      mapHeatCanvas = document.createElement("canvas");
+      mapHeatCanvas.className = "map-heat";
+      mapHeatCanvas.width = width;
+      mapHeatCanvas.height = height;
+      mapHeatCtx = mapHeatCanvas.getContext("2d");
+      mapShell.appendChild(mapHeatCanvas);
 
       const defs = mapSvg.append("defs");
       const filter = defs.append("filter").attr("id", "glow");
@@ -721,9 +779,17 @@
 
       mapPointsLayer = mapSvg.append("g");
       mapReady = true;
+
+      mapShell.addEventListener("click", () => {
+        tooltipPinned = false;
+        hideTooltip();
+      });
     }
 
-    function showTooltip(event, data) {
+    function showTooltip(event, data, pinned = false) {
+      if (!pinned && tooltipPinned) {
+        return;
+      }
       const city = cleanLabel(data.city || "");
       tooltipEl.textContent = `${city} · ${data.people} 人 · ${data.opens} 次 · ${data.brands} 品牌`;
       const rect = mapShell.getBoundingClientRect();
@@ -735,7 +801,53 @@
     }
 
     function hideTooltip() {
-      tooltipEl.classList.remove("visible");
+      if (!tooltipPinned) {
+        tooltipEl.classList.remove("visible");
+      }
+    }
+
+    function renderHeatmap(entries, maxOpens) {
+      if (!mapHeatCtx || !mapHeatCanvas) {
+        return;
+      }
+
+      const width = mapHeatCanvas.width;
+      const height = mapHeatCanvas.height;
+      mapHeatCtx.clearRect(0, 0, width, height);
+      mapHeatCtx.globalCompositeOperation = "lighter";
+
+      const max = Math.max(1, maxOpens);
+      const heatScale = d3.scaleQuantize()
+        .domain([0, 1])
+        .range(["#1e3a8a", "#2563eb", "#22c55e", "#fbbf24", "#f97316", "#ef4444"]);
+
+      entries.forEach((item) => {
+        const coord = mapProjection(cityCoords[cleanLabel(item.city)]);
+        if (!coord) {
+          return;
+        }
+
+        const intensity = Math.max(0.1, item.opens / max);
+        const radius = 14 + 30 * intensity;
+        const x = coord[0];
+        const y = coord[1];
+        const baseColor = d3.color(heatScale(intensity));
+        if (!baseColor) {
+          return;
+        }
+        baseColor.opacity = 0.35 + 0.45 * intensity;
+        const outerColor = baseColor.copy({ opacity: 0.12 * intensity });
+        const gradient = mapHeatCtx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, baseColor.formatRgb());
+        gradient.addColorStop(0.6, outerColor.formatRgb());
+        gradient.addColorStop(1, "rgba(0,0,0,0)");
+        mapHeatCtx.fillStyle = gradient;
+        mapHeatCtx.beginPath();
+        mapHeatCtx.arc(x, y, radius, 0, Math.PI * 2);
+        mapHeatCtx.fill();
+      });
+
+      mapHeatCtx.globalCompositeOperation = "source-over";
     }
 
     function pickTop(totals, limit) {
