@@ -6,8 +6,8 @@ export default async function handler(req, res) {
   }
 
   const requiredToken = process.env.TELEMETRY_STATS_TOKEN;
+  const provided = String(req.headers["x-stats-token"] || req.query.token || "").trim();
   if (requiredToken) {
-    const provided = String(req.headers["x-stats-token"] || req.query.token || "").trim();
     if (!provided || provided !== requiredToken) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     const results = await collectStats(dayList, weekQuery);
-    return res.status(200).json({ ok: true, days: dayList, ...results });
+    return res.status(200).json({ ok: true, days: dayList, auth_required: !!requiredToken, ...results });
   } catch (error) {
     return res.status(500).json({ error: "Stats error" });
   }

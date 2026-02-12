@@ -484,9 +484,13 @@
           console.error("[stats] renderMap failed", mapError);
         }
 
-        statusEl.textContent = mapOk
+        const baseStatus = mapOk
           ? `已更新 (UTC 日期: ${data.days ? data.days.join(", ") : ""})`
           : `已更新 (地图渲染失败 · UTC 日期: ${data.days ? data.days.join(", ") : ""})`;
+        const authWarning = data.auth_required === false && token
+          ? " · 注意：后端未启用 Token 校验"
+          : "";
+        statusEl.textContent = `${baseStatus}${authWarning}`;
       } catch (error) {
         lastPayload = null;
         statusEl.textContent = "加载失败（检查 Token）";
