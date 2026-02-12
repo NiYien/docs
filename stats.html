@@ -475,8 +475,18 @@
         renderHours("hours", data.hour_totals || []);
         renderWeeklyUsage("weeklyUsage", data.weekly_usage || {});
         renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
-        await renderMap(data);
-        statusEl.textContent = `已更新 (UTC 日期: ${data.days ? data.days.join(", ") : ""})`;
+
+        let mapOk = true;
+        try {
+          await renderMap(data);
+        } catch (mapError) {
+          mapOk = false;
+          console.error("[stats] renderMap failed", mapError);
+        }
+
+        statusEl.textContent = mapOk
+          ? `已更新 (UTC 日期: ${data.days ? data.days.join(", ") : ""})`
+          : `已更新 (地图渲染失败 · UTC 日期: ${data.days ? data.days.join(", ") : ""})`;
       } catch (error) {
         lastPayload = null;
         statusEl.textContent = "加载失败（检查 Token）";
