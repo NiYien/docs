@@ -9,7 +9,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   
@@ -25,8 +27,8 @@
   <!-- Header & Controls -->
   <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
     <div>
-      <h1 class="text-3xl font-bold text-blue-600">NiYien Stats</h1>
-      <p class="text-sm text-gray-500">Telemetry Dashboard</p>
+      <h1 class="text-3xl font-bold text-blue-600">NiYien 统计</h1>
+      <p class="text-sm text-gray-500">遥测数据看板</p>
     </div>
     
     <div class="flex flex-col md:flex-row items-center gap-2">
@@ -34,7 +36,7 @@
          <input 
            type="password" 
            v-model="token" 
-           placeholder="Token (Optional)" 
+           placeholder="令牌 (可选)" 
            class="px-3 py-2 rounded text-sm border-none focus:ring-0 w-32"
            @change="saveToken"
          >
@@ -51,8 +53,8 @@
       
       <!-- View Mode Toggle -->
       <div class="flex gap-1 bg-white p-1 rounded-lg shadow">
-         <button @click="viewMode = 'total'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'total' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">Total Opens</button>
-         <button @click="viewMode = 'unique'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'unique' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">Unique Users</button>
+         <button @click="viewMode = 'total'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'total' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">总开启次数</button>
+         <button @click="viewMode = 'unique'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'unique' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">独立用户数</button>
       </div>
     </div>
   </header>
@@ -65,7 +67,7 @@
   <!-- Loading State -->
   <div v-if="loading" class="text-center py-20">
     <div class="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-    <p class="text-gray-500">Crunching numbers...</p>
+    <p class="text-gray-500">正在统计数据...</p>
   </div>
 
   <div v-if="!loading && data" class="space-y-8">
@@ -80,13 +82,13 @@
 
       <!-- Active Cities -->
       <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-         <div class="text-gray-500 text-sm font-medium mb-1">Active Cities</div>
+         <div class="text-gray-500 text-sm font-medium mb-1">活跃城市</div>
          <div class="text-3xl font-bold">{{ Object.keys(currentStats.cities).length }}</div>
       </div>
 
       <!-- Inactive Users (Retention) -->
       <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
-         <div class="text-gray-500 text-sm font-medium leading-tight mb-1">Active / Inactive (30d)</div>
+         <div class="text-gray-500 text-sm font-medium leading-tight mb-1">活跃 / 不活跃 (30天)</div>
          <div class="flex items-baseline gap-2">
             <span class="text-2xl font-bold">{{ data.user_retention?.active_30d || 0 }}</span>
             <span class="text-gray-400 text-sm">/ {{ data.user_retention?.inactive_30d || 0 }}</span>
@@ -95,7 +97,7 @@
 
       <!-- Total Models -->
       <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
-         <div class="text-gray-500 text-sm font-medium mb-1">Active Models</div>
+         <div class="text-gray-500 text-sm font-medium mb-1">活跃相机型号</div>
          <div class="text-3xl font-bold">{{ Object.keys(currentStats.models).length }}</div>
       </div>
     </div>
@@ -103,8 +105,8 @@
     <!-- Map Section -->
     <div class="bg-white p-4 rounded-xl shadow-sm">
       <h2 class="text-xl font-semibold mb-4 text-gray-800 flex justify-between">
-        <span>User Distribution Map</span>
-        <span class="text-sm font-normal text-gray-500 self-center">Showing {{ viewMode === 'unique' ? 'Unique Users' : 'Total Opens' }}</span>
+        <span>用户分布地图</span>
+        <span class="text-sm font-normal text-gray-500 self-center">展示: {{ viewMode === 'unique' ? '独立用户数' : '总开启次数' }}</span>
       </h2>
       <div id="map"></div>
     </div>
@@ -113,7 +115,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- Brands -->
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">Camera Brands</h3>
+        <h3 class="text-lg font-semibold mb-4">相机品牌分布</h3>
         <div class="chart-container">
           <canvas id="brandChart"></canvas>
         </div>
@@ -121,7 +123,7 @@
       
       <!-- Top Models -->
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">Top 10 Models</h3>
+        <h3 class="text-lg font-semibold mb-4">热门型号 Top 10</h3>
         <div class="chart-container">
           <canvas id="modelChart"></canvas>
         </div>
@@ -132,19 +134,19 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- User Retention / Usage Freq -->
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">Weekly User Frequency (Retention)</h3>
+        <h3 class="text-lg font-semibold mb-4">用户活跃频次 (每周)</h3>
         <div class="chart-container">
           <canvas id="usageChart"></canvas>
         </div>
         <p class="text-xs text-gray-400 mt-2 text-center">
-          Heavy Users (6+ opens/week): {{ data.weekly_usage?.heavy_users || 0 }} 
+          重度用户 (6+次/周): {{ data.weekly_usage?.heavy_users || 0 }} 
           ({{ ((data.weekly_usage?.heavy_ratio || 0) * 100).toFixed(1) }}%)
         </p>
       </div>
 
       <!-- Languages -->
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">Language Distribution</h3>
+        <h3 class="text-lg font-semibold mb-4">语言分布</h3>
         <div class="chart-container">
           <canvas id="langChart"></canvas>
         </div>
@@ -153,15 +155,15 @@
 
     <!-- Detailed City Breakdown -->
     <div class="bg-white p-6 rounded-xl shadow-sm overflow-hidden">
-      <h3 class="text-lg font-semibold mb-4">City & Model Breakdown</h3>
+      <h3 class="text-lg font-semibold mb-4">城市详情 Top 50</h3>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-gray-50 border-b">
-              <th class="p-3">City</th>
-              <th class="p-3">Total Opens</th>
-              <th class="p-3">Top Brand</th>
-              <th class="p-3">Top Model</th>
+              <th class="p-3">城市</th>
+              <th class="p-3">数量</th>
+              <th class="p-3">主要品牌</th>
+              <th class="p-3">主要型号</th>
             </tr>
           </thead>
           <tbody>
@@ -198,7 +200,7 @@ const App = {
     ];
 
     let map = null;
-    let markersLayer = null;
+    let markersCluster = null;
     let charts = {};
 
     // Computed Stats based on View Mode
@@ -210,7 +212,7 @@ const App = {
           brands: data.value.brand_unique_totals || {},
           models: data.value.model_unique_totals || {},
           total: data.value.global_unique_total || 0,
-          label: 'Unique Users'
+          label: '独立用户数'
         };
       }
       return {
@@ -218,7 +220,7 @@ const App = {
         brands: data.value.brand_totals || {},
         models: data.value.model_totals || {},
         total: (Object.values(data.value.city_totals || {}).reduce((a,b)=>a+b,0)),
-        label: 'Total Opens'
+        label: '总开启次数'
       };
     });
     
@@ -241,58 +243,128 @@ const App = {
     // Mapbox/OSM Init
     const initMap = () => {
       if (map) return;
-      map = L.map('map').setView([20, 0], 2);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CartoDB',
+      
+      // Initialize map container
+      map = L.map('map', { 
+        minZoom: 2,
+        worldCopyJump: true // Seamless world wrapper
+      }).setView([20, 0], 2);
+      
+      // Using a cleaner, faster tile server (CartoDB Positron)
+      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 19
-      }).addTo(map);
-      markersLayer = L.layerGroup().addTo(map);
+      });
+      tileLayer.addTo(map);
+      
+      // Initialize Cluster Group
+      markersCluster = L.markerClusterGroup({
+        chunkedLoading: true, // Async loading for large datasets (faster UI)
+        maxClusterRadius: 50, // Smaller radius = more detailed clusters
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false, // Cleaner look
+        zoomToBoundsOnClick: true,
+        
+        // Customize the cluster icon to look like a "Heat Blob" with count
+        iconCreateFunction: function(cluster) {
+           const count = cluster.getChildCount();
+           let bgColor = 'bg-blue-500';
+           
+           // Color scale: Blue -> Emerald -> Yellow -> Orange -> Red
+           if (count > 10) bgColor = 'bg-emerald-500';
+           if (count > 50) bgColor = 'bg-yellow-500';
+           if (count > 200) bgColor = 'bg-orange-500';
+           if (count > 1000) bgColor = 'bg-red-500';
+           
+           // Use Tailwind classes inside divIcon? HTML inside divIcon is just string.
+           // We need inline styles or standard CSS since tailwind might not be parsed inside dynamic JS strings if JIT not aware 
+           // (but CDN usually works fine if classes are common). 
+           // Let's use standard Tailwind classes but wrapped safely.
+           
+           /* 
+             Note: Tailwind CDN parses DOM on load. Dynamic content might need a nudge or standard CSS.
+             But background colors are usually safe if used elsewhere.
+             Let's use style attributes to be 100% sure about colors.
+           */
+           
+           let colorHex = '#3b82f6'; // blue-500
+           if (count > 10) colorHex = '#10b981'; // emerald-500
+           if (count > 50) colorHex = '#f59e0b'; // yellow-500
+           if (count > 200) colorHex = '#f97316'; // orange-500
+           if (count > 1000) colorHex = '#ef4444'; // red-500
+
+           return L.divIcon({ 
+             html: `<div style="background-color: ${colorHex};" class="flex items-center justify-center w-10 h-10 text-white rounded-full text-xs font-bold shadow-lg border-2 border-white/50 opacity-90 transition-transform hover:scale-110">
+                      ${count > 999 ? (count/1000).toFixed(1)+'k' : count}
+                   </div>`, 
+             className: 'bg-transparent border-none', // Override default Leaflet box
+             iconSize: L.point(40, 40)
+           });
+        }
+      });
+      
+      map.addLayer(markersCluster);
+    };
+
+    const updateProgressBar = (processed, total, elapsed, layersArray) => {
+       // Optional: could show a loading bar if really heavy
     };
 
     const updateMap = () => {
       if (!map) initMap();
-      markersLayer.clearLayers();
+      markersCluster.clearLayers();
       
       const stats = currentStats.value.cities;
       const coordsMap = data.value.city_coords || {};
-      
+      const newMarkers = [];
+
       Object.entries(stats).forEach(([city, count]) => {
-        // Try exact match or decoded match
-        const rawCity = city; 
         const decCity = decodeURIComponent(city);
+        const latlon = coordsMap[city] || coordsMap[decCity];
         
-        let latlon = coordsMap[rawCity] || coordsMap[decCity];
+        if (!latlon || !latlon.lat) return;
 
-        // Fallback for some known majors if missing and strictly needed
-        if (!latlon && decCity === 'Unknown') return;
+        const lat = parseFloat(latlon.lat);
+        const lon = parseFloat(latlon.lon);
 
-        if (latlon && latlon.lat && latlon.lon) {
-           const lat = parseFloat(latlon.lat);
-           const lon = parseFloat(latlon.lon);
-           
-           // Size marker by log scale
-           const radius = Math.max(5, Math.log(count) * 3);
-           
-           const marker = L.circleMarker([lat, lon], {
-             radius: radius,
-             fillColor: viewMode.value === 'unique' ? '#10b981' : '#3b82f6',
-             color: '#fff',
-             weight: 1,
-             opacity: 1,
-             fillOpacity: 0.7
-           });
-           
-           marker.bindPopup(`
-             <div class="text-sm font-sans">
-               <strong class="block text-base mb-1">${decCity}</strong>
-               ${viewMode.value === 'unique' ? 'Unique Users' : 'Total Opens'}: <b>${count}</b>
-             </div>
-           `);
-           
-           markersLayer.addLayer(marker);
-        }
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        // Leaflet.markercluster supports custom icons for markers too if we want
+        // But default blue pin is fine. 
+        // Maybe color code the pin by intensity?
+        // Let's use CircleMarker instead for cleaner look, but Cluster Group works best with Markers usually
+        // Note: CircleMarker support in MarkerCluster is sometimes tricky. Standard Markers are safest.
+        
+        const marker = L.marker([lat, lon], {
+            title: `${decCity}: ${count}`
+        });
+
+        marker.bindPopup(`
+          <div class="p-2 min-w-[150px]">
+            <h3 class="font-bold text-gray-800 text-base mb-2 border-b pb-2">${decCity}</h3>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-gray-500 text-sm">${viewMode.value === 'unique' ? '独立用户' : '开启次数'}</span>
+              <span class="font-bold text-blue-600 text-lg">${count}</span>
+            </div>
+            <div class="text-xs text-gray-300 mt-2 text-right font-mono">
+               ${lat.toFixed(4)}, ${lon.toFixed(4)}
+            </div>
+          </div>
+        `);
+        newMarkers.push(marker);
       });
+      
+      if (newMarkers.length > 0) {
+        markersCluster.addLayers(newMarkers);
+        // Only fit bounds on initial load effectively
+        if (!window.mapInitialized) {
+           try { 
+             map.fitBounds(markersCluster.getBounds(), { padding: [50, 50] }); 
+             window.mapInitialized = true;
+           } catch(e){}
+        }
+      }
     };
 
     const loadStats = async (days) => {
@@ -312,13 +384,13 @@ const App = {
         
         const json = await res.json();
         data.value = json;
+        loading.value = false;
         
         await nextTick();
         renderAll();
       } catch (e) {
         error.value = e.message;
         console.error(e);
-      } finally {
         loading.value = false;
       }
     };
