@@ -316,6 +316,23 @@ async function collectUniqueTotals({ allowLegacyFallback, dayList, cityTotals, b
     source = "legacy-fallback";
   }
 
+  const cityEstimated = estimateMissingScopedUnique(cityTotals, cityUniqueTotals, globalUniqueTotal);
+  const brandEstimated = estimateMissingScopedUnique(brandTotals, brandUniqueTotals, globalUniqueTotal);
+  const modelEstimated = estimateMissingScopedUnique(modelTotals, modelUniqueTotals, globalUniqueTotal);
+  const countryEstimated = estimateMissingScopedUnique(countryTotals, countryUniqueTotals, globalUniqueTotal);
+
+  cityUniqueTotals = cityEstimated.totals;
+  brandUniqueTotals = brandEstimated.totals;
+  modelUniqueTotals = modelEstimated.totals;
+  countryUniqueTotals = countryEstimated.totals;
+
+  const usedEstimated = cityEstimated.used || brandEstimated.used || modelEstimated.used || countryEstimated.used;
+  if (usedEstimated && source === "day") {
+    source = "day+estimated";
+  } else if (usedEstimated && source === "legacy-fallback") {
+    source = "legacy-fallback+estimated";
+  }
+
   return {
     cityUniqueTotals,
     brandUniqueTotals,
@@ -328,6 +345,84 @@ async function collectUniqueTotals({ allowLegacyFallback, dayList, cityTotals, b
 
 function hasAnyTotals(totals) {
   return Object.values(totals || {}).some((value) => (parseInt(value || "0", 10) || 0) > 0);
+}
+
+function estimateMissingScopedUnique(opensTotals, uniqueTotals, globalUniqueTotal) {
+  const totals = { ...(uniqueTotals || {}) };
+  const labels = Object.entries(opensTotals || {})
+    .filter(([, opens]) => (parseInt(opens || "0", 10) || 0) > 0)
+    .map(([label]) => label);
+
+  if (!labels.length || globalUniqueTotal <= 0) {
+    return { totals, used: false };
+  }
+
+  const missing = [];
+  let knownSum = 0;
+  for (const label of labels) {
+    const opens = parseInt(opensTotals[label] || "0", 10) || 0;
+    const value = parseInt(totals[label] || "0", 10) || 0;
+    if (value > 0) {
+      knownSum += Math.min(value, opens);
+      totals[label] = Math.min(value, opens);
+    } else {
+      missing.push({ label, opens });
+      totals[label] = 0;
+    }
+  }
+
+  if (!missing.length) {
+    return { totals, used: false };
+  }
+
+  missing.sort((a, b) => b.opens - a.opens);
+  let budget = Math.max(globalUniqueTotal - knownSum, 0);
+  if (budget === 0) {
+    budget = Math.min(missing.length, Math.max(1, Math.round(globalUniqueTotal * 0.1)));
+  }
+
+  if (budget <= 0) {
+    return { totals, used: false };
+  }
+
+  if (budget <= missing.length) {
+    for (let i = 0; i < budget; i += 1) {
+      const item = missing[i];
+      totals[item.label] = Math.min(1, item.opens);
+    }
+    return { totals, used: true };
+  }
+
+  for (const item of missing) {
+    totals[item.label] = Math.min(1, item.opens);
+  }
+
+  let remaining = budget - missing.length;
+  const totalMissingOpens = missing.reduce((sum, item) => sum + item.opens, 0);
+  let allocated = 0;
+
+  for (const item of missing) {
+    const share = totalMissingOpens > 0 ? Math.floor((remaining * item.opens) / totalMissingOpens) : 0;
+    const nextValue = Math.min((totals[item.label] || 0) + share, item.opens);
+    allocated += Math.max(0, nextValue - (totals[item.label] || 0));
+    totals[item.label] = nextValue;
+  }
+
+  let left = remaining - allocated;
+  let cursor = 0;
+  while (left > 0 && missing.length) {
+    const item = missing[cursor % missing.length];
+    if ((totals[item.label] || 0) < item.opens) {
+      totals[item.label] += 1;
+      left -= 1;
+    }
+    cursor += 1;
+    if (cursor > missing.length * 4 && left > 0) {
+      break;
+    }
+  }
+
+  return { totals, used: true };
 }
 
 async function getGlobalUniqueTotal(dayList) {

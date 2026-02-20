@@ -472,7 +472,7 @@
         <h2>全球活跃度</h2>
         <div class="map-shell" id="mapShell">
           <div class="map-overlay"></div>
-          <div class="map-legend"><span class="legend-dot"></span>热力分布 · 点击城市查看</div>
+          <div class="map-legend"><span class="legend-dot"></span>热力分布 · 点击国家查看</div>
           <div class="tooltip" id="mapTooltip"></div>
         </div>
       </div>
@@ -564,6 +564,94 @@
       Melbourne: [144.9631, -37.8136],
     };
 
+    const countryCoords = {
+      US: [-98.5795, 39.8283],
+      CA: [-106.3468, 56.1304],
+      MX: [-102.5528, 23.6345],
+      BR: [-51.9253, -14.2350],
+      AR: [-63.6167, -38.4161],
+      CL: [-71.5430, -35.6751],
+      GB: [-3.4360, 55.3781],
+      IE: [-8.2439, 53.4129],
+      FR: [2.2137, 46.2276],
+      DE: [10.4515, 51.1657],
+      IT: [12.5674, 41.8719],
+      ES: [-3.7492, 40.4637],
+      NL: [5.2913, 52.1326],
+      BE: [4.4699, 50.5039],
+      CH: [8.2275, 46.8182],
+      SE: [18.6435, 60.1282],
+      NO: [8.4689, 60.4720],
+      FI: [25.7482, 61.9241],
+      PL: [19.1451, 51.9194],
+      UA: [31.1656, 48.3794],
+      RU: [105.3188, 61.5240],
+      TR: [35.2433, 38.9637],
+      SA: [45.0792, 23.8859],
+      AE: [53.8478, 23.4241],
+      EG: [30.8025, 26.8206],
+      ZA: [22.9375, -30.5595],
+      IN: [78.9629, 20.5937],
+      CN: [104.1954, 35.8617],
+      JP: [138.2529, 36.2048],
+      KR: [127.7669, 35.9078],
+      HK: [114.1095, 22.3964],
+      TW: [120.9605, 23.6978],
+      SG: [103.8198, 1.3521],
+      TH: [100.9925, 15.8700],
+      MY: [101.9758, 4.2105],
+      ID: [113.9213, -0.7893],
+      PH: [121.7740, 12.8797],
+      VN: [108.2772, 14.0583],
+      AU: [133.7751, -25.2744],
+      NZ: [174.8860, -40.9006],
+    };
+
+    const countryAlias = {
+      USA: "US",
+      "UNITED STATES": "US",
+      "UNITED STATES OF AMERICA": "US",
+      UK: "GB",
+      "UNITED KINGDOM": "GB",
+      CHINA: "CN",
+      JAPAN: "JP",
+      KOREA: "KR",
+      "SOUTH KOREA": "KR",
+      TAIWAN: "TW",
+      "HONG KONG": "HK",
+      RUSSIA: "RU",
+      TURKIYE: "TR",
+      TURKEY: "TR",
+      UAE: "AE",
+      "SAUDI ARABIA": "SA",
+      INDIA: "IN",
+      AUSTRALIA: "AU",
+      CANADA: "CA",
+      GERMANY: "DE",
+      FRANCE: "FR",
+      ITALY: "IT",
+      SPAIN: "ES",
+      NETHERLANDS: "NL",
+      SWEDEN: "SE",
+      NORWAY: "NO",
+      FINLAND: "FI",
+      POLAND: "PL",
+      UKRAINE: "UA",
+      BRAZIL: "BR",
+      ARGENTINA: "AR",
+      CHILE: "CL",
+      MEXICO: "MX",
+      SINGAPORE: "SG",
+      THAILAND: "TH",
+      MALAYSIA: "MY",
+      INDONESIA: "ID",
+      PHILIPPINES: "PH",
+      VIETNAM: "VN",
+      "NEW ZEALAND": "NZ",
+      EGYPT: "EG",
+      "SOUTH AFRICA": "ZA",
+    };
+
     tokenEl.value = localStorage.getItem("telemetry_stats_token") || "";
     tokenEl.addEventListener("input", () => {
       localStorage.setItem("telemetry_stats_token", tokenEl.value.trim());
@@ -630,7 +718,10 @@
         const authWarning = data.auth_required === false && token
           ? " · 注意：后端未启用 Token 校验"
           : "";
-        statusEl.textContent = `${baseStatus}${authWarning}`;
+        const uniqueSourceHint = data.unique_source
+          ? ` · 人数口径: ${formatUniqueSource(data.unique_source)}`
+          : "";
+        statusEl.textContent = `${baseStatus}${authWarning}${uniqueSourceHint}`;
       } catch (error) {
         lastPayload = null;
         statusEl.textContent = "加载失败（检查 Token）";
@@ -866,9 +957,8 @@
     }
 
     async function renderMap(data) {
-      const cityTotals = data.city_totals || {};
-      const cityUniqueTotals = data.city_unique_totals || {};
-      const cityBrandTotals = data.city_brand_totals || {};
+      const countryTotals = data.country_totals || {};
+      const countryUniqueTotals = data.country_unique_totals || {};
 
       if (!mapReady) {
         await initMap();
@@ -876,13 +966,14 @@
 
       mapPointsLayer.selectAll("circle").remove();
 
-      const entries = Object.entries(cityTotals)
-        .map(([city, opens]) => {
-          const people = cityUniqueTotals[city] || 0;
-          const brands = Object.keys(cityBrandTotals[city] || {}).length;
-          return { city, opens, people, brands };
+      const entries = Object.entries(countryTotals)
+        .map(([country, opens]) => {
+          const label = cleanLabel(country);
+          const coord = resolveCountryCoord(label);
+          const people = countryUniqueTotals[country] || 0;
+          return { label, opens, people, brands: 0, coord };
         })
-        .filter((item) => item.city && item.city !== "Unknown" && cityCoords[cleanLabel(item.city)]);
+        .filter((item) => item.label && item.label !== "Unknown" && item.coord);
 
       if (!entries.length) {
         return;
@@ -897,8 +988,8 @@
         .data(entries)
         .enter()
         .append("circle")
-        .attr("cx", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[0])
-        .attr("cy", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[1])
+        .attr("cx", (d) => mapProjection(d.coord)[0])
+        .attr("cy", (d) => mapProjection(d.coord)[1])
         .attr("r", (d) => hitScale(d.opens))
         .attr("fill", "rgba(20, 30, 55, 0.9)")
         .attr("stroke", "rgba(255, 255, 255, 0.9)")
@@ -980,8 +1071,10 @@
       if (!pinned && tooltipPinned) {
         return;
       }
-      const city = cleanLabel(data.city || "");
-      tooltipEl.textContent = `${city} · ${data.people} 人 · ${data.opens} 次 · ${data.brands} 品牌`;
+      const label = cleanLabel(data.label || data.city || "");
+      tooltipEl.textContent = data.brands && data.brands > 0
+        ? `${label} · ${data.people} 人 · ${data.opens} 次 · ${data.brands} 品牌`
+        : `${label} · ${data.people} 人 · ${data.opens} 次`;
       const rect = mapShell.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -1012,7 +1105,7 @@
         .range(["#1e3a8a", "#2563eb", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#b91c1c"]);
 
       entries.forEach((item) => {
-        const coord = mapProjection(cityCoords[cleanLabel(item.city)]);
+        const coord = mapProjection(item.coord);
         if (!coord) {
           return;
         }
@@ -1189,6 +1282,32 @@
 
     function normalizeRankMetric(value) {
       return value === "opens" ? "opens" : "people";
+    }
+
+    function resolveCountryCoord(country) {
+      const text = cleanLabel(country || "").trim();
+      if (!text || text === "Unknown") {
+        return null;
+      }
+
+      const upper = text.toUpperCase();
+      const code = /^[A-Z]{2}$/.test(upper) ? upper : (countryAlias[upper] || "");
+      return countryCoords[code] || null;
+    }
+
+    function formatUniqueSource(source) {
+      switch (source) {
+        case "day":
+          return "按天去重";
+        case "day+estimated":
+          return "按天去重 + 缺失估算";
+        case "legacy-fallback":
+          return "旧口径回退";
+        case "legacy-fallback+estimated":
+          return "旧口径回退 + 缺失估算";
+        default:
+          return cleanLabel(source || "未知");
+      }
     }
 
     loadStats();
