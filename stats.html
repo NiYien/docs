@@ -1,530 +1,997 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NiYien Telemetry Stats</title>
-  
-  <!-- CSS Framework & Libs -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>遥测统计面板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    #map { height: 500px; width: 100%; border-radius: 0.5rem; z-index: 1; }
-    .chart-container { position: relative; height: 300px; width: 100%; }
-    [v-cloak] { display: none; }
+    :root {
+      color-scheme: light;
+      --bg-1: #f6f2ea;
+      --bg-2: #f2f6ff;
+      --ink-1: #171717;
+      --ink-2: #4c4a47;
+      --accent: #ff6b2c;
+      --accent-2: #1d9bf0;
+      --card: #ffffffcc;
+      --border: #e7ded0;
+        --map-bg-1: #ffffff;
+        --map-bg-2: #f4f6fb;
+        --map-land: #cfd6e6;
+        --map-grid: rgba(28, 35, 54, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: var(--ink-1);
+      background: radial-gradient(circle at top left, var(--bg-2), transparent 45%),
+        radial-gradient(circle at 15% 20%, #ffe9da, transparent 40%),
+        linear-gradient(135deg, var(--bg-1), #f8f9ff);
+      min-height: 100vh;
+      padding: 48px 20px 72px;
+    }
+
+    .shell {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 3vw, 40px);
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--ink-2);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .controls .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--ink-2);
+    }
+
+    .controls .toggle input {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+    }
+
+    .controls input,
+    .controls select,
+    .controls button {
+      font: inherit;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink-1);
+    }
+
+    .controls button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .controls .ghost {
+      background: #fff;
+      color: var(--ink-1);
+      border: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+      align-items: start;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    body.loading .grid {
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .span-7 { grid-column: span 7; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    .span-12 { grid-column: span 12; }
+
+    .kpi {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .kpi div {
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+    }
+
+    .kpi h3 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+
+    .kpi strong {
+      font-size: 20px;
+    }
+
+    .map-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-shell {
+      flex: 1;
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+        background: #ffffff;
+      min-height: 360px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .map-heat {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.9;
+      mix-blend-mode: screen;
+      z-index: 1;
+    }
+
+    .map-shell svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .map-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(var(--map-grid) 1px, transparent 1px);
+      background-size: 26px 26px;
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .map-legend {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(10, 14, 24, 0.75);
+      color: #d7d7e5;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 3;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(255, 107, 44, 0.8);
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(10, 12, 20, 0.9);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      transform: translate(-50%, -130%);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+      z-index: 4;
+    }
+
+    .tooltip.visible {
+      opacity: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      min-width: 8px;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+
+    @media (max-width: 980px) {
+      .span-7,
+      .span-5,
+      .span-6 {
+        grid-column: span 12;
+      }
+    }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-
-<div id="app" v-cloak class="min-h-screen p-4 md:p-8">
-  <!-- Header & Controls -->
-  <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-    <div>
-      <h1 class="text-3xl font-bold text-blue-600">NiYien 统计</h1>
-      <p class="text-sm text-gray-500">遥测数据看板</p>
-    </div>
-    
-    <div class="flex flex-col md:flex-row items-center gap-2">
-      <div class="flex gap-2 bg-white p-1 rounded-lg shadow">
-         <input 
-           type="password" 
-           v-model="token" 
-           placeholder="令牌 (可选)" 
-           class="px-3 py-2 rounded text-sm border-none focus:ring-0 w-32"
-           @change="saveToken"
-         >
-         <div class="w-px bg-gray-200 my-1"></div>
-         <button 
-            v-for="d in durations" 
-            :key="d.val"
-            @click="loadStats(d.val)"
-            :class="['px-4 py-2 rounded transition-colors text-sm', duration === d.val ? 'bg-blue-600 text-white' : 'hover:bg-gray-100']"
-         >
-            {{ d.label }}
-         </button>
+<body class="loading">
+  <div class="shell">
+    <header>
+      <h1>统计面板</h1>
+      <p>人数、打开次数、品牌分布与小时使用情况（UTC）。</p>
+      <div class="controls">
+        <label>
+          Token
+          <input id="token" type="password" placeholder="可选" />
+        </label>
+        <label class="toggle">
+          <input id="tokenInQuery" type="checkbox" />
+          Token 传 query
+        </label>
+        <label>
+          天数
+          <select id="days">
+            <option value="7">最近 7 天</option>
+            <option value="14">最近 14 天</option>
+            <option value="30">最近 30 天</option>
+          </select>
+        </label>
+        <button id="refresh">刷新</button>
+        <button id="exportJson" class="ghost">导出 JSON</button>
+        <button id="exportCsv" class="ghost">导出 CSV</button>
+        <span class="hint" id="status">加载中...</span>
       </div>
-      
-      <!-- View Mode Toggle -->
-      <div class="flex gap-1 bg-white p-1 rounded-lg shadow">
-         <button @click="viewMode = 'total'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'total' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">总开启次数</button>
-         <button @click="viewMode = 'unique'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'unique' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">独立用户数</button>
-      </div>
-    </div>
-  </header>
+      <div class="kpi" id="kpi"></div>
+    </header>
 
-  <!-- Error State -->
-  <div v-if="error" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-8" role="alert">
-    <p>{{ error }}</p>
+    <section class="grid">
+      <div class="card span-7 map-card">
+        <h2>全球活跃度</h2>
+        <div class="map-shell" id="mapShell">
+          <div class="map-overlay"></div>
+          <div class="map-legend"><span class="legend-dot"></span>热力分布 · 点击城市查看</div>
+          <div class="tooltip" id="mapTooltip"></div>
+        </div>
+      </div>
+      <div class="card span-5">
+        <h2>城市概览</h2>
+        <div id="cities"></div>
+      </div>
+      <div class="card span-4">
+        <h2>相机品牌排行</h2>
+        <div id="brands"></div>
+      </div>
+      <div class="card span-4">
+        <h2>相机型号排行</h2>
+        <div id="models"></div>
+      </div>
+      <div class="card span-4">
+        <h2>国家/地区排行</h2>
+        <div id="countries"></div>
+      </div>
+      <div class="card span-6">
+        <h2>小时分布 (UTC)</h2>
+        <div id="hours"></div>
+      </div>
+      <div class="card span-6">
+        <h2>周使用 (人数)</h2>
+        <div id="weeklyUsage"></div>
+      </div>
+      <div class="card span-12">
+        <h2>城市 x 品牌矩阵（Top 10 城市 / Top 8 品牌）</h2>
+        <div id="matrix"></div>
+      </div>
+    </section>
   </div>
 
-  <!-- Loading State -->
-  <div v-if="loading" class="text-center py-20">
-    <div class="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-    <p class="text-gray-500">正在统计数据...</p>
-  </div>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script>
+    const statusEl = document.getElementById("status");
+    const daysEl = document.getElementById("days");
+    const refreshEl = document.getElementById("refresh");
+    const tokenEl = document.getElementById("token");
+    const tokenInQueryEl = document.getElementById("tokenInQuery");
+    const exportJsonEl = document.getElementById("exportJson");
+    const exportCsvEl = document.getElementById("exportCsv");
+    const mapShell = document.getElementById("mapShell");
+    const tooltipEl = document.getElementById("mapTooltip");
+    const kpiEl = document.getElementById("kpi");
+    let lastPayload = null;
+    let mapReady = false;
+    let mapSvg = null;
+    let mapProjection = null;
+    let mapPath = null;
+    let mapPointsLayer = null;
+    let mapHeatCanvas = null;
+    let mapHeatCtx = null;
+    let tooltipPinned = false;
 
-  <div v-if="!loading && data" class="space-y-8">
-    
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- Main Metric (Opens or Unique Users) -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-         <div class="text-gray-500 text-sm font-medium mb-1">{{ currentStats.label }}</div>
-         <div class="text-3xl font-bold">{{ currentStats.total.toLocaleString() }}</div>
-      </div>
+    const cityCoords = {
+      Beijing: [116.4074, 39.9042],
+      Shanghai: [121.4737, 31.2304],
+      Guangzhou: [113.2644, 23.1291],
+      Shenzhen: [114.0579, 22.5431],
+      Chengdu: [104.0665, 30.5723],
+      Hangzhou: [120.1551, 30.2741],
+      Wuhan: [114.3055, 30.5928],
+      "Hong Kong": [114.1694, 22.3193],
+      Taipei: [121.5654, 25.0330],
+      Tokyo: [139.6503, 35.6762],
+      Seoul: [126.9780, 37.5665],
+      Singapore: [103.8198, 1.3521],
+      Bangkok: [100.5018, 13.7563],
+      Delhi: [77.1025, 28.7041],
+      Mumbai: [72.8777, 19.0760],
+      Dubai: [55.2708, 25.2048],
+      Moscow: [37.6173, 55.7558],
+      London: [-0.1276, 51.5072],
+      Paris: [2.3522, 48.8566],
+      Berlin: [13.4050, 52.5200],
+      Madrid: [-3.7038, 40.4168],
+      Rome: [12.4964, 41.9028],
+      Istanbul: [28.9784, 41.0082],
+      "New York": [-74.0060, 40.7128],
+      Toronto: [-79.3832, 43.6532],
+      "Los Angeles": [-118.2437, 34.0522],
+      Chicago: [-87.6298, 41.8781],
+      "Mexico City": [-99.1332, 19.4326],
+      "Sao Paulo": [-46.6333, -23.5505],
+      Sydney: [151.2093, -33.8688],
+      Melbourne: [144.9631, -37.8136],
+    };
 
-      <!-- Active Cities -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-         <div class="text-gray-500 text-sm font-medium mb-1">活跃城市</div>
-         <div class="text-3xl font-bold">{{ Object.keys(currentStats.cities).length }}</div>
-      </div>
-
-      <!-- Inactive Users (Retention) -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
-         <div class="text-gray-500 text-sm font-medium leading-tight mb-1">活跃 / 不活跃 (30天)</div>
-         <div class="flex items-baseline gap-2">
-            <span class="text-2xl font-bold">{{ data.user_retention?.active_30d || 0 }}</span>
-            <span class="text-gray-400 text-sm">/ {{ data.user_retention?.inactive_30d || 0 }}</span>
-         </div>
-      </div>
-
-      <!-- Total Models -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
-         <div class="text-gray-500 text-sm font-medium mb-1">活跃相机型号</div>
-         <div class="text-3xl font-bold">{{ Object.keys(currentStats.models).length }}</div>
-      </div>
-    </div>
-
-    <!-- Map Section -->
-    <div class="bg-white p-4 rounded-xl shadow-sm">
-      <h2 class="text-xl font-semibold mb-4 text-gray-800 flex justify-between">
-        <span>用户分布地图</span>
-        <span class="text-sm font-normal text-gray-500 self-center">展示: {{ viewMode === 'unique' ? '独立用户数' : '总开启次数' }}</span>
-      </h2>
-      <div id="map"></div>
-    </div>
-
-    <!-- Main Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- Brands -->
-      <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">相机品牌分布</h3>
-        <div class="chart-container">
-          <canvas id="brandChart"></canvas>
-        </div>
-      </div>
-      
-      <!-- Top Models -->
-      <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">热门型号 Top 10</h3>
-        <div class="chart-container">
-          <canvas id="modelChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Secondary Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- User Retention / Usage Freq -->
-      <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">用户活跃频次 (每周)</h3>
-        <div class="chart-container">
-          <canvas id="usageChart"></canvas>
-        </div>
-        <p class="text-xs text-gray-400 mt-2 text-center">
-          重度用户 (6+次/周): {{ data.weekly_usage?.heavy_users || 0 }} 
-          ({{ ((data.weekly_usage?.heavy_ratio || 0) * 100).toFixed(1) }}%)
-        </p>
-      </div>
-
-      <!-- Languages -->
-      <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold mb-4">语言分布</h3>
-        <div class="chart-container">
-          <canvas id="langChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Detailed City Breakdown -->
-    <div class="bg-white p-6 rounded-xl shadow-sm overflow-hidden">
-      <h3 class="text-lg font-semibold mb-4">城市详情 Top 50</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-gray-50 border-b">
-              <th class="p-3">城市</th>
-              <th class="p-3">数量</th>
-              <th class="p-3">主要品牌</th>
-              <th class="p-3">主要型号</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="city in topCities" :key="city.name" class="border-b hover:bg-gray-50">
-              <td class="p-3 font-medium">{{ city.name }}</td>
-              <td class="p-3">{{ city.count }}</td>
-              <td class="p-3 text-sm text-gray-600">{{ city.topBrand }}</td>
-              <td class="p-3 text-sm text-gray-600">{{ city.topModel }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
-
-const App = {
-  setup() {
-    const error = ref(null);
-    const loading = ref(false);
-    const data = ref(null);
-    const duration = ref('7');
-    const token = ref('');
-    const viewMode = ref('total'); // 'total' or 'unique'
-    
-    const durations = [
-      { label: '7D', val: '7' },
-      { label: '30D', val: '30' },
-      { label: 'All', val: 'all' }
-    ];
-
-    let map = null;
-    let markersCluster = null;
-    let charts = {};
-
-    // Computed Stats based on View Mode
-    const currentStats = computed(() => {
-      if (!data.value) return {};
-      if (viewMode.value === 'unique') {
-        return {
-          // Fallback to total if unique is empty (backend might not have populated it yet)
-          cities: Object.keys(data.value.city_unique_totals || {}).length ? data.value.city_unique_totals : data.value.city_totals || {},
-          brands: Object.keys(data.value.brand_unique_totals || {}).length ? data.value.brand_unique_totals : data.value.brand_totals || {},
-          models: Object.keys(data.value.model_unique_totals || {}).length ? data.value.model_unique_totals : data.value.model_totals || {},
-          total: data.value.global_unique_total || (Object.values(data.value.city_totals || {}).reduce((a,b)=>a+b,0)),
-          label: '独立用户数'
-        };
-      }
-      return {
-        cities: data.value.city_totals || {},
-        brands: data.value.brand_totals || {},
-        models: data.value.model_totals || {},
-        total: (Object.values(data.value.city_totals || {}).reduce((a,b)=>a+b,0)),
-        label: '总开启次数'
-      };
-    });
-    
-    // Top Cities List
-    const topCities = computed(() => {
-        if (!data.value) return [];
-        const source = currentStats.value.cities;
-        return Object.entries(source)
-            .sort((a,b) => b[1] - a[1])
-            .slice(0, 50)
-            .map(([name, count]) => {
-                const cityName = decodeURIComponent(name);
-                
-                // Find top Brand for this city
-                const cityBrands = data.value.city_brand_totals?.[name] || {};
-                const topBrandEntry = Object.entries(cityBrands).sort((a, b) => b[1] - a[1])[0];
-                const topBrand = topBrandEntry ? decodeURIComponent(topBrandEntry[0]) : '-';
-
-                // Find top Model for this city
-                const cityModels = data.value.model_city_totals?.[name] || {};
-                const topModelEntry = Object.entries(cityModels).sort((a, b) => b[1] - a[1])[0];
-                const topModel = topModelEntry ? decodeURIComponent(topModelEntry[0]) : '-';
-
-                return {
-                    name: cityName,
-                    count,
-                    topBrand, 
-                    topModel
-                };
-            });
+    tokenEl.value = localStorage.getItem("telemetry_stats_token") || "";
+    tokenEl.addEventListener("input", () => {
+      localStorage.setItem("telemetry_stats_token", tokenEl.value.trim());
     });
 
-    // Mapbox/OSM Init
-    const initMap = () => {
-      if (map) return;
-      
-      // Initialize map container
-      map = L.map('map', { 
-        minZoom: 2,
-        worldCopyJump: true // Seamless world wrapper
-      }).setView([20, 0], 2);
-      
-      // Using a cleaner, faster tile server (CartoDB Positron)
-      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-      });
-      tileLayer.addTo(map);
-      
-      // Initialize Cluster Group
-      markersCluster = L.markerClusterGroup({
-        chunkedLoading: true, // Async loading for large datasets (faster UI)
-        maxClusterRadius: 50, // Smaller radius = more detailed clusters
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false, // Cleaner look
-        zoomToBoundsOnClick: true,
-        
-        // Customize the cluster icon to look like a "Heat Blob" with count
-        iconCreateFunction: function(cluster) {
-           // Calculate total users in this cluster
-           const markers = cluster.getAllChildMarkers();
-           let count = 0;
-           markers.forEach(m => {
-               count += (m.options.userCount || 1);
-           });
-           
-           let colorHex = '#3b82f6'; // blue-500
-           if (count > 10) colorHex = '#10b981'; // emerald-500
-           if (count > 50) colorHex = '#f59e0b'; // yellow-500
-           if (count > 200) colorHex = '#f97316'; // orange-500
-           if (count > 1000) colorHex = '#ef4444'; // red-500
-
-           return L.divIcon({ 
-             html: `<div style="background-color: ${colorHex}; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; color: white; border-radius: 9999px; font-size: 12px; font-weight: bold; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 2px solid rgba(255,255,255,0.5); opacity: 0.9;">
-                      ${count > 999 ? (count/1000).toFixed(1)+'k' : count}
-                   </div>`, 
-             className: 'bg-transparent border-none', // Override default Leaflet box
-             iconSize: L.point(40, 40)
-           });
-        }
-      });
-      
-      map.addLayer(markersCluster);
-    };
-
-    const updateProgressBar = (processed, total, elapsed, layersArray) => {
-       // Optional: could show a loading bar if really heavy
-    };
-
-    const updateMap = () => {
-      if (!map) initMap();
-      markersCluster.clearLayers();
-      
-      const stats = currentStats.value.cities;
-      const coordsMap = data.value.city_coords || {};
-      const newMarkers = [];
-
-      Object.entries(stats).forEach(([city, count]) => {
-        const decCity = decodeURIComponent(city);
-        const latlon = coordsMap[city] || coordsMap[decCity];
-        
-        if (!latlon || !latlon.lat) return;
-
-        const lat = parseFloat(latlon.lat);
-        const lon = parseFloat(latlon.lon);
-
-        if (isNaN(lat) || isNaN(lon)) return;
-
-        let colorHex = '#3b82f6'; // blue-500
-        if (count > 10) colorHex = '#10b981'; // emerald-500
-        if (count > 50) colorHex = '#f59e0b'; // yellow-500
-        if (count > 200) colorHex = '#f97316'; // orange-500
-        if (count > 1000) colorHex = '#ef4444'; // red-500
-
-        const customIcon = L.divIcon({
-             html: `<div style="background-color: ${colorHex}; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; color: white; border-radius: 9999px; font-size: 10px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 2px solid rgba(255,255,255,0.8); opacity: 0.9;">
-                      ${count > 999 ? (count/1000).toFixed(1)+'k' : count}
-                   </div>`, 
-             className: 'bg-transparent border-none',
-             iconSize: L.point(30, 30)
-        });
-
-        const marker = L.marker([lat, lon], {
-            title: `${decCity}: ${count}`,
-            userCount: count,
-            icon: customIcon
-        });
-
-        marker.bindPopup(`
-          <div class="p-2 min-w-[150px]">
-            <h3 class="font-bold text-gray-800 text-base mb-2 border-b pb-2">${decCity}</h3>
-            <div class="flex justify-between items-center mb-1">
-              <span class="text-gray-500 text-sm">${viewMode.value === 'unique' ? '独立用户' : '开启次数'}</span>
-              <span class="font-bold text-blue-600 text-lg">${count}</span>
-            </div>
-            <div class="text-xs text-gray-300 mt-2 text-right font-mono">
-               ${lat.toFixed(4)}, ${lon.toFixed(4)}
-            </div>
-          </div>
-        `);
-        newMarkers.push(marker);
-      });
-      
-      if (newMarkers.length > 0) {
-        markersCluster.addLayers(newMarkers);
-        // Only fit bounds on initial load effectively
-        if (!window.mapInitialized) {
-           try { 
-             map.fitBounds(markersCluster.getBounds(), { padding: [50, 50] }); 
-             window.mapInitialized = true;
-           } catch(e){}
-        }
-      }
-    };
-
-    const loadStats = async (days) => {
-      duration.value = days;
-      loading.value = true;
-      error.value = null;
-      
-      try {
-        const headers = token.value ? { "X-Stats-Token": token.value } : {};
-        const url = `/api/telemetry-stats?days=${days}&token=${token.value || ''}`;
-        
-        const res = await fetch(url);
-        if (res.status === 401) {
-             throw new Error("Unauthorized: Please enter valid Token");
-        }
-        if (!res.ok) throw new Error(`API Error: ${res.status}`);
-        
-        const json = await res.json();
-        data.value = json;
-        loading.value = false;
-        
-        await nextTick();
-        renderAll();
-      } catch (e) {
-        error.value = e.message;
-        console.error(e);
-        loading.value = false;
-      }
-    };
-    
-    // Watch view mode to re-render without fetching
-    watch(viewMode, () => {
-        renderAll();
+    tokenInQueryEl.checked = localStorage.getItem("telemetry_stats_token_in_query") === "true";
+    tokenInQueryEl.addEventListener("change", () => {
+      localStorage.setItem("telemetry_stats_token_in_query", String(tokenInQueryEl.checked));
     });
 
-    const renderAll = () => {
-        if (!data.value) return;
-        renderCharts();
-        updateMap();
-    };
+    refreshEl.addEventListener("click", () => loadStats());
+    daysEl.addEventListener("change", () => loadStats());
+    exportJsonEl.addEventListener("click", () => exportJson());
+    exportCsvEl.addEventListener("click", () => exportCsv());
+    window.addEventListener("resize", () => {
+      if (mapReady && lastPayload) {
+        renderMap(lastPayload);
+      }
+    });
 
-    const renderCharts = () => {
-      // Helper to destroy old charts
-      ['brand', 'model', 'lang', 'usage'].forEach(k => {
-          if (charts[k]) {
-              charts[k].destroy();
-              charts[k] = null;
-          }
-      });
-      
-      const stats = currentStats.value;
-      const fullData = data.value;
+    async function loadStats() {
+      document.body.classList.add("loading");
+      statusEl.textContent = "加载中...";
+      const days = daysEl.value;
+      const token = tokenEl.value.trim();
+      const headers = token ? { "X-Stats-Token": token } : {};
+      const includeTokenInQuery = tokenInQueryEl.checked;
 
       try {
-        // Brands
-        if (document.getElementById('brandChart')) {
-          charts.brand = createChart('brandChart', 'doughnut', stats.brands, 'Brands');
-        }
-        
-        // Models (Top 10)
-        if (document.getElementById('modelChart')) {
-          charts.model = createChart('modelChart', 'bar', stats.models, 'Models', 10);
+        const cacheBuster = Date.now();
+        const tokenParam = includeTokenInQuery && token ? `&token=${encodeURIComponent(token)}` : "";
+        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}&_ts=${cacheBuster}${tokenParam}`, { headers });
+        if (!response.ok) {
+          throw new Error("Bad response");
         }
 
-        // Weekly Usage
-        if (document.getElementById('usageChart') && fullData.weekly_usage && fullData.weekly_usage.buckets) {
-           const ctx = document.getElementById('usageChart');
-           charts.usage = new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: Object.keys(fullData.weekly_usage.buckets),
-              datasets: [{
-                label: 'Users',
-                data: Object.values(fullData.weekly_usage.buckets),
-                backgroundColor: '#3b82f6'
-              }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-          });
+        const data = await response.json();
+        lastPayload = data;
+        renderKpis(data);
+        renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {});
+        renderTable("brands", data.brand_totals || {}, "品牌", "打开次数");
+        renderTable("models", data.model_totals || {}, "型号", "打开次数");
+        renderTable("countries", data.country_totals || {}, "国家/地区", "打开次数");
+        renderHours("hours", data.hour_totals || []);
+        renderWeeklyUsage("weeklyUsage", data.weekly_usage || {});
+        renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
+
+        let mapOk = true;
+        try {
+          await renderMap(data);
+        } catch (mapError) {
+          mapOk = false;
+          console.error("[stats] renderMap failed", mapError);
         }
 
-        // Langs
-        if (document.getElementById('langChart')) {
-           const langParams = viewMode.value === 'unique' ? fullData.language_totals : fullData.language_totals;
-           charts.lang = createChart('langChart', 'pie', langParams, 'Language');
-        }
-      } catch (e) {
-        console.warn("Chart render failed", e);
+        const baseStatus = mapOk
+          ? `已更新 (UTC 日期: ${data.days ? data.days.join(", ") : ""})`
+          : `已更新 (地图渲染失败 · UTC 日期: ${data.days ? data.days.join(", ") : ""})`;
+        const authWarning = data.auth_required === false && token
+          ? " · 注意：后端未启用 Token 校验"
+          : "";
+        statusEl.textContent = `${baseStatus}${authWarning}`;
+      } catch (error) {
+        lastPayload = null;
+        statusEl.textContent = "加载失败（检查 Token）";
+        kpiEl.innerHTML = "";
+        document.getElementById("cities").innerHTML = "";
+        document.getElementById("brands").innerHTML = "";
+        document.getElementById("models").innerHTML = "";
+        document.getElementById("countries").innerHTML = "";
+        document.getElementById("hours").innerHTML = "";
+        document.getElementById("weeklyUsage").innerHTML = "";
+        document.getElementById("matrix").innerHTML = "";
+      } finally {
+        document.body.classList.remove("loading");
       }
-    };
+    }
 
-    const createChart = (id, type, dataObj, label, limit = 0) => {
-      const cvs = document.getElementById(id);
-      if(!cvs) return null;
-      
-      let sorting = Object.entries(dataObj || {}).sort((a, b) => b[1] - a[1]);
-      
-      if (limit > 0) {
-          sorting = sorting.slice(0, limit);
+    function renderKpis(data) {
+      const cityTotals = data.city_totals || {};
+      const brandTotals = data.brand_totals || {};
+      const totalOpens = Object.values(cityTotals).reduce((sum, val) => sum + (val || 0), 0);
+      const uniquePeople = data.global_unique_total || 0;
+      const activeCities = Object.keys(cityTotals).length;
+      const activeBrands = Object.keys(brandTotals).length;
+      const weeklyUsage = data.weekly_usage || {};
+      const weeklyUsers = weeklyUsage.total_users || 0;
+      const heavyRatio = weeklyUsage.heavy_ratio || 0;
+
+      kpiEl.innerHTML = [
+        buildKpi("独立人数", uniquePeople),
+        buildKpi("总打开次数", totalOpens),
+        buildKpi("活跃城市", activeCities),
+        buildKpi("活跃品牌", activeBrands),
+        buildKpi("周活跃用户", weeklyUsers),
+        buildKpi("重度占比", `${Math.round(heavyRatio * 100)}%`),
+      ].join("");
+    }
+
+    function buildKpi(label, value) {
+      return `<div><h3>${label}</h3><strong>${value}</strong></div>`;
+    }
+
+    function renderCitySummary(cityTotals, cityUniqueTotals, cityBrandTotals) {
+      const container = document.getElementById("cities");
+      const entries = Object.entries(cityTotals)
+        .map(([city, count]) => {
+          const brands = Object.keys(cityBrandTotals[city] || {}).length;
+          const people = cityUniqueTotals[city] || 0;
+          return [city, people, count, brands];
+        })
+        .sort((a, b) => b[2] - a[2])
+        .slice(0, 12);
+
+      if (!entries.length) {
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
+        return;
       }
 
-      const labels = sorting.map(x => decodeURIComponent(x[0]));
-      const values = sorting.map(x => x[1]);
+      const table = document.createElement("table");
+      const header = document.createElement("tr");
+      header.innerHTML = "<th>城市</th><th>人数</th><th>打开次数</th><th>品牌数</th>";
+      table.appendChild(header);
 
-      return new Chart(cvs, {
-        type: type,
-        data: {
-          labels: labels,
-          datasets: [{
-            label: label,
-            data: values,
-            backgroundColor: [
-              '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
-              '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
+      for (const [city, people, count, brands] of entries) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(city))}</td><td>${people}</td><td>${count}</td><td>${brands}</td>`;
+        table.appendChild(row);
+      }
+
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function renderTable(targetId, rows, labelTitle, countTitle) {
+      const container = document.getElementById(targetId);
+      const entries = Object.entries(rows)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 15);
+
+      if (!entries.length) {
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      const header = document.createElement("tr");
+      header.innerHTML = `<th>${labelTitle}</th><th>${countTitle}</th>`;
+      table.appendChild(header);
+
+      for (const [label, count] of entries) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(label))}</td><td>${count}</td>`;
+        table.appendChild(row);
+      }
+
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function renderHours(targetId, totals) {
+      const container = document.getElementById(targetId);
+      if (!totals.length) {
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
+        return;
+      }
+
+      const max = Math.max(...totals, 1);
+      container.innerHTML = "";
+
+      totals.forEach((count, hour) => {
+        const row = document.createElement("div");
+        row.className = "bar-row";
+        const label = document.createElement("span");
+        label.textContent = String(hour).padStart(2, "0");
+        label.style.width = "32px";
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.width = `${(count / max) * 100}%`;
+
+        const value = document.createElement("span");
+        value.textContent = count;
+
+        row.append(label, bar, value);
+        container.appendChild(row);
       });
-    };
-    
-    // Save/Load token
-    const saveToken = () => {
-        if(token.value) localStorage.setItem('niyien_stats_token', token.value);
-    };
-    
-    onMounted(() => {
-        const saved = localStorage.getItem('niyien_stats_token');
-        if(saved) token.value = saved;
-        if(saved) loadStats('7');
-    });
+    }
 
-    return {
-      error, loading, data, duration, token, durations, viewMode,
-      topCities, currentStats,
-      loadStats, saveToken
-    };
-  }
-};
+    function renderWeeklyUsage(targetId, weeklyUsage) {
+      const container = document.getElementById(targetId);
+      const buckets = weeklyUsage.buckets || {};
+      const total = weeklyUsage.total_users || 0;
 
-createApp(App).mount('#app');
+      if (!total) {
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
+        return;
+      }
 
-</script>
+      const rows = [
+        ["1", buckets["1"] || 0],
+        ["2-3", buckets["2-3"] || 0],
+        ["4-6", buckets["4-6"] || 0],
+        ["7-9", buckets["7-9"] || 0],
+        ["10+", buckets["10+"] || 0],
+      ];
+
+      const table = document.createElement("table");
+      const header = document.createElement("tr");
+      header.innerHTML = `<th>每周打开</th><th>人数</th><th>占比</th>`;
+      table.appendChild(header);
+
+      rows.forEach(([label, count]) => {
+        const ratio = total ? Math.round((count / total) * 100) : 0;
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${label}</td><td>${count}</td><td>${ratio}%</td>`;
+        table.appendChild(row);
+      });
+
+      const summary = document.createElement("p");
+      summary.className = "hint";
+      summary.textContent = `周 ${weeklyUsage.week || ""} · 重度 >= ${weeklyUsage.heavy_threshold || 0}`;
+
+      container.innerHTML = "";
+      container.appendChild(table);
+      container.appendChild(summary);
+    }
+
+    function renderMatrix(targetId, matrix, cityTotals, brandTotals) {
+      const container = document.getElementById(targetId);
+      const topCities = pickTop(cityTotals, 10);
+      const topBrands = pickTop(brandTotals, 8);
+
+      if (!topCities.length || !topBrands.length) {
+        container.innerHTML = "<p class=\"hint\">暂无数据</p>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      const headRow = document.createElement("tr");
+      headRow.innerHTML = `<th>城市</th>${topBrands.map((b) => `<th>${escapeHtml(cleanLabel(b))}</th>`).join("")}`;
+      table.appendChild(headRow);
+
+      topCities.forEach((city) => {
+        const row = document.createElement("tr");
+        const cells = [
+          `<td>${escapeHtml(cleanLabel(city))}</td>`,
+          ...topBrands.map((brand) => {
+            const value = matrix[city] && matrix[city][brand] ? matrix[city][brand] : 0;
+            return `<td>${value}</td>`;
+          }),
+        ];
+        row.innerHTML = cells.join("");
+        table.appendChild(row);
+      });
+
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    async function renderMap(data) {
+      const cityTotals = data.city_totals || {};
+      const cityUniqueTotals = data.city_unique_totals || {};
+      const cityBrandTotals = data.city_brand_totals || {};
+
+      if (!mapReady) {
+        await initMap();
+      }
+
+      mapPointsLayer.selectAll("circle").remove();
+
+      const entries = Object.entries(cityTotals)
+        .map(([city, opens]) => {
+          const people = cityUniqueTotals[city] || 0;
+          const brands = Object.keys(cityBrandTotals[city] || {}).length;
+          return { city, opens, people, brands };
+        })
+        .filter((item) => item.city && item.city !== "Unknown" && cityCoords[cleanLabel(item.city)]);
+
+      if (!entries.length) {
+        return;
+      }
+
+      const maxOpens = Math.max(...entries.map((item) => item.opens || 1));
+      renderHeatmap(entries, maxOpens);
+
+      const hitScale = d3.scaleSqrt().domain([1, maxOpens]).range([4, 10]);
+      mapPointsLayer
+        .selectAll("circle")
+        .data(entries)
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[0])
+        .attr("cy", (d) => mapProjection(cityCoords[cleanLabel(d.city)])[1])
+        .attr("r", (d) => hitScale(d.opens))
+        .attr("fill", "rgba(20, 30, 55, 0.9)")
+        .attr("stroke", "rgba(255, 255, 255, 0.9)")
+        .attr("stroke-width", 1.6)
+        .attr("cursor", "pointer")
+        .on("mouseenter", (event, d) => showTooltip(event, d))
+        .on("mouseleave", hideTooltip)
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          tooltipPinned = true;
+          showTooltip(event, d, true);
+        });
+    }
+
+    async function initMap() {
+      const width = mapShell.clientWidth;
+      const height = Math.max(mapShell.clientHeight, 360);
+      const existingSvg = mapShell.querySelector("svg");
+      if (existingSvg) {
+        existingSvg.remove();
+      }
+
+      mapSvg = d3
+        .select(mapShell)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`);
+
+      mapHeatCanvas = document.createElement("canvas");
+      mapHeatCanvas.className = "map-heat";
+      mapHeatCanvas.width = width;
+      mapHeatCanvas.height = height;
+      mapHeatCtx = mapHeatCanvas.getContext("2d");
+      mapShell.appendChild(mapHeatCanvas);
+
+      const defs = mapSvg.append("defs");
+      const filter = defs.append("filter").attr("id", "glow");
+      filter.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "blur");
+      const merge = filter.append("feMerge");
+      merge.append("feMergeNode").attr("in", "blur");
+      merge.append("feMergeNode").attr("in", "SourceGraphic");
+
+      mapProjection = d3.geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
+      mapPath = d3.geoPath().projection(mapProjection);
+
+      const world = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then((res) => res.json());
+      const land = topojson.feature(world, world.objects.countries);
+
+      mapSvg.append("rect").attr("width", width).attr("height", height).attr("fill", "none");
+
+      mapSvg
+        .append("path")
+        .datum(land)
+        .attr("fill", "var(--map-land)")
+        .attr("opacity", 0.9)
+        .attr("d", mapPath);
+
+      const graticule = d3.geoGraticule().step([20, 20]);
+      mapSvg
+        .append("path")
+        .datum(graticule())
+        .attr("fill", "none")
+        .attr("stroke", "rgba(255,255,255,0.12)")
+        .attr("stroke-width", 0.5)
+        .attr("opacity", 0.6)
+        .attr("d", mapPath);
+
+      mapPointsLayer = mapSvg.append("g");
+      mapReady = true;
+
+      mapShell.addEventListener("click", () => {
+        tooltipPinned = false;
+        hideTooltip();
+      });
+    }
+
+    function showTooltip(event, data, pinned = false) {
+      if (!pinned && tooltipPinned) {
+        return;
+      }
+      const city = cleanLabel(data.city || "");
+      tooltipEl.textContent = `${city} · ${data.people} 人 · ${data.opens} 次 · ${data.brands} 品牌`;
+      const rect = mapShell.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      tooltipEl.style.left = `${x}px`;
+      tooltipEl.style.top = `${y}px`;
+      tooltipEl.classList.add("visible");
+    }
+
+    function hideTooltip() {
+      if (!tooltipPinned) {
+        tooltipEl.classList.remove("visible");
+      }
+    }
+
+    function renderHeatmap(entries, maxOpens) {
+      if (!mapHeatCtx || !mapHeatCanvas) {
+        return;
+      }
+
+      const width = mapHeatCanvas.width;
+      const height = mapHeatCanvas.height;
+      mapHeatCtx.clearRect(0, 0, width, height);
+      mapHeatCtx.globalCompositeOperation = "lighter";
+
+      const max = Math.max(1, maxOpens);
+      const heatScale = d3.scaleQuantize()
+        .domain([0, 1])
+        .range(["#1e3a8a", "#2563eb", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444", "#b91c1c"]);
+
+      entries.forEach((item) => {
+        const coord = mapProjection(cityCoords[cleanLabel(item.city)]);
+        if (!coord) {
+          return;
+        }
+
+        const intensity = Math.max(0.12, item.opens / max);
+        const radius = 16 + 36 * intensity;
+        const x = coord[0];
+        const y = coord[1];
+        const baseColor = d3.color(heatScale(intensity));
+        if (!baseColor) {
+          return;
+        }
+        baseColor.opacity = 0.5 + 0.4 * intensity;
+        const outerColor = baseColor.copy({ opacity: 0.2 * intensity });
+        const gradient = mapHeatCtx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, baseColor.formatRgb());
+        gradient.addColorStop(0.7, outerColor.formatRgb());
+        gradient.addColorStop(1, "rgba(0,0,0,0)");
+        mapHeatCtx.fillStyle = gradient;
+        mapHeatCtx.beginPath();
+        mapHeatCtx.arc(x, y, radius, 0, Math.PI * 2);
+        mapHeatCtx.fill();
+
+        mapHeatCtx.save();
+        mapHeatCtx.shadowBlur = 10 + 10 * intensity;
+        mapHeatCtx.shadowColor = baseColor.formatRgb();
+        mapHeatCtx.strokeStyle = baseColor.formatRgb();
+        mapHeatCtx.lineWidth = 1.2;
+        mapHeatCtx.beginPath();
+        mapHeatCtx.arc(x, y, radius * 0.55, 0, Math.PI * 2);
+        mapHeatCtx.stroke();
+        mapHeatCtx.restore();
+      });
+
+      mapHeatCtx.globalCompositeOperation = "source-over";
+    }
+
+    function pickTop(totals, limit) {
+      return Object.entries(totals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([label]) => label);
+    }
+
+    function cleanLabel(value) {
+      const text = String(value ?? "");
+      try {
+        return decodeURIComponent(text);
+      } catch (error) {
+        return text;
+      }
+    }
+
+    function exportJson() {
+      if (!lastPayload) {
+        statusEl.textContent = "没有可导出的数据";
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(lastPayload, null, 2)], { type: "application/json" });
+      downloadBlob(blob, "telemetry-stats.json");
+    }
+
+    function exportCsv() {
+      if (!lastPayload) {
+        statusEl.textContent = "没有可导出的数据";
+        return;
+      }
+
+      const lines = ["type,label1,label2,count"];
+      const {
+        city_totals: cityTotals = {},
+        brand_totals: brandTotals = {},
+        model_totals: modelTotals = {},
+        language_totals: languageTotals = {},
+        country_totals: countryTotals = {},
+        hour_totals: hourTotals = [],
+        city_brand_totals: cityBrand = {},
+        city_unique_totals: cityUnique = {},
+        weekly_usage: weeklyUsage = {},
+      } = lastPayload;
+
+      Object.entries(cityTotals).forEach(([city, count]) => {
+        lines.push(`city,${csvEscape(cleanLabel(city))},,${count}`);
+      });
+
+      Object.entries(cityUnique).forEach(([city, count]) => {
+        lines.push(`city_unique,${csvEscape(cleanLabel(city))},,${count}`);
+      });
+
+      Object.entries(brandTotals).forEach(([brand, count]) => {
+        lines.push(`brand,${csvEscape(cleanLabel(brand))},,${count}`);
+      });
+
+      Object.entries(modelTotals).forEach(([model, count]) => {
+        lines.push(`model,${csvEscape(cleanLabel(model))},,${count}`);
+      });
+
+      Object.entries(languageTotals).forEach(([lang, count]) => {
+        lines.push(`language,${csvEscape(cleanLabel(lang))},,${count}`);
+      });
+
+      Object.entries(countryTotals).forEach(([country, count]) => {
+        lines.push(`country,${csvEscape(cleanLabel(country))},,${count}`);
+      });
+
+      hourTotals.forEach((count, hour) => {
+        lines.push(`hour,${String(hour).padStart(2, "0")},,${count}`);
+      });
+
+      Object.entries(cityBrand).forEach(([city, brands]) => {
+        Object.entries(brands || {}).forEach(([brand, count]) => {
+          lines.push(`city_brand,${csvEscape(cleanLabel(city))},${csvEscape(cleanLabel(brand))},${count}`);
+        });
+      });
+
+      if (weeklyUsage && weeklyUsage.buckets) {
+        Object.entries(weeklyUsage.buckets).forEach(([bucket, count]) => {
+          lines.push(`weekly_bucket,${bucket},,${count}`);
+        });
+      }
+
+      const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+      downloadBlob(blob, "telemetry-stats.csv");
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      if (/[",\n]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    loadStats();
+  </script>
 </body>
 </html>
