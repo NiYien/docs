@@ -742,7 +742,7 @@
       const cityTotals = data.city_totals || {};
       const brandTotals = data.brand_totals || {};
       const totalOpens = Object.values(cityTotals).reduce((sum, val) => sum + (val || 0), 0);
-      const uniquePeople = data.global_unique_total || 0;
+      const uniquePeople = data.missing_unique_data ? "—" : (data.global_unique_total || 0);
       const activeCities = Object.keys(cityTotals).length;
       const activeBrands = Object.keys(brandTotals).length;
       const weeklyUsage = data.weekly_usage || {};
@@ -1297,14 +1297,10 @@
 
     function formatUniqueSource(source) {
       switch (source) {
-        case "day":
-          return "按天去重";
-        case "day+estimated":
-          return "按天去重 + 缺失估算";
-        case "legacy-fallback":
-          return "旧口径回退";
-        case "legacy-fallback+estimated":
-          return "旧口径回退 + 缺失估算";
+        case "day-observed":
+          return "按天实测去重";
+        case "day-observed-missing":
+          return "按天实测去重（UV缺失）";
         default:
           return cleanLabel(source || "未知");
       }

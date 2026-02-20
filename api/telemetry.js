@@ -8,11 +8,7 @@ export default async function handler(req, res) {
   if (!body) {
     return res.status(400).json({ error: "Invalid JSON" });
   }
-  
-  const now = new Date();
-  const iso = now.toISOString();
-  const day = iso.slice(0, 10);
-  const hour = iso.slice(11, 13);
+
   const ip = getClientIp(req);
   const debugGeo = shouldLogGeo(req);
   if (debugGeo) {
@@ -27,13 +23,14 @@ export default async function handler(req, res) {
   const geo = await lookupGeo(req, ip);
   const city = geo.city || "Unknown";
   const country = geo.country || "Unknown";
-  const weekKey = getIsoWeekKey(now);
   const ttlDays = parseInt(process.env.TELEMETRY_TTL_DAYS || "90", 10);
   const ttlSeconds = Math.max(ttlDays, 1) * 86400;
   const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "0", 10);
   const uniqueTtlSeconds = uniqueTtlDays > 0 ? uniqueTtlDays * 86400 : 0;
   const weekTtlDays = parseInt(process.env.TELEMETRY_USER_TTL_DAYS || "120", 10);
   const weekTtlSeconds = Math.max(weekTtlDays, 1) * 86400;
+  const dedupeTtlDays = parseInt(process.env.TELEMETRY_EVENT_ID_TTL_DAYS || "120", 10);
+  const dedupeTtlSeconds = Math.max(dedupeTtlDays, 1) * 86400;
 
   const isBatch = Array.isArray(body.events);
   if (isBatch) {
@@ -57,21 +54,36 @@ export default async function handler(req, res) {
     }
 
     try {
+      let processed = 0;
+      let deduped = 0;
       for (const item of items) {
-        await processEvent(
+        const result = await processEvent(
           item.fields,
           {
-            day,
-            hour,
             city,
             country,
-            weekKey,
             ttlSeconds,
             uniqueTtlSeconds,
             weekTtlSeconds,
+            dedupeTtlSeconds,
           }
         );
+        if (result.processed) {
+          processed += 1;
+        } else {
+          deduped += 1;
+        }
       }
+
+      return res.status(200).json({
+        ok: true,
+        batch: true,
+        processed,
+        deduped,
+        received: items.length,
+        city,
+        country,
+      });
     } catch (error) {
       return res.status(500).json({
         error: "Storage error",
@@ -80,16 +92,6 @@ export default async function handler(req, res) {
         has_token: !!(process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN),
       });
     }
-
-    return res.status(200).json({
-      ok: true,
-      batch: true,
-      processed: items.length,
-      day,
-      hour,
-      city,
-      country,
-    });
   }
 
   const fields = extractEventFields(body, "");
@@ -99,19 +101,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    await processEvent(
+    const result = await processEvent(
       fields,
       {
-        day,
-        hour,
         city,
         country,
-        weekKey,
         ttlSeconds,
         uniqueTtlSeconds,
         weekTtlSeconds,
+        dedupeTtlSeconds,
       }
     );
+
+    const eventDate = new Date(fields.eventTs * 1000);
+    const iso = eventDate.toISOString();
+    const day = iso.slice(0, 10);
+    const hour = iso.slice(11, 13);
+
+    return res.status(200).json({
+      ok: true,
+      day,
+      hour,
+      city,
+      country,
+      deduped: !result.processed,
+      event: fields.event,
+      app_version: fields.appVersion || undefined,
+      os: fields.os || undefined,
+    });
   } catch (error) {
     return res.status(500).json({
       error: "Storage error",
@@ -120,17 +137,6 @@ export default async function handler(req, res) {
       has_token: !!(process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN),
     });
   }
-
-  return res.status(200).json({
-    ok: true,
-    day,
-    hour,
-    city,
-    country,
-    event: fields.event,
-    app_version: fields.appVersion || undefined,
-    os: fields.os || undefined,
-  });
 }
 
 function extractEventFields(payload, fallbackAnonId) {
@@ -141,6 +147,17 @@ function extractEventFields(payload, fallbackAnonId) {
   const cameraModel = String(payload?.camera_model || "").trim() || "Unknown";
   const language = String(payload?.language || "").trim() || "Unknown";
   const anonId = String(payload?.anon_id || fallbackAnonId || "").trim();
+  const eventTs = normalizeEventTimestamp(payload?.ts);
+  const eventId = buildEventId(payload, {
+    event,
+    appVersion,
+    os,
+    cameraBrand,
+    cameraModel,
+    language,
+    anonId,
+    eventTs,
+  });
 
   return {
     event,
@@ -150,6 +167,8 @@ function extractEventFields(payload, fallbackAnonId) {
     cameraModel,
     language,
     anonId,
+    eventTs,
+    eventId,
   };
 }
 
@@ -162,13 +181,26 @@ function validateEventFields(fields) {
     return "Invalid anon_id";
   }
 
+  if (!fields.eventId || fields.eventId.length > 128) {
+    return "Invalid event_id";
+  }
+
+  if (!Number.isFinite(fields.eventTs) || fields.eventTs <= 0) {
+    return "Invalid ts";
+  }
+
   return "";
 }
 
 async function processEvent(fields, context) {
+  const eventDate = new Date(fields.eventTs * 1000);
+  const iso = eventDate.toISOString();
+  const day = iso.slice(0, 10);
+  const hour = iso.slice(11, 13);
+  const weekKey = getIsoWeekKey(eventDate);
   const keyParts = {
-    day: context.day,
-    hour: context.hour,
+    day,
+    hour,
     city: normalizeKeyPart(context.city),
     country: normalizeKeyPart(context.country),
     brand: normalizeKeyPart(fields.cameraBrand),
@@ -185,17 +217,67 @@ async function processEvent(fields, context) {
     model: keyParts.model,
     country: keyParts.country,
   });
-  const weekUserKey = buildWeekUserKey(context.weekKey, fields.anonId);
+  const weekUserKey = buildWeekUserKey(weekKey, fields.anonId);
+  const dedupeKey = buildEventDedupeKey(day, fields.eventId);
 
-  await upstashWrite(
+  return upstashWrite(
     keys,
     context.ttlSeconds,
     uniqueKeys,
     context.uniqueTtlSeconds,
     fields.anonId,
     weekUserKey,
-    context.weekTtlSeconds
+    context.weekTtlSeconds,
+    dedupeKey,
+    context.dedupeTtlSeconds
   );
+}
+
+function normalizeEventTimestamp(tsValue) {
+  if (tsValue === null || tsValue === undefined || tsValue === "") {
+    return Math.floor(Date.now() / 1000);
+  }
+
+  const raw = Number(tsValue);
+  if (!Number.isFinite(raw) || raw <= 0) {
+    return Math.floor(Date.now() / 1000);
+  }
+
+  if (raw > 1e12) {
+    return Math.floor(raw / 1000);
+  }
+
+  return Math.floor(raw);
+}
+
+function buildEventId(payload, fields) {
+  const explicit = String(payload?.event_id || "").trim();
+  if (explicit) {
+    return explicit.slice(0, 128);
+  }
+
+  const raw = [
+    fields.anonId,
+    fields.event,
+    fields.eventTs,
+    fields.cameraBrand,
+    fields.cameraModel,
+    fields.appVersion,
+    fields.os,
+    fields.language,
+  ].join("|");
+
+  return stableHash(raw);
+}
+
+function stableHash(text) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+
+  return `evt_${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }
 
 function safeJsonParse(value) {
@@ -344,6 +426,11 @@ function buildWeekUserKey(weekKey, anonId) {
   return `telemetry:week:${weekKey}:user:${anonId}`;
 }
 
+function buildEventDedupeKey(day, eventId) {
+  const normalized = encodeURIComponent(String(eventId || "").trim().slice(0, 128) || "unknown");
+  return `telemetry:event:processed:${day}:${normalized}`;
+}
+
 function getIsoWeekKey(date) {
   const temp = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const dayNum = temp.getUTCDay() || 7;
@@ -361,13 +448,14 @@ async function upstashWrite(
   uniqueTtlSeconds,
   anonId,
   weekUserKey,
-  weekTtlSeconds
+  weekTtlSeconds,
+  dedupeKey,
+  dedupeTtlSeconds
 ) {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (!url || !token) {
-    throw new Error("Missing Upstash config");
+  const dedupeResponse = await upstashCommand(["SET", dedupeKey, "1", "EX", dedupeTtlSeconds, "NX"]);
+  const dedupeApplied = dedupeResponse && dedupeResponse.result === "OK";
+  if (!dedupeApplied) {
+    return { processed: false };
   }
 
   const pipeline = [];
@@ -386,16 +474,37 @@ async function upstashWrite(
   pipeline.push(["INCR", weekUserKey]);
   pipeline.push(["EXPIRE", weekUserKey, weekTtlSeconds]);
 
+  await upstashPipeline(pipeline);
+
+  return { processed: true };
+}
+
+async function upstashCommand(command) {
+  const responses = await upstashPipeline([command]);
+  return responses[0] || null;
+}
+
+async function upstashPipeline(commands) {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    throw new Error("Missing Upstash config");
+  }
+
   const response = await fetch(`${url}/pipeline`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(pipeline),
+    body: JSON.stringify(commands),
   });
 
   if (!response.ok) {
     throw new Error("Upstash pipeline error");
   }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
 }
