@@ -208,10 +208,11 @@ const App = {
       if (!data.value) return {};
       if (viewMode.value === 'unique') {
         return {
-          cities: data.value.city_unique_totals || {},
-          brands: data.value.brand_unique_totals || {},
-          models: data.value.model_unique_totals || {},
-          total: data.value.global_unique_total || 0,
+          // Fallback to total if unique is empty (backend might not have populated it yet)
+          cities: Object.keys(data.value.city_unique_totals || {}).length ? data.value.city_unique_totals : data.value.city_totals || {},
+          brands: Object.keys(data.value.brand_unique_totals || {}).length ? data.value.brand_unique_totals : data.value.brand_totals || {},
+          models: Object.keys(data.value.model_unique_totals || {}).length ? data.value.model_unique_totals : data.value.model_totals || {},
+          total: data.value.global_unique_total || (Object.values(data.value.city_totals || {}).reduce((a,b)=>a+b,0)),
           label: '独立用户数'
         };
       }
@@ -231,13 +232,26 @@ const App = {
         return Object.entries(source)
             .sort((a,b) => b[1] - a[1])
             .slice(0, 50)
-            .map(([name, count]) => ({
-                name: decodeURIComponent(name),
-                count,
-                // Rough mapping for demonstration if brand/model not available in unique view easily without heavy processing
-                topBrand: '-', 
-                topModel: '-'
-            }));
+            .map(([name, count]) => {
+                const cityName = decodeURIComponent(name);
+                
+                // Find top Brand for this city
+                const cityBrands = data.value.city_brand_totals?.[name] || {};
+                const topBrandEntry = Object.entries(cityBrands).sort((a, b) => b[1] - a[1])[0];
+                const topBrand = topBrandEntry ? decodeURIComponent(topBrandEntry[0]) : '-';
+
+                // Find top Model for this city
+                const cityModels = data.value.model_city_totals?.[name] || {};
+                const topModelEntry = Object.entries(cityModels).sort((a, b) => b[1] - a[1])[0];
+                const topModel = topModelEntry ? decodeURIComponent(topModelEntry[0]) : '-';
+
+                return {
+                    name: cityName,
+                    count,
+                    topBrand, 
+                    topModel
+                };
+            });
     });
 
     // Mapbox/OSM Init
@@ -268,25 +282,12 @@ const App = {
         
         // Customize the cluster icon to look like a "Heat Blob" with count
         iconCreateFunction: function(cluster) {
-           const count = cluster.getChildCount();
-           let bgColor = 'bg-blue-500';
-           
-           // Color scale: Blue -> Emerald -> Yellow -> Orange -> Red
-           if (count > 10) bgColor = 'bg-emerald-500';
-           if (count > 50) bgColor = 'bg-yellow-500';
-           if (count > 200) bgColor = 'bg-orange-500';
-           if (count > 1000) bgColor = 'bg-red-500';
-           
-           // Use Tailwind classes inside divIcon? HTML inside divIcon is just string.
-           // We need inline styles or standard CSS since tailwind might not be parsed inside dynamic JS strings if JIT not aware 
-           // (but CDN usually works fine if classes are common). 
-           // Let's use standard Tailwind classes but wrapped safely.
-           
-           /* 
-             Note: Tailwind CDN parses DOM on load. Dynamic content might need a nudge or standard CSS.
-             But background colors are usually safe if used elsewhere.
-             Let's use style attributes to be 100% sure about colors.
-           */
+           // Calculate total users in this cluster
+           const markers = cluster.getAllChildMarkers();
+           let count = 0;
+           markers.forEach(m => {
+               count += (m.options.userCount || 1);
+           });
            
            let colorHex = '#3b82f6'; // blue-500
            if (count > 10) colorHex = '#10b981'; // emerald-500
@@ -295,7 +296,7 @@ const App = {
            if (count > 1000) colorHex = '#ef4444'; // red-500
 
            return L.divIcon({ 
-             html: `<div style="background-color: ${colorHex};" class="flex items-center justify-center w-10 h-10 text-white rounded-full text-xs font-bold shadow-lg border-2 border-white/50 opacity-90 transition-transform hover:scale-110">
+             html: `<div style="background-color: ${colorHex}; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; color: white; border-radius: 9999px; font-size: 12px; font-weight: bold; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 2px solid rgba(255,255,255,0.5); opacity: 0.9;">
                       ${count > 999 ? (count/1000).toFixed(1)+'k' : count}
                    </div>`, 
              className: 'bg-transparent border-none', // Override default Leaflet box
@@ -330,14 +331,24 @@ const App = {
 
         if (isNaN(lat) || isNaN(lon)) return;
 
-        // Leaflet.markercluster supports custom icons for markers too if we want
-        // But default blue pin is fine. 
-        // Maybe color code the pin by intensity?
-        // Let's use CircleMarker instead for cleaner look, but Cluster Group works best with Markers usually
-        // Note: CircleMarker support in MarkerCluster is sometimes tricky. Standard Markers are safest.
-        
+        let colorHex = '#3b82f6'; // blue-500
+        if (count > 10) colorHex = '#10b981'; // emerald-500
+        if (count > 50) colorHex = '#f59e0b'; // yellow-500
+        if (count > 200) colorHex = '#f97316'; // orange-500
+        if (count > 1000) colorHex = '#ef4444'; // red-500
+
+        const customIcon = L.divIcon({
+             html: `<div style="background-color: ${colorHex}; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; color: white; border-radius: 9999px; font-size: 10px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 2px solid rgba(255,255,255,0.8); opacity: 0.9;">
+                      ${count > 999 ? (count/1000).toFixed(1)+'k' : count}
+                   </div>`, 
+             className: 'bg-transparent border-none',
+             iconSize: L.point(30, 30)
+        });
+
         const marker = L.marker([lat, lon], {
-            title: `${decCity}: ${count}`
+            title: `${decCity}: ${count}`,
+            userCount: count,
+            icon: customIcon
         });
 
         marker.bindPopup(`

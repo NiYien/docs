@@ -78,6 +78,8 @@ async function collectStats(dayList, weekQuery) {
 
   for (const day of dayList) {
     const cityBrandPattern = `telemetry:day:${day}:city:*:brand:*:event:open`;
+    const cityPattern = `telemetry:day:${day}:city:*:event:open`;
+    const brandPattern = `telemetry:day:${day}:brand:*:event:open`;
     const modelCityPattern = `telemetry:day:${day}:city:*:model:*:event:open`;
     const modelPattern = `telemetry:day:${day}:model:*:event:open`;
     const languagePattern = `telemetry:day:${day}:lang:*:event:open`;
@@ -85,13 +87,27 @@ async function collectStats(dayList, weekQuery) {
     const hourPattern = `telemetry:day:${day}:hour:*:event:open`;
 
     const cityBrandKeys = await scanKeys(cityBrandPattern);
+    const cityKeys = await scanKeys(cityPattern);
+    const brandKeys = await scanKeys(brandPattern);
     const modelCityKeys = await scanKeys(modelCityPattern);
     const modelKeys = await scanKeys(modelPattern);
     const languageKeys = await scanKeys(languagePattern);
     const countryKeys = await scanKeys(countryPattern);
     const hourKeys = await scanKeys(hourPattern);
 
+    const prevCityCount = Object.keys(cityTotals).length;
+    const prevBrandCount = Object.keys(brandTotals).length;
+
     await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals);
+    
+    // Fallback if cityBrandKeys was empty for this day
+    if (Object.keys(cityTotals).length === prevCityCount) {
+      await accumulateSingleTotals(cityKeys, cityTotals, "city");
+    }
+    if (Object.keys(brandTotals).length === prevBrandCount) {
+      await accumulateSingleTotals(brandKeys, brandTotals, "brand");
+    }
+
     await accumulateCityModel(modelCityKeys, modelCityTotals);
     await accumulateSingleTotals(modelKeys, modelTotals, "model");
     await accumulateSingleTotals(languageKeys, languageTotals, "lang");
@@ -99,7 +115,7 @@ async function collectStats(dayList, weekQuery) {
     await accumulateHours(hourKeys, hourTotals);
   }
 
-  const uniqueTotals = await collectUniqueTotals(cityTotals, brandTotals, modelTotals);
+  const uniqueTotals = await collectUniqueTotals(dayList, cityTotals, brandTotals, modelTotals);
   const weeklyUsage = await collectWeeklyUsage(weekQuery);
   const cityCoords = await collectCityCoords(cityTotals);
   const retention = await collectUserRetention();
@@ -134,24 +150,37 @@ async function collectAllTimeStats(weekQuery) {
   const hourTotals = []; 
 
   const cityBrandPattern = `telemetry:total:city:*:brand:*:event:open`;
+  const cityPattern = `telemetry:total:city:*:event:open`;
+  const brandPattern = `telemetry:total:brand:*:event:open`;
   const modelCityPattern = `telemetry:total:city:*:model:*:event:open`;
   const modelPattern = `telemetry:total:model:*:event:open`;
   const languagePattern = `telemetry:total:lang:*:event:open`;
   const countryPattern = `telemetry:total:country:*:event:open`;
 
   const cityBrandKeys = await scanKeys(cityBrandPattern);
+  const cityKeys = await scanKeys(cityPattern);
+  const brandKeys = await scanKeys(brandPattern);
   const modelCityKeys = await scanKeys(modelCityPattern);
   const modelKeys = await scanKeys(modelPattern);
   const languageKeys = await scanKeys(languagePattern);
   const countryKeys = await scanKeys(countryPattern);
 
   await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals); 
+  
+  // Fallback for old data where cityBrandKeys might be missing
+  if (Object.keys(cityTotals).length === 0) {
+    await accumulateSingleTotals(cityKeys, cityTotals, "city");
+  }
+  if (Object.keys(brandTotals).length === 0) {
+    await accumulateSingleTotals(brandKeys, brandTotals, "brand");
+  }
+
   await accumulateCityModel(modelCityKeys, modelCityTotals);
   await accumulateSingleTotals(modelKeys, modelTotals, "model");
   await accumulateSingleTotals(languageKeys, languageTotals, "lang");
   await accumulateSingleTotals(countryKeys, countryTotals, "country");
 
-  const uniqueTotals = await collectUniqueTotals(cityTotals, brandTotals, modelTotals);
+  const uniqueTotals = await collectUniqueTotals("all", cityTotals, brandTotals, modelTotals);
   const weeklyUsage = await collectWeeklyUsage(weekQuery);
   const cityCoords = await collectCityCoords(cityTotals);
   const retention = await collectUserRetention();
@@ -391,26 +420,33 @@ async function getValues(keys) {
   return result;
 }
 
-async function collectUniqueTotals(cityTotals, brandTotals, modelTotals) {
+async function collectUniqueTotals(dayList, cityTotals, brandTotals, modelTotals) {
   const cityNames = cityTotals ? Object.keys(cityTotals) : [];
   const brandNames = brandTotals ? Object.keys(brandTotals) : [];
   const modelNames = modelTotals ? Object.keys(modelTotals) : [];
 
-  const cityUniqueTotals = await getUniqueCounts("city", cityNames);
-  const brandUniqueTotals = await getUniqueCounts("brand", brandNames);
-  const modelUniqueTotals = await getUniqueCounts("model", modelNames);
-  const globalUniqueTotal = await getGlobalUniqueTotal();
+  const cityUniqueTotals = await getUniqueCounts(dayList, "city", cityNames);
+  const brandUniqueTotals = await getUniqueCounts(dayList, "brand", brandNames);
+  const modelUniqueTotals = await getUniqueCounts(dayList, "model", modelNames);
+  const globalUniqueTotal = await getGlobalUniqueTotal(dayList);
 
   return { cityUniqueTotals, brandUniqueTotals, modelUniqueTotals, globalUniqueTotal };
 }
 
-async function getGlobalUniqueTotal() {
-  const [response] = await upstashPipeline([["SCARD", "telemetry:unique:all"]]);
-  const total = response && response.result ? response.result : 0;
-  return parseInt(total, 10) || 0;
+async function getGlobalUniqueTotal(dayList) {
+  if (dayList === "all") {
+    const [response] = await upstashPipeline([["PFCOUNT", "telemetry:total:unique:all"]]);
+    return response && response.result ? parseInt(response.result, 10) || 0 : 0;
+  }
+
+  if (!dayList || !dayList.length) return 0;
+
+  const keys = dayList.map(day => `telemetry:day:${day}:unique:all`);
+  const [response] = await upstashPipeline([["PFCOUNT", ...keys]]);
+  return response && response.result ? parseInt(response.result, 10) || 0 : 0;
 }
 
-async function getUniqueCounts(type, names) {
+async function getUniqueCounts(dayList, type, names) {
   if (!names.length) {
     return {};
   }
@@ -421,8 +457,12 @@ async function getUniqueCounts(type, names) {
   for (let i = 0; i < names.length; i += chunkSize) {
     const chunk = names.slice(i, i + chunkSize);
     const commands = chunk.map((name) => {
-      const key = `telemetry:unique:${type}:${encodeKeyPart(name)}`;
-      return ["SCARD", key];
+      if (dayList === "all") {
+        return ["PFCOUNT", `telemetry:total:unique:${type}:${encodeKeyPart(name)}`];
+      } else {
+        const keys = dayList.map(day => `telemetry:day:${day}:unique:${type}:${encodeKeyPart(name)}`);
+        return ["PFCOUNT", ...keys];
+      }
     });
 
     const responses = await upstashPipeline(commands);

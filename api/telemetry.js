@@ -188,7 +188,7 @@ async function processEvent(fields, context) {
   };
 
   const { dailyKeys, totalKeys } = buildKeys(keyParts);
-  const uniqueKeys = buildUniqueKeys(normCity, normBrand, normModel);
+  const uniqueKeys = buildUniqueKeys(context.day, normCity, normBrand, normModel);
   const weekUserKey = buildWeekUserKey(context.weekKey, fields.anonId);
   const cityCoordsKey = `telemetry:city_coords:${normCity}`;
   // Correct Sorted Set key for keeping track of all users last seen
@@ -344,6 +344,7 @@ function buildKeys({ day, hour, city, country, brand, model, language, event }) 
     `telemetry:total:city:${city}:event:${event}`,
     `telemetry:total:brand:${brand}:event:${event}`,
     `telemetry:total:model:${model}:event:${event}`,
+    `telemetry:total:city:${city}:brand:${brand}:event:${event}`,
     `telemetry:total:city:${city}:model:${model}:event:${event}`,
     `telemetry:total:country:${country}:event:${event}`,
     `telemetry:total:event:${event}`,
@@ -352,13 +353,21 @@ function buildKeys({ day, hour, city, country, brand, model, language, event }) 
   return { dailyKeys, totalKeys };
 }
 
-function buildUniqueKeys(city, brand, model) {
+function buildUniqueKeys(day, city, brand, model) {
   const keys = [
-    "telemetry:unique:all",
-    `telemetry:unique:city:${city}`,
+    `telemetry:day:${day}:unique:all`,
+    `telemetry:day:${day}:unique:city:${city}`,
+    `telemetry:total:unique:all`,
+    `telemetry:total:unique:city:${city}`,
   ];
-  if (brand && brand !== "Unknown") keys.push(`telemetry:unique:brand:${brand}`);
-  if (model && model !== "Unknown") keys.push(`telemetry:unique:model:${model}`);
+  if (brand && brand !== "Unknown") {
+    keys.push(`telemetry:day:${day}:unique:brand:${brand}`);
+    keys.push(`telemetry:total:unique:brand:${brand}`);
+  }
+  if (model && model !== "Unknown") {
+    keys.push(`telemetry:day:${day}:unique:model:${model}`);
+    keys.push(`telemetry:total:unique:model:${model}`);
+  }
   return keys;
 }
 
@@ -413,10 +422,10 @@ async function upstashWrite(
     }
   }
 
-  // Unique users tracking
+  // Unique users tracking (HyperLogLog)
   for (const key of uniqueKeys) {
-    pipeline.push(["SADD", key, anonId]);
-    if (uniqueTtlSeconds > 0) {
+    pipeline.push(["PFADD", key, anonId]);
+    if (key.startsWith("telemetry:day:") && uniqueTtlSeconds > 0) {
       pipeline.push(["EXPIRE", key, uniqueTtlSeconds]);
     }
   }
