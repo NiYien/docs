@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   const requiredToken = process.env.TELEMETRY_STATS_TOKEN;
-  const provided = String(req.headers["x-stats-token"] || req.query.token || "").trim();
+  const provided = String(req.headers["x-stats-token"] || "").trim();
   if (requiredToken) {
     if (!provided || provided !== requiredToken) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -107,6 +107,7 @@ async function collectStats(dayList, weekQuery) {
     model_unique_totals: uniqueTotals.modelUniqueTotals,
     country_unique_totals: uniqueTotals.countryUniqueTotals,
     global_unique_total: uniqueTotals.globalUniqueTotal,
+    unique_source: uniqueTotals.source,
     weekly_usage: weeklyUsage,
   };
 }
@@ -291,11 +292,27 @@ async function collectUniqueTotals({ dayList, cityTotals, brandTotals, modelTota
   const modelNames = Object.keys(modelTotals);
   const countryNames = Object.keys(countryTotals);
 
-  const cityUniqueTotals = await getScopedUniqueTotals(dayList, cityNames, "city");
-  const brandUniqueTotals = await getScopedUniqueTotals(dayList, brandNames, "brand");
-  const modelUniqueTotals = await getScopedUniqueTotals(dayList, modelNames, "model");
-  const countryUniqueTotals = await getScopedUniqueTotals(dayList, countryNames, "country");
-  const globalUniqueTotal = await getGlobalUniqueTotal(dayList);
+  let cityUniqueTotals = await getScopedUniqueTotals(dayList, cityNames, "city");
+  let brandUniqueTotals = await getScopedUniqueTotals(dayList, brandNames, "brand");
+  let modelUniqueTotals = await getScopedUniqueTotals(dayList, modelNames, "model");
+  let countryUniqueTotals = await getScopedUniqueTotals(dayList, countryNames, "country");
+  let globalUniqueTotal = await getGlobalUniqueTotal(dayList);
+  let source = "day";
+
+  const hasOpenTotals =
+    hasAnyTotals(cityTotals) ||
+    hasAnyTotals(brandTotals) ||
+    hasAnyTotals(modelTotals) ||
+    hasAnyTotals(countryTotals);
+
+  if (globalUniqueTotal === 0 && hasOpenTotals) {
+    globalUniqueTotal = await getLegacyGlobalUniqueTotal();
+    cityUniqueTotals = await getLegacyScopedUniqueTotals(cityNames, "city");
+    brandUniqueTotals = await getLegacyScopedUniqueTotals(brandNames, "brand");
+    modelUniqueTotals = await getLegacyScopedUniqueTotals(modelNames, "model");
+    countryUniqueTotals = await getLegacyScopedUniqueTotals(countryNames, "country");
+    source = "legacy-fallback";
+  }
 
   return {
     cityUniqueTotals,
@@ -303,12 +320,23 @@ async function collectUniqueTotals({ dayList, cityTotals, brandTotals, modelTota
     modelUniqueTotals,
     countryUniqueTotals,
     globalUniqueTotal,
+    source,
   };
+}
+
+function hasAnyTotals(totals) {
+  return Object.values(totals || {}).some((value) => (parseInt(value || "0", 10) || 0) > 0);
 }
 
 async function getGlobalUniqueTotal(dayList) {
   const keys = dayList.map((day) => `telemetry:day:${day}:unique:all`);
   return getUnionCardinality(keys);
+}
+
+async function getLegacyGlobalUniqueTotal() {
+  const [response] = await upstashPipeline([["SCARD", "telemetry:unique:all"]]);
+  const total = response && response.result ? response.result : 0;
+  return parseInt(total, 10) || 0;
 }
 
 async function getScopedUniqueTotals(dayList, names, scope) {
@@ -320,6 +348,32 @@ async function getScopedUniqueTotals(dayList, names, scope) {
   for (const name of names) {
     const keys = dayList.map((day) => `telemetry:day:${day}:unique:${scope}:${encodeKeyPart(name)}`);
     result[name] = await getUnionCardinality(keys);
+  }
+
+  return result;
+}
+
+async function getLegacyScopedUniqueTotals(names, scope) {
+  if (!names.length) {
+    return {};
+  }
+
+  const result = {};
+  const chunkSize = 200;
+
+  for (let i = 0; i < names.length; i += chunkSize) {
+    const chunk = names.slice(i, i + chunkSize);
+    const commands = chunk.map((name) => {
+      const key = `telemetry:unique:${scope}:${encodeKeyPart(name)}`;
+      return ["SCARD", key];
+    });
+
+    const responses = await upstashPipeline(commands);
+    for (let j = 0; j < chunk.length; j += 1) {
+      const response = responses[j];
+      const total = response && response.result ? response.result : 0;
+      result[chunk[j]] = parseInt(total, 10) || 0;
+    }
   }
 
   return result;
