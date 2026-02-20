@@ -234,9 +234,11 @@ const App = {
         
         // Wait for DOM update
         await Vue.nextTick();
-
-        renderCharts(json);
-        updateMap(json.city_totals || {});
+        // Double check if canvas exists, sometimes nextTick is too fast for complex v-if
+        setTimeout(() => {
+          renderCharts(json);
+          updateMap(json.city_totals || {});
+        }, 100);
       } catch (e) {
         error.value = e.message;
         console.error(e);
@@ -248,30 +250,40 @@ const App = {
     const renderCharts = (stats) => {
       destroyCharts();
       
-      // Brands
-      charts.brand = createChart('brandChart', 'doughnut', stats.brand_totals, 'Brands');
-      
-      // Models (Top 10)
-      const topModels = getTopK(stats.model_totals, 10);
-      charts.model = createChart('modelChart', 'bar', topModels, 'Models');
+      try {
+        // Brands
+        if (document.getElementById('brandChart')) {
+          charts.brand = createChart('brandChart', 'doughnut', stats.brand_totals, 'Brands');
+        }
+        
+        // Models (Top 10)
+        if (document.getElementById('modelChart')) {
+          const topModels = getTopK(stats.model_totals, 10);
+          charts.model = createChart('modelChart', 'bar', topModels, 'Models');
+        }
 
-      // Weekly Usage
-      if (stats.weekly_usage && stats.weekly_usage.buckets) {
-         charts.usage = new Chart(document.getElementById('usageChart'), {
-          type: 'bar',
-          data: {
-            labels: Object.keys(stats.weekly_usage.buckets),
-            datasets: [{
-              label: 'Users',
-              data: Object.values(stats.weekly_usage.buckets),
-              backgroundColor: '#3b82f6'
-            }]
-          }
-        });
+        // Weekly Usage
+        if (document.getElementById('usageChart') && stats.weekly_usage && stats.weekly_usage.buckets) {
+           charts.usage = new Chart(document.getElementById('usageChart'), {
+            type: 'bar',
+            data: {
+              labels: Object.keys(stats.weekly_usage.buckets),
+              datasets: [{
+                label: 'Users',
+                data: Object.values(stats.weekly_usage.buckets),
+                backgroundColor: '#3b82f6'
+              }]
+            }
+          });
+        }
+
+        // Langs
+        if (document.getElementById('langChart')) {
+          charts.lang = createChart('langChart', 'pie', stats.language_totals, 'Language');
+        }
+      } catch (e) {
+        console.warn("Chart render failed", e);
       }
-
-      // Langs
-      charts.lang = createChart('langChart', 'pie', stats.language_totals, 'Language');
     };
 
     const createChart = (id, type, dataObj, label) => {
