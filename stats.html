@@ -169,20 +169,6 @@ const App = {
     let heatLayer = null;
     let charts = {};
 
-    onMounted(() => {
-      // Load saved token
-      const savedToken = localStorage.getItem('telemetry_stats_token');
-      if (savedToken) {
-        token.value = savedToken;
-      }
-      loadStats('7');
-    });
-
-    const saveToken = () => {
-      localStorage.setItem('telemetry_stats_token', token.value);
-      loadStats(duration.value); // Reload with new token
-    };
-
     // Mapbox/OSM Init
     const initMap = () => {
       if (map) return;
