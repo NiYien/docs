@@ -57,6 +57,7 @@ function buildDayList(days) {
 }
 
 async function collectStats(dayList, weekQuery) {
+  const allowLegacyFallback = String(process.env.TELEMETRY_DISABLE_LEGACY_FALLBACK || "").toLowerCase() !== "true";
   const cityTotals = {};
   const brandTotals = {};
   const modelTotals = {};
@@ -86,6 +87,7 @@ async function collectStats(dayList, weekQuery) {
   }
 
   const uniqueTotals = await collectUniqueTotals({
+    allowLegacyFallback,
     dayList,
     cityTotals,
     brandTotals,
@@ -286,7 +288,7 @@ async function getValues(keys) {
   return result;
 }
 
-async function collectUniqueTotals({ dayList, cityTotals, brandTotals, modelTotals, countryTotals }) {
+async function collectUniqueTotals({ allowLegacyFallback, dayList, cityTotals, brandTotals, modelTotals, countryTotals }) {
   const cityNames = Object.keys(cityTotals);
   const brandNames = Object.keys(brandTotals);
   const modelNames = Object.keys(modelTotals);
@@ -305,7 +307,7 @@ async function collectUniqueTotals({ dayList, cityTotals, brandTotals, modelTota
     hasAnyTotals(modelTotals) ||
     hasAnyTotals(countryTotals);
 
-  if (globalUniqueTotal === 0 && hasOpenTotals) {
+  if (allowLegacyFallback && globalUniqueTotal === 0 && hasOpenTotals) {
     globalUniqueTotal = await getLegacyGlobalUniqueTotal();
     cityUniqueTotals = await getLegacyScopedUniqueTotals(cityNames, "city");
     brandUniqueTotals = await getLegacyScopedUniqueTotals(brandNames, "brand");

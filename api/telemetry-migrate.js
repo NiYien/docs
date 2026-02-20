@@ -38,10 +38,20 @@ export default async function handler(req, res) {
   }
 
   const dryRun = body.dry_run !== false;
+  const force = body.force === true;
   const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "0", 10);
   const uniqueTtlSeconds = uniqueTtlDays > 0 ? uniqueTtlDays * 86400 : 0;
+  const doneKey = "telemetry:migration:legacy_snapshot_copy:done";
 
   try {
+    const alreadyDone = await readStringKey(doneKey);
+    if (!dryRun && alreadyDone === "1" && !force) {
+      return res.status(409).json({
+        error: "Migration already completed",
+        hint: "Set force=true only if you intentionally need to rerun",
+      });
+    }
+
     const legacy = await collectLegacyUniqueKeys();
 
     if (dryRun) {
@@ -63,6 +73,7 @@ export default async function handler(req, res) {
     }
 
     const migrated = await migrateLegacySnapshotToDays(dayList, legacy, uniqueTtlSeconds);
+    await writeStringKey(doneKey, "1");
     return res.status(200).json({
       ok: true,
       dry_run: false,
@@ -202,4 +213,13 @@ async function upstashPipeline(commands) {
 
   const data = await response.json();
   return Array.isArray(data) ? data : [];
+}
+
+async function readStringKey(key) {
+  const [response] = await upstashPipeline([["GET", key]]);
+  return response && typeof response.result === "string" ? response.result : "";
+}
+
+async function writeStringKey(key, value) {
+  await upstashPipeline([["SET", key, value]]);
 }
