@@ -86,6 +86,7 @@ async function collectStats(dayList, weekQuery) {
   }
 
   const uniqueTotals = await collectUniqueTotals({
+    dayList,
     cityTotals,
     brandTotals,
     modelTotals,
@@ -284,17 +285,17 @@ async function getValues(keys) {
   return result;
 }
 
-async function collectUniqueTotals({ cityTotals, brandTotals, modelTotals, countryTotals }) {
+async function collectUniqueTotals({ dayList, cityTotals, brandTotals, modelTotals, countryTotals }) {
   const cityNames = Object.keys(cityTotals);
   const brandNames = Object.keys(brandTotals);
   const modelNames = Object.keys(modelTotals);
   const countryNames = Object.keys(countryTotals);
 
-  const cityUniqueTotals = await getScopedUniqueTotals(cityNames, "city");
-  const brandUniqueTotals = await getScopedUniqueTotals(brandNames, "brand");
-  const modelUniqueTotals = await getScopedUniqueTotals(modelNames, "model");
-  const countryUniqueTotals = await getScopedUniqueTotals(countryNames, "country");
-  const globalUniqueTotal = await getGlobalUniqueTotal();
+  const cityUniqueTotals = await getScopedUniqueTotals(dayList, cityNames, "city");
+  const brandUniqueTotals = await getScopedUniqueTotals(dayList, brandNames, "brand");
+  const modelUniqueTotals = await getScopedUniqueTotals(dayList, modelNames, "model");
+  const countryUniqueTotals = await getScopedUniqueTotals(dayList, countryNames, "country");
+  const globalUniqueTotal = await getGlobalUniqueTotal(dayList);
 
   return {
     cityUniqueTotals,
@@ -305,36 +306,48 @@ async function collectUniqueTotals({ cityTotals, brandTotals, modelTotals, count
   };
 }
 
-async function getGlobalUniqueTotal() {
-  const [response] = await upstashPipeline([["SCARD", "telemetry:unique:all"]]);
-  const total = response && response.result ? response.result : 0;
-  return parseInt(total, 10) || 0;
+async function getGlobalUniqueTotal(dayList) {
+  const keys = dayList.map((day) => `telemetry:day:${day}:unique:all`);
+  return getUnionCardinality(keys);
 }
 
-async function getScopedUniqueTotals(names, scope) {
+async function getScopedUniqueTotals(dayList, names, scope) {
   if (!names.length) {
     return {};
   }
 
   const result = {};
-  const chunkSize = 200;
-
-  for (let i = 0; i < names.length; i += chunkSize) {
-    const chunk = names.slice(i, i + chunkSize);
-    const commands = chunk.map((name) => {
-      const key = `telemetry:unique:${scope}:${encodeKeyPart(name)}`;
-      return ["SCARD", key];
-    });
-
-    const responses = await upstashPipeline(commands);
-    for (let j = 0; j < chunk.length; j += 1) {
-      const response = responses[j];
-      const total = response && response.result ? response.result : 0;
-      result[chunk[j]] = parseInt(total, 10) || 0;
-    }
+  for (const name of names) {
+    const keys = dayList.map((day) => `telemetry:day:${day}:unique:${scope}:${encodeKeyPart(name)}`);
+    result[name] = await getUnionCardinality(keys);
   }
 
   return result;
+}
+
+async function getUnionCardinality(keys) {
+  const list = keys.filter((key) => !!key);
+  if (!list.length) {
+    return 0;
+  }
+
+  if (list.length === 1) {
+    const [response] = await upstashPipeline([["SCARD", list[0]]]);
+    const total = response && response.result ? response.result : 0;
+    return parseInt(total, 10) || 0;
+  }
+
+  const tempKey = `telemetry:tmp:stats:union:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
+  const responses = await upstashPipeline([
+    ["SUNIONSTORE", tempKey, ...list],
+    ["EXPIRE", tempKey, 30],
+    ["SCARD", tempKey],
+    ["DEL", tempKey],
+  ]);
+
+  const cardResponse = responses[2];
+  const total = cardResponse && cardResponse.result ? cardResponse.result : 0;
+  return parseInt(total, 10) || 0;
 }
 
 async function collectWeeklyUsage(weekQuery) {

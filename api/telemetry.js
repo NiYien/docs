@@ -179,6 +179,7 @@ async function processEvent(fields, context) {
 
   const keys = buildKeys(keyParts);
   const uniqueKeys = buildUniqueKeys({
+    day: keyParts.day,
     city: keyParts.city,
     brand: keyParts.brand,
     model: keyParts.model,
@@ -324,13 +325,18 @@ function buildKeys({ day, hour, city, country, brand, model, language, event }) 
   ];
 }
 
-function buildUniqueKeys({ city, brand, model, country }) {
+function buildUniqueKeys({ day, city, brand, model, country }) {
   return [
     "telemetry:unique:all",
     `telemetry:unique:city:${city}`,
     `telemetry:unique:brand:${brand}`,
     `telemetry:unique:model:${model}`,
     `telemetry:unique:country:${country}`,
+    `telemetry:day:${day}:unique:all`,
+    `telemetry:day:${day}:unique:city:${city}`,
+    `telemetry:day:${day}:unique:brand:${brand}`,
+    `telemetry:day:${day}:unique:model:${model}`,
+    `telemetry:day:${day}:unique:country:${country}`,
   ];
 }
 
