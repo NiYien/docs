@@ -27,6 +27,8 @@ export default async function handler(req, res) {
   const geo = await lookupGeo(req, ip);
   const city = geo.city || "Unknown";
   const country = geo.country || "Unknown";
+  const lat = geo.lat || "";
+  const lon = geo.lon || "";
   const weekKey = getIsoWeekKey(now);
   const ttlDays = parseInt(process.env.TELEMETRY_TTL_DAYS || "90", 10);
   const ttlSeconds = Math.max(ttlDays, 1) * 86400;
@@ -63,6 +65,8 @@ export default async function handler(req, res) {
           {
             day,
             hour,
+            lat,
+            lon,
             city,
             country,
             weekKey,
@@ -104,6 +108,8 @@ export default async function handler(req, res) {
       {
         day,
         hour,
+        lat,
+        lon,
         city,
         country,
         weekKey,
@@ -166,20 +172,29 @@ function validateEventFields(fields) {
 }
 
 async function processEvent(fields, context) {
+  const normCity = normalizeKeyPart(context.city);
+  const normBrand = normalizeKeyPart(fields.cameraBrand);
+  const normModel = normalizeKeyPart(fields.cameraModel);
+  
   const keyParts = {
     day: context.day,
     hour: context.hour,
-    city: normalizeKeyPart(context.city),
+    city: normCity,
     country: normalizeKeyPart(context.country),
-    brand: normalizeKeyPart(fields.cameraBrand),
-    model: normalizeKeyPart(fields.cameraModel),
+    brand: normBrand,
+    model: normModel,
     language: normalizeKeyPart(fields.language),
     event: normalizeKeyPart(fields.event),
   };
 
   const { dailyKeys, totalKeys } = buildKeys(keyParts);
-  const uniqueKeys = buildUniqueKeys(keyParts.city);
+  const uniqueKeys = buildUniqueKeys(normCity, normBrand, normModel);
   const weekUserKey = buildWeekUserKey(context.weekKey, fields.anonId);
+  const cityCoordsKey = `telemetry:city_coords:${normCity}`;
+  // Correct Sorted Set key for keeping track of all users last seen
+  // Format: ZADD telemetry:users:last_seen <timestamp> <anonId>
+  const usersLastSeenKey = `telemetry:users:last_seen`;
+  const timestamp = Date.now();
 
   await upstashWrite(
     dailyKeys,
@@ -189,7 +204,12 @@ async function processEvent(fields, context) {
     context.uniqueTtlSeconds,
     fields.anonId,
     weekUserKey,
-    context.weekTtlSeconds
+    context.weekTtlSeconds,
+    cityCoordsKey,
+    context.lat,
+    context.lon,
+    usersLastSeenKey,
+    timestamp
   );
 }
 
@@ -221,17 +241,19 @@ function getClientIp(req) {
 }
 
 async function lookupGeo(req, ip) {
-  // 1. ipinfo (Primary)
+  // 1. IPInfo
   const token = process.env.IPINFO_TOKEN;
-  if (token && ip) {
+  if (token && ip && ip !== "127.0.0.1" && ip !== "::1") {
     try {
-      const url = `https://ipinfo.io/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
-      const res = await fetch(url);
+      const res = await fetch(`https://ipinfo.io/${ip}?token=${token}`);
       if (res.ok) {
         const data = await res.json();
+        const [lat, lon] = (data.loc || "").split(",");
         return {
           city: data.city || "Unknown",
           country: data.country || "Unknown",
+          lat: lat || "",
+          lon: lon || "",
         };
       }
       console.warn(`[telemetry] ipinfo failed: ${res.status}`);
@@ -248,24 +270,28 @@ async function lookupGeo(req, ip) {
     }
   }
 
-  return { city: "Unknown", country: "Unknown" };
+  return { city: "Unknown", country: "Unknown", lat: "", lon: "" };
 }
 
 function getVercelGeo(req) {
   let city = String(req.headers["x-vercel-ip-city"] || "").trim();
   let country = String(req.headers["x-vercel-ip-country"] || "").trim();
+  let lat = String(req.headers["x-vercel-ip-latitude"] || "").trim();
+  let lon = String(req.headers["x-vercel-ip-longitude"] || "").trim();
 
   try { city = decodeURIComponent(city); } catch (e) {}
   try { country = decodeURIComponent(country); } catch (e) {}
 
   const debugGeo = shouldLogGeo(req);
   if (debugGeo) {
-    console.log("[telemetry] vercel-geo", { city, country });
+    console.log("[telemetry] vercel-geo", { city, country, lat, lon });
   }
 
   return {
     city: city || "",
     country: country || "",
+    lat: lat || "",
+    lon: lon || "",
   };
 }
 
@@ -320,18 +346,20 @@ function buildKeys({ day, hour, city, country, brand, model, language, event }) 
     `telemetry:total:model:${model}:event:${event}`,
     `telemetry:total:city:${city}:model:${model}:event:${event}`,
     `telemetry:total:country:${country}:event:${event}`,
-    `telemetry:total:lang:${language}:event:${event}`,
     `telemetry:total:event:${event}`,
   ];
 
   return { dailyKeys, totalKeys };
 }
 
-function buildUniqueKeys(city) {
-  return [
+function buildUniqueKeys(city, brand, model) {
+  const keys = [
     "telemetry:unique:all",
     `telemetry:unique:city:${city}`,
   ];
+  if (brand && brand !== "Unknown") keys.push(`telemetry:unique:brand:${brand}`);
+  if (model && model !== "Unknown") keys.push(`telemetry:unique:model:${model}`);
+  return keys;
 }
 
 function buildWeekUserKey(weekKey, anonId) {
@@ -356,7 +384,12 @@ async function upstashWrite(
   uniqueTtlSeconds,
   anonId,
   weekUserKey,
-  weekTtlSeconds
+  weekTtlSeconds,
+  cityCoordsKey,
+  lat,
+  lon,
+  userLastSeenKey,
+  timestamp
 ) {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -366,6 +399,7 @@ async function upstashWrite(
   }
 
   const pipeline = [];
+  
   // Daily Keys (expire)
   for (const key of dailyKeys) {
     pipeline.push(["INCR", key]);
@@ -379,6 +413,7 @@ async function upstashWrite(
     }
   }
 
+  // Unique users tracking
   for (const key of uniqueKeys) {
     pipeline.push(["SADD", key, anonId]);
     if (uniqueTtlSeconds > 0) {
@@ -386,8 +421,21 @@ async function upstashWrite(
     }
   }
 
+  // Week User key (active this week)
   pipeline.push(["INCR", weekUserKey]);
   pipeline.push(["EXPIRE", weekUserKey, weekTtlSeconds]);
+
+  // Last Seen key
+  // We use ZADD on a sorted set for easier querying: telemetry:users:last_seen
+  pipeline.push(["ZADD", "telemetry:users:last_seen", timestamp, anonId]);
+  
+  // Also store individual key if we need direct lookup
+  // pipeline.push(["SET", userLastSeenKey, timestamp]); 
+
+  // City Coords
+  if (cityCoordsKey && lat && lon) {
+    pipeline.push(["SET", cityCoordsKey, JSON.stringify({ lat, lon })]);
+  }
 
   const response = await fetch(`${url}/pipeline`, {
     method: "POST",

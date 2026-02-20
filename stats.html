@@ -48,6 +48,12 @@
             {{ d.label }}
          </button>
       </div>
+      
+      <!-- View Mode Toggle -->
+      <div class="flex gap-1 bg-white p-1 rounded-lg shadow">
+         <button @click="viewMode = 'total'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'total' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">Total Opens</button>
+         <button @click="viewMode = 'unique'" :class="['px-4 py-2 rounded text-sm transition-colors', viewMode === 'unique' ? 'bg-emerald-100 text-emerald-800 font-medium' : 'hover:bg-gray-50 text-gray-600']">Unique Users</button>
+      </div>
     </div>
   </header>
 
@@ -66,15 +72,40 @@
     
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <kpi-card title="Total Opens" :value="totalOpens" icon="🚀"></kpi-card>
-      <kpi-card title="Active Cities" :value="Object.keys(data.city_totals || {}).length" icon="🌍"></kpi-card>
-      <kpi-card title="Camera Brands" :value="Object.keys(data.brand_totals || {}).length" icon="📷"></kpi-card>
-      <kpi-card title="Active Models" :value="Object.keys(data.model_totals || {}).length" icon="🔢"></kpi-card>
+      <!-- Main Metric (Opens or Unique Users) -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+         <div class="text-gray-500 text-sm font-medium mb-1">{{ currentStats.label }}</div>
+         <div class="text-3xl font-bold">{{ currentStats.total.toLocaleString() }}</div>
+      </div>
+
+      <!-- Active Cities -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+         <div class="text-gray-500 text-sm font-medium mb-1">Active Cities</div>
+         <div class="text-3xl font-bold">{{ Object.keys(currentStats.cities).length }}</div>
+      </div>
+
+      <!-- Inactive Users (Retention) -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
+         <div class="text-gray-500 text-sm font-medium leading-tight mb-1">Active / Inactive (30d)</div>
+         <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-bold">{{ data.user_retention?.active_30d || 0 }}</span>
+            <span class="text-gray-400 text-sm">/ {{ data.user_retention?.inactive_30d || 0 }}</span>
+         </div>
+      </div>
+
+      <!-- Total Models -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
+         <div class="text-gray-500 text-sm font-medium mb-1">Active Models</div>
+         <div class="text-3xl font-bold">{{ Object.keys(currentStats.models).length }}</div>
+      </div>
     </div>
 
     <!-- Map Section -->
     <div class="bg-white p-4 rounded-xl shadow-sm">
-      <h2 class="text-xl font-semibold mb-4">User Distribution Heatmap</h2>
+      <h2 class="text-xl font-semibold mb-4 text-gray-800 flex justify-between">
+        <span>User Distribution Map</span>
+        <span class="text-sm font-normal text-gray-500 self-center">Showing {{ viewMode === 'unique' ? 'Unique Users' : 'Total Opens' }}</span>
+      </h2>
       <div id="map"></div>
     </div>
 
@@ -149,7 +180,7 @@
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted, watch } = Vue;
+const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
 const App = {
   setup() {
@@ -158,16 +189,54 @@ const App = {
     const data = ref(null);
     const duration = ref('7');
     const token = ref('');
+    const viewMode = ref('total'); // 'total' or 'unique'
+    
     const durations = [
       { label: '7D', val: '7' },
-      { label: '14D', val: '14' },
       { label: '30D', val: '30' },
       { label: 'All', val: 'all' }
     ];
 
     let map = null;
-    let heatLayer = null;
+    let markersLayer = null;
     let charts = {};
+
+    // Computed Stats based on View Mode
+    const currentStats = computed(() => {
+      if (!data.value) return {};
+      if (viewMode.value === 'unique') {
+        return {
+          cities: data.value.city_unique_totals || {},
+          brands: data.value.brand_unique_totals || {},
+          models: data.value.model_unique_totals || {},
+          total: data.value.global_unique_total || 0,
+          label: 'Unique Users'
+        };
+      }
+      return {
+        cities: data.value.city_totals || {},
+        brands: data.value.brand_totals || {},
+        models: data.value.model_totals || {},
+        total: (Object.values(data.value.city_totals || {}).reduce((a,b)=>a+b,0)),
+        label: 'Total Opens'
+      };
+    });
+    
+    // Top Cities List
+    const topCities = computed(() => {
+        if (!data.value) return [];
+        const source = currentStats.value.cities;
+        return Object.entries(source)
+            .sort((a,b) => b[1] - a[1])
+            .slice(0, 50)
+            .map(([name, count]) => ({
+                name: decodeURIComponent(name),
+                count,
+                // Rough mapping for demonstration if brand/model not available in unique view easily without heavy processing
+                topBrand: '-', 
+                topModel: '-'
+            }));
+    });
 
     // Mapbox/OSM Init
     const initMap = () => {
@@ -178,43 +247,52 @@ const App = {
         subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
+      markersLayer = L.layerGroup().addTo(map);
     };
 
-    const updateMap = (cityTotals) => {
+    const updateMap = () => {
       if (!map) initMap();
+      markersLayer.clearLayers();
       
-      const heatPoints = [];
-      // Mock lookup for demonstration - REPLACE with real lat/lon in production
-      // or expand the hardcoded list significantly.
-      const cityCoords = {
-        "Shanghai": [31.2304, 121.4737], "Beijing": [39.9042, 116.4074],
-        "London": [51.5074, -0.1278], "New York": [40.7128, -74.0060],
-        "Tokyo": [35.6762, 139.6503], "Singapore": [1.3521, 103.8198],
-        "Sydney": [-33.8688, 151.2093], "Paris": [48.8566, 2.3522],
-        "Berlin": [52.5200, 13.4050], "Moscow": [55.7558, 37.6173],
-        "Los Angeles": [34.0522, -118.2437], "Toronto": [43.6510, -79.3470],
-        "Hong Kong": [22.3193, 114.1694], "Taipei": [25.0330, 121.5654],
-        "Seoul": [37.5665, 126.9780], "Bangkok": [13.7563, 100.5018],
-        "Dubai": [25.2048, 55.2708], "Mumbai": [19.0760, 72.8777],
-        // ... Add more as needed
-      };
-
-      Object.entries(cityTotals).forEach(([city, count]) => {
-        // Decode URI component just in case
+      const stats = currentStats.value.cities;
+      const coordsMap = data.value.city_coords || {};
+      
+      Object.entries(stats).forEach(([city, count]) => {
+        // Try exact match or decoded match
+        const rawCity = city; 
         const decCity = decodeURIComponent(city);
-        const coords = cityCoords[decCity];
         
-        if (coords) {
-          // Add point with intensity based on log of count
-          const intensity = Math.min(count * 10, 1000); 
-          heatPoints.push([coords[0], coords[1], intensity]);
+        let latlon = coordsMap[rawCity] || coordsMap[decCity];
+
+        // Fallback for some known majors if missing and strictly needed
+        if (!latlon && decCity === 'Unknown') return;
+
+        if (latlon && latlon.lat && latlon.lon) {
+           const lat = parseFloat(latlon.lat);
+           const lon = parseFloat(latlon.lon);
+           
+           // Size marker by log scale
+           const radius = Math.max(5, Math.log(count) * 3);
+           
+           const marker = L.circleMarker([lat, lon], {
+             radius: radius,
+             fillColor: viewMode.value === 'unique' ? '#10b981' : '#3b82f6',
+             color: '#fff',
+             weight: 1,
+             opacity: 1,
+             fillOpacity: 0.7
+           });
+           
+           marker.bindPopup(`
+             <div class="text-sm font-sans">
+               <strong class="block text-base mb-1">${decCity}</strong>
+               ${viewMode.value === 'unique' ? 'Unique Users' : 'Total Opens'}: <b>${count}</b>
+             </div>
+           `);
+           
+           markersLayer.addLayer(marker);
         }
       });
-
-      if (heatLayer) map.removeLayer(heatLayer);
-      if (heatPoints.length > 0) {
-        heatLayer = L.heatLayer(heatPoints, { radius: 25, title: 'Heatmap' }).addTo(map);
-      }
     };
 
     const loadStats = async (days) => {
@@ -224,21 +302,19 @@ const App = {
       
       try {
         const headers = token.value ? { "X-Stats-Token": token.value } : {};
-        const res = await fetch(`/api/telemetry-stats?days=${days}`, { headers });
+        const url = `/api/telemetry-stats?days=${days}&token=${token.value || ''}`;
+        
+        const res = await fetch(url);
         if (res.status === 401) {
-             throw new Error("Unauthorized: Please enter a valid Token");
+             throw new Error("Unauthorized: Please enter valid Token");
         }
         if (!res.ok) throw new Error(`API Error: ${res.status}`);
+        
         const json = await res.json();
         data.value = json;
         
-        // Wait for DOM update
-        await Vue.nextTick();
-        // Double check if canvas exists, sometimes nextTick is too fast for complex v-if
-        setTimeout(() => {
-          renderCharts(json);
-          updateMap(json.city_totals || {});
-        }, 100);
+        await nextTick();
+        renderAll();
       } catch (e) {
         error.value = e.message;
         console.error(e);
@@ -246,58 +322,82 @@ const App = {
         loading.value = false;
       }
     };
+    
+    // Watch view mode to re-render without fetching
+    watch(viewMode, () => {
+        renderAll();
+    });
 
-    const renderCharts = (stats) => {
-      destroyCharts();
+    const renderAll = () => {
+        if (!data.value) return;
+        renderCharts();
+        updateMap();
+    };
+
+    const renderCharts = () => {
+      // Helper to destroy old charts
+      ['brand', 'model', 'lang', 'usage'].forEach(k => {
+          if (charts[k]) {
+              charts[k].destroy();
+              charts[k] = null;
+          }
+      });
       
+      const stats = currentStats.value;
+      const fullData = data.value;
+
       try {
         // Brands
         if (document.getElementById('brandChart')) {
-          charts.brand = createChart('brandChart', 'doughnut', stats.brand_totals, 'Brands');
+          charts.brand = createChart('brandChart', 'doughnut', stats.brands, 'Brands');
         }
         
         // Models (Top 10)
         if (document.getElementById('modelChart')) {
-          const topModels = getTopK(stats.model_totals, 10);
-          charts.model = createChart('modelChart', 'bar', topModels, 'Models');
+          charts.model = createChart('modelChart', 'bar', stats.models, 'Models', 10);
         }
 
         // Weekly Usage
-        if (document.getElementById('usageChart') && stats.weekly_usage && stats.weekly_usage.buckets) {
-           charts.usage = new Chart(document.getElementById('usageChart'), {
+        if (document.getElementById('usageChart') && fullData.weekly_usage && fullData.weekly_usage.buckets) {
+           const ctx = document.getElementById('usageChart');
+           charts.usage = new Chart(ctx, {
             type: 'bar',
             data: {
-              labels: Object.keys(stats.weekly_usage.buckets),
+              labels: Object.keys(fullData.weekly_usage.buckets),
               datasets: [{
                 label: 'Users',
-                data: Object.values(stats.weekly_usage.buckets),
+                data: Object.values(fullData.weekly_usage.buckets),
                 backgroundColor: '#3b82f6'
               }]
-            }
+            },
+            options: { responsive: true, maintainAspectRatio: false }
           });
         }
 
         // Langs
         if (document.getElementById('langChart')) {
-          charts.lang = createChart('langChart', 'pie', stats.language_totals, 'Language');
+           const langParams = viewMode.value === 'unique' ? fullData.language_totals : fullData.language_totals;
+           charts.lang = createChart('langChart', 'pie', langParams, 'Language');
         }
       } catch (e) {
         console.warn("Chart render failed", e);
       }
     };
 
-    const createChart = (id, type, dataObj, label) => {
-      const sorting = Object.entries(dataObj || {})
-        .sort((a, b) => b[1] - a[1]);
+    const createChart = (id, type, dataObj, label, limit = 0) => {
+      const cvs = document.getElementById(id);
+      if(!cvs) return null;
       
-      if (id === 'modelChart') { // Keep specifically top 10 for bar
-         // already sliced in caller
+      let sorting = Object.entries(dataObj || {}).sort((a, b) => b[1] - a[1]);
+      
+      if (limit > 0) {
+          sorting = sorting.slice(0, limit);
       }
 
       const labels = sorting.map(x => decodeURIComponent(x[0]));
       const values = sorting.map(x => x[1]);
 
-      return new Chart(document.getElementById(id), {
+      return new Chart(cvs, {
         type: type,
         data: {
           labels: labels,
@@ -312,99 +412,36 @@ const App = {
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } }
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
         }
       });
     };
-
-    const destroyCharts = () => {
-      Object.values(charts).forEach(c => c && c.destroy());
-      charts = {};
-    };
-
-    const getTopK = (obj, k) => {
-      return Object.fromEntries(
-        Object.entries(obj || {}).sort((a, b) => b[1] - a[1]).slice(0, k)
-      );
-    };
-
-    const totalOpens = computed(() => {
-      if (!data.value?.city_totals) return 0;
-      return Object.values(data.value.city_totals).reduce((a, b) => a + b, 0);
-    });
-
-    const topCities = computed(() => {
-        if (!data.value?.city_totals) return [];
-        
-        // Use result of brand_totals and model_city_totals to find top brand/model per city
-        const cities = Object.entries(data.value.city_totals)
-            .sort((a, b) => b[1] - a[1]) // Sort by count
-            .slice(0, 50); // Top 50
-
-        return cities.map(([city, count]) => {
-            const cityName = decodeURIComponent(city);
-            
-            // Find top Brand for this city
-            const cityBrands = data.value.city_brand_totals?.[city] || {};
-            const topBrandEntry = Object.entries(cityBrands).sort((a, b) => b[1] - a[1])[0];
-            const topBrand = topBrandEntry ? decodeURIComponent(topBrandEntry[0]) : '-';
-
-            // Find top Model for this city
-            // Note: Currently API returns Model totals globally, 
-            // OR if we implemented model_city_totals we can use it.
-            // We successfully added model_city_totals in backend.
-            const cityModels = data.value.model_city_totals?.[city] || {};
-            const topModelEntry = Object.entries(cityModels).sort((a, b) => b[1] - a[1])[0];
-            const topModel = topModelEntry ? decodeURIComponent(topModelEntry[0]) : '-';
-
-            return {
-                name: cityName,
-                count: count,
-                topBrand: topBrand,
-                topModel: topModel
-            };
-        });
-    });
-
+    
+    // Save/Load token
     const saveToken = () => {
-      localStorage.setItem('telemetry_stats_token', token.value);
-      loadStats(duration.value); // Reload with new token
+        if(token.value) localStorage.setItem('niyien_stats_token', token.value);
     };
-
+    
     onMounted(() => {
-      const savedToken = localStorage.getItem('telemetry_stats_token');
-      if (savedToken) {
-        token.value = savedToken;
-      }
-      // Delay initial load slightly or allow immediate if token exists
-      loadStats('7');
+        const saved = localStorage.getItem('niyien_stats_token');
+        if(saved) token.value = saved;
+        if(saved) loadStats('7');
     });
 
     return {
-      duration, durations, loadStats,
-      error, loading, data,
-      totalOpens, topCities, 
-      token, saveToken // Export new props
+      error, loading, data, duration, token, durations, viewMode,
+      topCities, currentStats,
+      loadStats, saveToken
     };
   }
 };
 
-const app = createApp(App);
-app.component('kpi-card', {
-  props: ['title', 'value', 'icon'],
-  template: `
-    <div class="bg-white p-6 rounded-xl shadow-sm flex items-center space-x-4">
-      <div class="text-4xl">{{ icon }}</div>
-      <div>
-        <p class="text-sm text-gray-500 font-medium uppercase">{{ title }}</p>
-        <p class="text-2xl font-bold text-gray-900">{{ value }}</p>
-      </div>
-    </div>
-  `
-});
-app.mount('#app');
+createApp(App).mount('#app');
+
 </script>
 </body>
 </html>

@@ -73,7 +73,7 @@ async function collectStats(dayList, weekQuery) {
   const languageTotals = {};
   const countryTotals = {};
   const cityBrandTotals = {};
-  const modelCityTotals = {}; // New: City + Model
+  const modelCityTotals = {};
   const hourTotals = Array.from({ length: 24 }, () => 0);
 
   for (const day of dayList) {
@@ -85,22 +85,24 @@ async function collectStats(dayList, weekQuery) {
     const hourPattern = `telemetry:day:${day}:hour:*:event:open`;
 
     const cityBrandKeys = await scanKeys(cityBrandPattern);
-    const modelCityKeys = await scanKeys(modelCityPattern); // New
+    const modelCityKeys = await scanKeys(modelCityPattern);
     const modelKeys = await scanKeys(modelPattern);
     const languageKeys = await scanKeys(languagePattern);
     const countryKeys = await scanKeys(countryPattern);
     const hourKeys = await scanKeys(hourPattern);
 
     await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals);
-    await accumulateCityModel(modelCityKeys, modelCityTotals); // New: Reuse logic or create
+    await accumulateCityModel(modelCityKeys, modelCityTotals);
     await accumulateSingleTotals(modelKeys, modelTotals, "model");
     await accumulateSingleTotals(languageKeys, languageTotals, "lang");
     await accumulateSingleTotals(countryKeys, countryTotals, "country");
     await accumulateHours(hourKeys, hourTotals);
   }
 
-  const uniqueTotals = await collectUniqueTotals(cityTotals);
+  const uniqueTotals = await collectUniqueTotals(cityTotals, brandTotals, modelTotals);
   const weeklyUsage = await collectWeeklyUsage(weekQuery);
+  const cityCoords = await collectCityCoords(cityTotals);
+  const retention = await collectUserRetention();
 
   return {
     city_totals: cityTotals,
@@ -112,10 +114,14 @@ async function collectStats(dayList, weekQuery) {
     model_city_totals: modelCityTotals,
     hour_totals: hourTotals,
     city_unique_totals: uniqueTotals.cityUniqueTotals,
+    brand_unique_totals: uniqueTotals.brandUniqueTotals,
+    model_unique_totals: uniqueTotals.modelUniqueTotals,
     global_unique_total: uniqueTotals.globalUniqueTotal,
     weekly_usage: weeklyUsage,
+    city_coords: cityCoords,
+    user_retention: retention,
   };
-} 
+}
 
 async function collectAllTimeStats(weekQuery) {
   const cityTotals = {};
@@ -125,29 +131,19 @@ async function collectAllTimeStats(weekQuery) {
   const countryTotals = {};
   const cityBrandTotals = {};
   const modelCityTotals = {};
-  
-  // Directly scan All Time keys
-  const cityBrandPattern = `telemetry:total:city:*:brand:*:event:open`; // Note: total keys don't have day
+  const hourTotals = []; 
+
+  const cityBrandPattern = `telemetry:total:city:*:brand:*:event:open`;
   const modelCityPattern = `telemetry:total:city:*:model:*:event:open`;
   const modelPattern = `telemetry:total:model:*:event:open`;
   const languagePattern = `telemetry:total:lang:*:event:open`;
-  const countryPattern = `telemetry:total:countr:*:event:open`; // careful with "country" vs "countr" typo in keys if any. Correct is country.
-  // Note: Hour totals for all time is telemetry:total:hour:? No, I didn't add that key. Skipping hours for All Time or assuming distinct if needed.
-  // Actually I did not add hour to total keys. So hour_totals will be empty.
-  const hourTotals = []; 
+  const countryPattern = `telemetry:total:country:*:event:open`;
 
   const cityBrandKeys = await scanKeys(cityBrandPattern);
   const modelCityKeys = await scanKeys(modelCityPattern);
   const modelKeys = await scanKeys(modelPattern);
   const languageKeys = await scanKeys(languagePattern);
-  // Re-check country key name. In buildKeys: `telemetry:total:country:${country}:event:${event}`
-  const countryKeys = await scanKeys(`telemetry:total:country:*:event:open`);
-
-  // Accum functions expect keys to follow a pattern.
-  // daily: telemetry:day:..:city:..
-  // total: telemetry:total:city:..
-  // existing accumulateCityBrand calls parseCityBrandKey which does: key.split(":") and indexOf("city").
-  // It should transparently work for 'total' keys too!
+  const countryKeys = await scanKeys(countryPattern);
 
   await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals); 
   await accumulateCityModel(modelCityKeys, modelCityTotals);
@@ -155,11 +151,10 @@ async function collectAllTimeStats(weekQuery) {
   await accumulateSingleTotals(languageKeys, languageTotals, "lang");
   await accumulateSingleTotals(countryKeys, countryTotals, "country");
 
-  const uniqueTotals = await collectUniqueTotals(cityTotals);
-  // Weekly usage is inherently time-based (last 7 days retention).
-  // For 'All Time', weekly usage chart might show "Current Week" context or be empty. 
-  // Let's show current week context. 
+  const uniqueTotals = await collectUniqueTotals(cityTotals, brandTotals, modelTotals);
   const weeklyUsage = await collectWeeklyUsage(weekQuery);
+  const cityCoords = await collectCityCoords(cityTotals);
+  const retention = await collectUserRetention();
 
   return {
     city_totals: cityTotals,
@@ -171,8 +166,12 @@ async function collectAllTimeStats(weekQuery) {
     model_city_totals: modelCityTotals,
     hour_totals: hourTotals,
     city_unique_totals: uniqueTotals.cityUniqueTotals,
+    brand_unique_totals: uniqueTotals.brandUniqueTotals,
+    model_unique_totals: uniqueTotals.modelUniqueTotals,
     global_unique_total: uniqueTotals.globalUniqueTotal,
     weekly_usage: weeklyUsage,
+    city_coords: cityCoords,
+    user_retention: retention,
   };
 }
 
@@ -392,12 +391,17 @@ async function getValues(keys) {
   return result;
 }
 
-async function collectUniqueTotals(cityTotals) {
-  const cityNames = Object.keys(cityTotals);
-  const cityUniqueTotals = await getCityUniqueTotals(cityNames);
+async function collectUniqueTotals(cityTotals, brandTotals, modelTotals) {
+  const cityNames = cityTotals ? Object.keys(cityTotals) : [];
+  const brandNames = brandTotals ? Object.keys(brandTotals) : [];
+  const modelNames = modelTotals ? Object.keys(modelTotals) : [];
+
+  const cityUniqueTotals = await getUniqueCounts("city", cityNames);
+  const brandUniqueTotals = await getUniqueCounts("brand", brandNames);
+  const modelUniqueTotals = await getUniqueCounts("model", modelNames);
   const globalUniqueTotal = await getGlobalUniqueTotal();
 
-  return { cityUniqueTotals, globalUniqueTotal };
+  return { cityUniqueTotals, brandUniqueTotals, modelUniqueTotals, globalUniqueTotal };
 }
 
 async function getGlobalUniqueTotal() {
@@ -406,18 +410,18 @@ async function getGlobalUniqueTotal() {
   return parseInt(total, 10) || 0;
 }
 
-async function getCityUniqueTotals(cityNames) {
-  if (!cityNames.length) {
+async function getUniqueCounts(type, names) {
+  if (!names.length) {
     return {};
   }
 
   const result = {};
   const chunkSize = 200;
 
-  for (let i = 0; i < cityNames.length; i += chunkSize) {
-    const chunk = cityNames.slice(i, i + chunkSize);
-    const commands = chunk.map((city) => {
-      const key = `telemetry:unique:city:${encodeKeyPart(city)}`;
+  for (let i = 0; i < names.length; i += chunkSize) {
+    const chunk = names.slice(i, i + chunkSize);
+    const commands = chunk.map((name) => {
+      const key = `telemetry:unique:${type}:${encodeKeyPart(name)}`;
       return ["SCARD", key];
     });
 
@@ -522,4 +526,49 @@ async function upstashPipeline(commands) {
 
   const data = await response.json();
   return Array.isArray(data) ? data : [];
+}
+
+async function collectCityCoords(cityTotals) {
+  const cityNames = Object.keys(cityTotals);
+  if (!cityNames.length) return {};
+  
+  const result = {};
+  const chunkSize = 100;
+
+  for (let i = 0; i < cityNames.length; i += chunkSize) {
+    const chunk = cityNames.slice(i, i + chunkSize);
+    const keys = chunk.map(city => `telemetry:city_coords:${encodeKeyPart(city)}`);
+    const values = await getValues(keys);
+    
+    for (let j = 0; j < chunk.length; j += 1) {
+      if (values[j]) {
+        try {
+          result[chunk[j]] = JSON.parse(values[j]);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }
+  return result;
+}
+
+async function collectUserRetention() {
+  const now = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const threshold = now - thirtyDaysMs;
+
+  const [activeRes, inactiveRes] = await upstashPipeline([
+    ["ZCOUNT", "telemetry:users:last_seen", threshold, "+inf"],  // Active in last 30 days
+    ["ZCOUNT", "telemetry:users:last_seen", "-inf", `(${threshold}`] // Inactive (seen before 30 days ago)
+  ]);
+
+  const active = activeRes && activeRes.result ? parseInt(activeRes.result, 10) : 0;
+  const inactive = inactiveRes && inactiveRes.result ? parseInt(inactiveRes.result, 10) : 0;
+
+  return {
+    active_30d: active,
+    inactive_30d: inactive,
+    total: active + inactive
+  };
 }
