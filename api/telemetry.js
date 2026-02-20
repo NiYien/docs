@@ -178,7 +178,12 @@ async function processEvent(fields, context) {
   };
 
   const keys = buildKeys(keyParts);
-  const uniqueKeys = buildUniqueKeys(keyParts.city);
+  const uniqueKeys = buildUniqueKeys({
+    city: keyParts.city,
+    brand: keyParts.brand,
+    model: keyParts.model,
+    country: keyParts.country,
+  });
   const weekUserKey = buildWeekUserKey(context.weekKey, fields.anonId);
 
   await upstashWrite(
@@ -319,10 +324,13 @@ function buildKeys({ day, hour, city, country, brand, model, language, event }) 
   ];
 }
 
-function buildUniqueKeys(city) {
+function buildUniqueKeys({ city, brand, model, country }) {
   return [
     "telemetry:unique:all",
     `telemetry:unique:city:${city}`,
+    `telemetry:unique:brand:${brand}`,
+    `telemetry:unique:model:${model}`,
+    `telemetry:unique:country:${country}`,
   ];
 }
 

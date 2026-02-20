@@ -85,7 +85,12 @@ async function collectStats(dayList, weekQuery) {
     await accumulateHours(hourKeys, hourTotals);
   }
 
-  const uniqueTotals = await collectUniqueTotals(cityTotals);
+  const uniqueTotals = await collectUniqueTotals({
+    cityTotals,
+    brandTotals,
+    modelTotals,
+    countryTotals,
+  });
   const weeklyUsage = await collectWeeklyUsage(weekQuery);
 
   return {
@@ -97,6 +102,9 @@ async function collectStats(dayList, weekQuery) {
     city_brand_totals: cityBrandTotals,
     hour_totals: hourTotals,
     city_unique_totals: uniqueTotals.cityUniqueTotals,
+    brand_unique_totals: uniqueTotals.brandUniqueTotals,
+    model_unique_totals: uniqueTotals.modelUniqueTotals,
+    country_unique_totals: uniqueTotals.countryUniqueTotals,
     global_unique_total: uniqueTotals.globalUniqueTotal,
     weekly_usage: weeklyUsage,
   };
@@ -276,12 +284,25 @@ async function getValues(keys) {
   return result;
 }
 
-async function collectUniqueTotals(cityTotals) {
+async function collectUniqueTotals({ cityTotals, brandTotals, modelTotals, countryTotals }) {
   const cityNames = Object.keys(cityTotals);
-  const cityUniqueTotals = await getCityUniqueTotals(cityNames);
+  const brandNames = Object.keys(brandTotals);
+  const modelNames = Object.keys(modelTotals);
+  const countryNames = Object.keys(countryTotals);
+
+  const cityUniqueTotals = await getScopedUniqueTotals(cityNames, "city");
+  const brandUniqueTotals = await getScopedUniqueTotals(brandNames, "brand");
+  const modelUniqueTotals = await getScopedUniqueTotals(modelNames, "model");
+  const countryUniqueTotals = await getScopedUniqueTotals(countryNames, "country");
   const globalUniqueTotal = await getGlobalUniqueTotal();
 
-  return { cityUniqueTotals, globalUniqueTotal };
+  return {
+    cityUniqueTotals,
+    brandUniqueTotals,
+    modelUniqueTotals,
+    countryUniqueTotals,
+    globalUniqueTotal,
+  };
 }
 
 async function getGlobalUniqueTotal() {
@@ -290,18 +311,18 @@ async function getGlobalUniqueTotal() {
   return parseInt(total, 10) || 0;
 }
 
-async function getCityUniqueTotals(cityNames) {
-  if (!cityNames.length) {
+async function getScopedUniqueTotals(names, scope) {
+  if (!names.length) {
     return {};
   }
 
   const result = {};
   const chunkSize = 200;
 
-  for (let i = 0; i < cityNames.length; i += chunkSize) {
-    const chunk = cityNames.slice(i, i + chunkSize);
-    const commands = chunk.map((city) => {
-      const key = `telemetry:unique:city:${encodeKeyPart(city)}`;
+  for (let i = 0; i < names.length; i += chunkSize) {
+    const chunk = names.slice(i, i + chunkSize);
+    const commands = chunk.map((name) => {
+      const key = `telemetry:unique:${scope}:${encodeKeyPart(name)}`;
       return ["SCARD", key];
     });
 

@@ -324,6 +324,13 @@
             <option value="30">最近 30 天</option>
           </select>
         </label>
+        <label>
+          统计排行按
+          <select id="cityRankMetric">
+            <option value="people">人数</option>
+            <option value="opens">打开次数</option>
+          </select>
+        </label>
         <button id="refresh">刷新</button>
         <button id="exportJson" class="ghost">导出 JSON</button>
         <button id="exportCsv" class="ghost">导出 CSV</button>
@@ -380,6 +387,7 @@
     const refreshEl = document.getElementById("refresh");
     const tokenEl = document.getElementById("token");
     const tokenInQueryEl = document.getElementById("tokenInQuery");
+    const cityRankMetricEl = document.getElementById("cityRankMetric");
     const exportJsonEl = document.getElementById("exportJson");
     const exportCsvEl = document.getElementById("exportCsv");
     const mapShell = document.getElementById("mapShell");
@@ -439,6 +447,18 @@
       localStorage.setItem("telemetry_stats_token_in_query", String(tokenInQueryEl.checked));
     });
 
+    cityRankMetricEl.value = normalizeRankMetric(localStorage.getItem("telemetry_stats_city_rank_metric"));
+    cityRankMetricEl.addEventListener("change", () => {
+      cityRankMetricEl.value = normalizeRankMetric(cityRankMetricEl.value);
+      localStorage.setItem("telemetry_stats_city_rank_metric", cityRankMetricEl.value);
+      if (lastPayload) {
+        renderCitySummary(lastPayload.city_totals || {}, lastPayload.city_unique_totals || {}, lastPayload.city_brand_totals || {}, cityRankMetricEl.value);
+        renderTable("brands", lastPayload.brand_totals || {}, lastPayload.brand_unique_totals || {}, "品牌", cityRankMetricEl.value);
+        renderTable("models", lastPayload.model_totals || {}, lastPayload.model_unique_totals || {}, "型号", cityRankMetricEl.value);
+        renderTable("countries", lastPayload.country_totals || {}, lastPayload.country_unique_totals || {}, "国家/地区", cityRankMetricEl.value);
+      }
+    });
+
     refreshEl.addEventListener("click", () => loadStats());
     daysEl.addEventListener("change", () => loadStats());
     exportJsonEl.addEventListener("click", () => exportJson());
@@ -468,10 +488,10 @@
         const data = await response.json();
         lastPayload = data;
         renderKpis(data);
-        renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {});
-        renderTable("brands", data.brand_totals || {}, "品牌", "打开次数");
-        renderTable("models", data.model_totals || {}, "型号", "打开次数");
-        renderTable("countries", data.country_totals || {}, "国家/地区", "打开次数");
+        renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {}, cityRankMetricEl.value);
+        renderTable("brands", data.brand_totals || {}, data.brand_unique_totals || {}, "品牌", cityRankMetricEl.value);
+        renderTable("models", data.model_totals || {}, data.model_unique_totals || {}, "型号", cityRankMetricEl.value);
+        renderTable("countries", data.country_totals || {}, data.country_unique_totals || {}, "国家/地区", cityRankMetricEl.value);
         renderHours("hours", data.hour_totals || []);
         renderWeeklyUsage("weeklyUsage", data.weekly_usage || {});
         renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
@@ -532,15 +552,26 @@
       return `<div><h3>${label}</h3><strong>${value}</strong></div>`;
     }
 
-    function renderCitySummary(cityTotals, cityUniqueTotals, cityBrandTotals) {
+    function renderCitySummary(cityTotals, cityUniqueTotals, cityBrandTotals, rankMetric = "people") {
       const container = document.getElementById("cities");
+      const metric = rankMetric === "opens" ? "opens" : "people";
       const entries = Object.entries(cityTotals)
         .map(([city, count]) => {
           const brands = Object.keys(cityBrandTotals[city] || {}).length;
           const people = cityUniqueTotals[city] || 0;
           return [city, people, count, brands];
         })
-        .sort((a, b) => b[2] - a[2])
+        .sort((a, b) => {
+          const primary = metric === "people" ? b[1] - a[1] : b[2] - a[2];
+          if (primary !== 0) {
+            return primary;
+          }
+          const secondary = metric === "people" ? b[2] - a[2] : b[1] - a[1];
+          if (secondary !== 0) {
+            return secondary;
+          }
+          return cleanLabel(a[0]).localeCompare(cleanLabel(b[0]), "zh-Hans-CN");
+        })
         .slice(0, 12);
 
       if (!entries.length) {
@@ -553,6 +584,10 @@
       header.innerHTML = "<th>城市</th><th>人数</th><th>打开次数</th><th>品牌数</th>";
       table.appendChild(header);
 
+      const summary = document.createElement("p");
+      summary.className = "hint";
+      summary.textContent = `当前按${metric === "people" ? "人数" : "打开次数"}排序`;
+
       for (const [city, people, count, brands] of entries) {
         const row = document.createElement("tr");
         row.innerHTML = `<td>${escapeHtml(cleanLabel(city))}</td><td>${people}</td><td>${count}</td><td>${brands}</td>`;
@@ -560,13 +595,29 @@
       }
 
       container.innerHTML = "";
+      container.appendChild(summary);
       container.appendChild(table);
     }
 
-    function renderTable(targetId, rows, labelTitle, countTitle) {
+    function renderTable(targetId, rows, uniqueRows, labelTitle, rankMetric = "people") {
       const container = document.getElementById(targetId);
+      const metric = normalizeRankMetric(rankMetric);
       const entries = Object.entries(rows)
-        .sort((a, b) => b[1] - a[1])
+        .map(([label, opens]) => {
+          const people = uniqueRows && uniqueRows[label] ? uniqueRows[label] : 0;
+          return [label, people, opens];
+        })
+        .sort((a, b) => {
+          const primary = metric === "people" ? b[1] - a[1] : b[2] - a[2];
+          if (primary !== 0) {
+            return primary;
+          }
+          const secondary = metric === "people" ? b[2] - a[2] : b[1] - a[1];
+          if (secondary !== 0) {
+            return secondary;
+          }
+          return cleanLabel(a[0]).localeCompare(cleanLabel(b[0]), "zh-Hans-CN");
+        })
         .slice(0, 15);
 
       if (!entries.length) {
@@ -576,16 +627,21 @@
 
       const table = document.createElement("table");
       const header = document.createElement("tr");
-      header.innerHTML = `<th>${labelTitle}</th><th>${countTitle}</th>`;
+      header.innerHTML = `<th>${labelTitle}</th><th>人数</th><th>打开次数</th>`;
       table.appendChild(header);
 
-      for (const [label, count] of entries) {
+      const summary = document.createElement("p");
+      summary.className = "hint";
+      summary.textContent = `当前按${metric === "people" ? "人数" : "打开次数"}排序`;
+
+      for (const [label, people, opens] of entries) {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${escapeHtml(cleanLabel(label))}</td><td>${count}</td>`;
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(label))}</td><td>${people}</td><td>${opens}</td>`;
         table.appendChild(row);
       }
 
       container.innerHTML = "";
+      container.appendChild(summary);
       container.appendChild(table);
     }
 
@@ -907,6 +963,7 @@
       }
 
       const lines = ["type,label1,label2,count"];
+      const cityRankMetric = normalizeRankMetric(cityRankMetricEl.value);
       const {
         city_totals: cityTotals = {},
         brand_totals: brandTotals = {},
@@ -916,8 +973,14 @@
         hour_totals: hourTotals = [],
         city_brand_totals: cityBrand = {},
         city_unique_totals: cityUnique = {},
+        brand_unique_totals: brandUnique = {},
+        model_unique_totals: modelUnique = {},
+        country_unique_totals: countryUnique = {},
         weekly_usage: weeklyUsage = {},
       } = lastPayload;
+
+      lines.push(`meta,city_rank_metric,,${cityRankMetric}`);
+      lines.push(`meta,rank_metric,,${cityRankMetric}`);
 
       Object.entries(cityTotals).forEach(([city, count]) => {
         lines.push(`city,${csvEscape(cleanLabel(city))},,${count}`);
@@ -931,8 +994,16 @@
         lines.push(`brand,${csvEscape(cleanLabel(brand))},,${count}`);
       });
 
+      Object.entries(brandUnique).forEach(([brand, count]) => {
+        lines.push(`brand_unique,${csvEscape(cleanLabel(brand))},,${count}`);
+      });
+
       Object.entries(modelTotals).forEach(([model, count]) => {
         lines.push(`model,${csvEscape(cleanLabel(model))},,${count}`);
+      });
+
+      Object.entries(modelUnique).forEach(([model, count]) => {
+        lines.push(`model_unique,${csvEscape(cleanLabel(model))},,${count}`);
       });
 
       Object.entries(languageTotals).forEach(([lang, count]) => {
@@ -941,6 +1012,10 @@
 
       Object.entries(countryTotals).forEach(([country, count]) => {
         lines.push(`country,${csvEscape(cleanLabel(country))},,${count}`);
+      });
+
+      Object.entries(countryUnique).forEach(([country, count]) => {
+        lines.push(`country_unique,${csvEscape(cleanLabel(country))},,${count}`);
       });
 
       hourTotals.forEach((count, hour) => {
@@ -973,6 +1048,7 @@
 
     function downloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob);
+      
       const link = document.createElement("a");
       link.href = url;
       link.download = filename;
@@ -989,6 +1065,10 @@
         .replace(/>/g, "&gt;")
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#039;");
+    }
+
+    function normalizeRankMetric(value) {
+      return value === "opens" ? "opens" : "people";
     }
 
     loadStats();
