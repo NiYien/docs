@@ -29,15 +29,25 @@
       <p class="text-sm text-gray-500">Telemetry Dashboard</p>
     </div>
     
-    <div class="flex gap-2 bg-white p-1 rounded-lg shadow">
-      <button 
-        v-for="d in durations" 
-        :key="d.val"
-        @click="loadStats(d.val)"
-        :class="['px-4 py-2 rounded transition-colors', duration === d.val ? 'bg-blue-600 text-white' : 'hover:bg-gray-100']"
-      >
-        {{ d.label }}
-      </button>
+    <div class="flex flex-col md:flex-row items-center gap-2">
+      <div class="flex gap-2 bg-white p-1 rounded-lg shadow">
+         <input 
+           type="password" 
+           v-model="token" 
+           placeholder="Token (Optional)" 
+           class="px-3 py-2 rounded text-sm border-none focus:ring-0 w-32"
+           @change="saveToken"
+         >
+         <div class="w-px bg-gray-200 my-1"></div>
+         <button 
+            v-for="d in durations" 
+            :key="d.val"
+            @click="loadStats(d.val)"
+            :class="['px-4 py-2 rounded transition-colors text-sm', duration === d.val ? 'bg-blue-600 text-white' : 'hover:bg-gray-100']"
+         >
+            {{ d.label }}
+         </button>
+      </div>
     </div>
   </header>
 
@@ -147,16 +157,31 @@ const App = {
     const loading = ref(false);
     const data = ref(null);
     const duration = ref('7');
+    const token = ref('');
     const durations = [
-      { label: 'Last 7 Days', val: '7' },
-      { label: 'Last 14 Days', val: '14' },
-      { label: 'Last 30 Days', val: '30' },
-      { label: 'All Time', val: 'all' }
+      { label: '7D', val: '7' },
+      { label: '14D', val: '14' },
+      { label: '30D', val: '30' },
+      { label: 'All', val: 'all' }
     ];
 
     let map = null;
     let heatLayer = null;
     let charts = {};
+
+    onMounted(() => {
+      // Load saved token
+      const savedToken = localStorage.getItem('telemetry_stats_token');
+      if (savedToken) {
+        token.value = savedToken;
+      }
+      loadStats('7');
+    });
+
+    const saveToken = () => {
+      localStorage.setItem('telemetry_stats_token', token.value);
+      loadStats(duration.value); // Reload with new token
+    };
 
     // Mapbox/OSM Init
     const initMap = () => {
@@ -212,11 +237,18 @@ const App = {
       error.value = null;
       
       try {
-        const res = await fetch(`/api/telemetry-stats?days=${days}`);
+        const headers = token.value ? { "X-Stats-Token": token.value } : {};
+        const res = await fetch(`/api/telemetry-stats?days=${days}`, { headers });
+        if (res.status === 401) {
+             throw new Error("Unauthorized: Please enter a valid Token");
+        }
         if (!res.ok) throw new Error(`API Error: ${res.status}`);
         const json = await res.json();
         data.value = json;
         
+        // Wait for DOM update
+        await Vue.nextTick();
+
         renderCharts(json);
         updateMap(json.city_totals || {});
       } catch (e) {
@@ -338,14 +370,25 @@ const App = {
         });
     });
 
+    const saveToken = () => {
+      localStorage.setItem('telemetry_stats_token', token.value);
+      loadStats(duration.value); // Reload with new token
+    };
+
     onMounted(() => {
+      const savedToken = localStorage.getItem('telemetry_stats_token');
+      if (savedToken) {
+        token.value = savedToken;
+      }
+      // Delay initial load slightly or allow immediate if token exists
       loadStats('7');
     });
 
     return {
       duration, durations, loadStats,
       error, loading, data,
-      totalOpens, topCities
+      totalOpens, topCities, 
+      token, saveToken // Export new props
     };
   }
 };
