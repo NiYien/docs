@@ -25,10 +25,44 @@ export default async function handler(req, res) {
 
   try {
     const results = await collectStats(dayList, weekQuery);
-    return res.status(200).json({ ok: true, days: dayList, auth_required: !!requiredToken, ...results });
+    const breakpoint = buildBreakpointMeta(dayList);
+    return res.status(200).json({ ok: true, days: dayList, auth_required: !!requiredToken, breakpoint, ...results });
   } catch (error) {
     return res.status(500).json({ error: "Stats error" });
   }
+}
+
+function buildBreakpointMeta(dayList) {
+  const day = normalizeDay(String(process.env.TELEMETRY_BREAKPOINT_DAY || "").trim());
+  if (!day) {
+    return null;
+  }
+
+  let hasBefore = false;
+  let hasAfter = false;
+  for (const item of dayList) {
+    if (!item) {
+      continue;
+    }
+    if (item < day) {
+      hasBefore = true;
+    } else {
+      hasAfter = true;
+    }
+  }
+
+  const crosses = hasBefore && hasAfter;
+  const note = String(
+    process.env.TELEMETRY_BREAKPOINT_NOTE || "断点日前后口径不同，建议分段查看，不做同比。"
+  );
+
+  return {
+    day,
+    crosses,
+    all_before: hasBefore && !hasAfter,
+    all_after: hasAfter && !hasBefore,
+    note,
+  };
 }
 
 function clampNumber(value, min, max) {

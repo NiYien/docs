@@ -31,6 +31,10 @@ export default async function handler(req, res) {
   const weekTtlSeconds = Math.max(weekTtlDays, 1) * 86400;
   const dedupeTtlDays = parseInt(process.env.TELEMETRY_EVENT_ID_TTL_DAYS || "120", 10);
   const dedupeTtlSeconds = Math.max(dedupeTtlDays, 1) * 86400;
+  const rawStreamEnabled =
+    String(process.env.TELEMETRY_RAW_STREAM_ENABLED || "true").toLowerCase() !== "false";
+  const rawTtlDays = parseInt(process.env.TELEMETRY_RAW_TTL_DAYS || "365", 10);
+  const rawTtlSeconds = rawTtlDays > 0 ? rawTtlDays * 86400 : 0;
 
   const isBatch = Array.isArray(body.events);
   if (isBatch) {
@@ -66,6 +70,8 @@ export default async function handler(req, res) {
             uniqueTtlSeconds,
             weekTtlSeconds,
             dedupeTtlSeconds,
+            rawStreamEnabled,
+            rawTtlSeconds,
           }
         );
         if (result.processed) {
@@ -110,6 +116,8 @@ export default async function handler(req, res) {
         uniqueTtlSeconds,
         weekTtlSeconds,
         dedupeTtlSeconds,
+        rawStreamEnabled,
+        rawTtlSeconds,
       }
     );
 
@@ -219,6 +227,21 @@ async function processEvent(fields, context) {
   });
   const weekUserKey = buildWeekUserKey(weekKey, fields.anonId);
   const dedupeKey = buildEventDedupeKey(day, fields.eventId);
+  const rawStreamKey = buildRawStreamKey(day);
+  const rawEvent = {
+    event_id: fields.eventId,
+    event: fields.event,
+    anon_id: fields.anonId,
+    app_version: fields.appVersion,
+    os: fields.os,
+    camera_brand: fields.cameraBrand,
+    camera_model: fields.cameraModel,
+    language: fields.language,
+    city: context.city,
+    country: context.country,
+    ts: fields.eventTs,
+    ingested_at: Math.floor(Date.now() / 1000),
+  };
 
   return upstashWrite(
     keys,
@@ -229,7 +252,11 @@ async function processEvent(fields, context) {
     weekUserKey,
     context.weekTtlSeconds,
     dedupeKey,
-    context.dedupeTtlSeconds
+    context.dedupeTtlSeconds,
+    rawStreamKey,
+    rawEvent,
+    context.rawStreamEnabled,
+    context.rawTtlSeconds
   );
 }
 
@@ -431,6 +458,10 @@ function buildEventDedupeKey(day, eventId) {
   return `telemetry:event:processed:${day}:${normalized}`;
 }
 
+function buildRawStreamKey(day) {
+  return `telemetry:raw:day:${day}`;
+}
+
 function getIsoWeekKey(date) {
   const temp = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const dayNum = temp.getUTCDay() || 7;
@@ -450,7 +481,11 @@ async function upstashWrite(
   weekUserKey,
   weekTtlSeconds,
   dedupeKey,
-  dedupeTtlSeconds
+  dedupeTtlSeconds,
+  rawStreamKey,
+  rawEvent,
+  rawStreamEnabled,
+  rawTtlSeconds
 ) {
   const dedupeResponse = await upstashCommand(["SET", dedupeKey, "1", "EX", dedupeTtlSeconds, "NX"]);
   const dedupeApplied = dedupeResponse && dedupeResponse.result === "OK";
@@ -473,6 +508,17 @@ async function upstashWrite(
 
   pipeline.push(["INCR", weekUserKey]);
   pipeline.push(["EXPIRE", weekUserKey, weekTtlSeconds]);
+
+  if (rawStreamEnabled) {
+    const rawFieldPairs = [];
+    for (const [field, value] of Object.entries(rawEvent)) {
+      rawFieldPairs.push(field, value === undefined || value === null ? "" : String(value));
+    }
+    pipeline.push(["XADD", rawStreamKey, "*", ...rawFieldPairs]);
+    if (rawTtlSeconds > 0) {
+      pipeline.push(["EXPIRE", rawStreamKey, rawTtlSeconds]);
+    }
+  }
 
   await upstashPipeline(pipeline);
 

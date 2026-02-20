@@ -464,6 +464,7 @@
         <button id="exportCsv" class="ghost">导出 CSV</button>
         <span class="hint" id="status">加载中...</span>
       </div>
+      <p class="hint" id="breakpointHint"></p>
       <div class="kpi" id="kpi"></div>
     </header>
 
@@ -517,6 +518,7 @@
     const cityRankMetricEl = document.getElementById("cityRankMetric");
     const exportJsonEl = document.getElementById("exportJson");
     const exportCsvEl = document.getElementById("exportCsv");
+    const breakpointHintEl = document.getElementById("breakpointHint");
     const mapShell = document.getElementById("mapShell");
     const tooltipEl = document.getElementById("mapTooltip");
     const kpiEl = document.getElementById("kpi");
@@ -721,10 +723,13 @@
         const uniqueSourceHint = data.unique_source
           ? ` · 人数口径: ${formatUniqueSource(data.unique_source)}`
           : "";
-        statusEl.textContent = `${baseStatus}${authWarning}${uniqueSourceHint}`;
+        const breakpointStatusHint = formatBreakpointStatus(data.breakpoint);
+        statusEl.textContent = `${baseStatus}${authWarning}${uniqueSourceHint}${breakpointStatusHint}`;
+        breakpointHintEl.textContent = formatBreakpointBanner(data.breakpoint);
       } catch (error) {
         lastPayload = null;
         statusEl.textContent = "加载失败（检查 Token）";
+        breakpointHintEl.textContent = "";
         kpiEl.innerHTML = "";
         document.getElementById("cities").innerHTML = "";
         document.getElementById("brands").innerHTML = "";
@@ -1304,6 +1309,34 @@
         default:
           return cleanLabel(source || "未知");
       }
+    }
+
+    function formatBreakpointStatus(breakpoint) {
+      if (!breakpoint || !breakpoint.day) {
+        return "";
+      }
+
+      if (breakpoint.crosses) {
+        return ` · 历史断点: ${breakpoint.day}`;
+      }
+
+      return "";
+    }
+
+    function formatBreakpointBanner(breakpoint) {
+      if (!breakpoint || !breakpoint.day) {
+        return "";
+      }
+
+      if (breakpoint.crosses) {
+        return `⚠ 当前查询跨越口径断点（${breakpoint.day}）。${breakpoint.note || "建议分段查看，不做同比。"}`;
+      }
+
+      if (breakpoint.all_before) {
+        return `ℹ 当前查询全部在断点日前（${breakpoint.day}），仅建议用于历史趋势参考。`;
+      }
+
+      return "";
     }
 
     loadStats();

@@ -19,6 +19,24 @@
       ]
     },
     {
+      "source": "/api/telemetry-rebuild",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/telemetry-rebuild-cron",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
       "source": "/sw.js",
       "headers": [
         {
@@ -47,6 +65,16 @@
           "value": "max-age=86400"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/telemetry-rebuild-cron?scope=today",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/telemetry-rebuild-cron?scope=yesterday",
+      "schedule": "15 0 * * *"
     }
   ]
 }
