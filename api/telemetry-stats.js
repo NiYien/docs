@@ -16,17 +16,27 @@ export default async function handler(req, res) {
   const dayQuery = String(req.query.day || "").trim();
   const daysQuery = String(req.query.days || "7").trim();
   const weekQuery = String(req.query.week || "").trim();
-  const days = clampNumber(parseInt(daysQuery, 10) || 7, 1, 30);
+  
+  const isAllTime = daysQuery === "all";
+  const days = isAllTime ? 36500 : clampNumber(parseInt(daysQuery, 10) || 7, 1, 30); // 100 years for 'all' logic fallback
 
-  const dayList = dayQuery ? [normalizeDay(dayQuery)] : buildDayList(days);
-  if (dayList.some((d) => !d)) {
+  // If not all time, build day list as before
+  const dayList = (dayQuery || !isAllTime) ? (dayQuery ? [normalizeDay(dayQuery)] : buildDayList(days)) : [];
+  
+  if (!isAllTime && dayList.some((d) => !d)) {
     return res.status(400).json({ error: "Invalid day" });
   }
 
   try {
-    const results = await collectStats(dayList, weekQuery);
-    return res.status(200).json({ ok: true, days: dayList, auth_required: !!requiredToken, ...results });
+    let results;
+    if (isAllTime) {
+        results = await collectAllTimeStats(weekQuery);
+    } else {
+        results = await collectStats(dayList, weekQuery);
+    }
+    return res.status(200).json({ ok: true, days: isAllTime ? "all" : dayList, auth_required: !!requiredToken, ...results });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: "Stats error" });
   }
 }
@@ -63,22 +73,26 @@ async function collectStats(dayList, weekQuery) {
   const languageTotals = {};
   const countryTotals = {};
   const cityBrandTotals = {};
+  const modelCityTotals = {}; // New: City + Model
   const hourTotals = Array.from({ length: 24 }, () => 0);
 
   for (const day of dayList) {
     const cityBrandPattern = `telemetry:day:${day}:city:*:brand:*:event:open`;
+    const modelCityPattern = `telemetry:day:${day}:city:*:model:*:event:open`;
     const modelPattern = `telemetry:day:${day}:model:*:event:open`;
     const languagePattern = `telemetry:day:${day}:lang:*:event:open`;
     const countryPattern = `telemetry:day:${day}:country:*:event:open`;
     const hourPattern = `telemetry:day:${day}:hour:*:event:open`;
 
     const cityBrandKeys = await scanKeys(cityBrandPattern);
+    const modelCityKeys = await scanKeys(modelCityPattern); // New
     const modelKeys = await scanKeys(modelPattern);
     const languageKeys = await scanKeys(languagePattern);
     const countryKeys = await scanKeys(countryPattern);
     const hourKeys = await scanKeys(hourPattern);
 
     await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals);
+    await accumulateCityModel(modelCityKeys, modelCityTotals); // New: Reuse logic or create
     await accumulateSingleTotals(modelKeys, modelTotals, "model");
     await accumulateSingleTotals(languageKeys, languageTotals, "lang");
     await accumulateSingleTotals(countryKeys, countryTotals, "country");
@@ -95,6 +109,66 @@ async function collectStats(dayList, weekQuery) {
     language_totals: languageTotals,
     country_totals: countryTotals,
     city_brand_totals: cityBrandTotals,
+    model_city_totals: modelCityTotals,
+    hour_totals: hourTotals,
+    city_unique_totals: uniqueTotals.cityUniqueTotals,
+    global_unique_total: uniqueTotals.globalUniqueTotal,
+    weekly_usage: weeklyUsage,
+  };
+} 
+
+async function collectAllTimeStats(weekQuery) {
+  const cityTotals = {};
+  const brandTotals = {};
+  const modelTotals = {};
+  const languageTotals = {};
+  const countryTotals = {};
+  const cityBrandTotals = {};
+  const modelCityTotals = {};
+  
+  // Directly scan All Time keys
+  const cityBrandPattern = `telemetry:total:city:*:brand:*:event:open`; // Note: total keys don't have day
+  const modelCityPattern = `telemetry:total:city:*:model:*:event:open`;
+  const modelPattern = `telemetry:total:model:*:event:open`;
+  const languagePattern = `telemetry:total:lang:*:event:open`;
+  const countryPattern = `telemetry:total:countr:*:event:open`; // careful with "country" vs "countr" typo in keys if any. Correct is country.
+  // Note: Hour totals for all time is telemetry:total:hour:? No, I didn't add that key. Skipping hours for All Time or assuming distinct if needed.
+  // Actually I did not add hour to total keys. So hour_totals will be empty.
+  const hourTotals = []; 
+
+  const cityBrandKeys = await scanKeys(cityBrandPattern);
+  const modelCityKeys = await scanKeys(modelCityPattern);
+  const modelKeys = await scanKeys(modelPattern);
+  const languageKeys = await scanKeys(languagePattern);
+  // Re-check country key name. In buildKeys: `telemetry:total:country:${country}:event:${event}`
+  const countryKeys = await scanKeys(`telemetry:total:country:*:event:open`);
+
+  // Accum functions expect keys to follow a pattern.
+  // daily: telemetry:day:..:city:..
+  // total: telemetry:total:city:..
+  // existing accumulateCityBrand calls parseCityBrandKey which does: key.split(":") and indexOf("city").
+  // It should transparently work for 'total' keys too!
+
+  await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals); 
+  await accumulateCityModel(modelCityKeys, modelCityTotals);
+  await accumulateSingleTotals(modelKeys, modelTotals, "model");
+  await accumulateSingleTotals(languageKeys, languageTotals, "lang");
+  await accumulateSingleTotals(countryKeys, countryTotals, "country");
+
+  const uniqueTotals = await collectUniqueTotals(cityTotals);
+  // Weekly usage is inherently time-based (last 7 days retention).
+  // For 'All Time', weekly usage chart might show "Current Week" context or be empty. 
+  // Let's show current week context. 
+  const weeklyUsage = await collectWeeklyUsage(weekQuery);
+
+  return {
+    city_totals: cityTotals,
+    brand_totals: brandTotals,
+    model_totals: modelTotals,
+    language_totals: languageTotals,
+    country_totals: countryTotals,
+    city_brand_totals: cityBrandTotals,
+    model_city_totals: modelCityTotals,
     hour_totals: hourTotals,
     city_unique_totals: uniqueTotals.cityUniqueTotals,
     global_unique_total: uniqueTotals.globalUniqueTotal,
@@ -125,6 +199,48 @@ async function accumulateCityBrand(keys, cityTotals, brandTotals, cityBrandTotal
     cityBrandTotals[parsed.city][parsed.brand] =
       (cityBrandTotals[parsed.city][parsed.brand] || 0) + count;
   }
+}
+
+async function accumulateCityModel(keys, modelCityTotals) {
+  const values = await getValues(keys);
+
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    const count = parseInt(values[i] || "0", 10);
+    if (!count) {
+      continue;
+    }
+
+    const parsed = parseCityModelKey(key);
+    if (!parsed) {
+      continue;
+    }
+
+    if (!modelCityTotals[parsed.city]) {
+      modelCityTotals[parsed.city] = {};
+    }
+    modelCityTotals[parsed.city][parsed.model] =
+      (modelCityTotals[parsed.city][parsed.model] || 0) + count;
+  }
+}
+
+function parseCityModelKey(key) {
+  const parts = key.split(":");
+  const cityIndex = parts.indexOf("city");
+  const modelIndex = parts.indexOf("model");
+
+  if (cityIndex < 0 || modelIndex < 0) {
+    return null;
+  }
+
+  const city = decodeKeyPart(parts[cityIndex + 1]);
+  const model = decodeKeyPart(parts[modelIndex + 1]);
+
+  if (!city || !model) {
+    return null;
+  }
+
+  return { city, model };
 }
 
 async function accumulateSingleTotals(keys, totals, label) {

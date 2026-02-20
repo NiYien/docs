@@ -177,12 +177,13 @@ async function processEvent(fields, context) {
     event: normalizeKeyPart(fields.event),
   };
 
-  const keys = buildKeys(keyParts);
+  const { dailyKeys, totalKeys } = buildKeys(keyParts);
   const uniqueKeys = buildUniqueKeys(keyParts.city);
   const weekUserKey = buildWeekUserKey(context.weekKey, fields.anonId);
 
   await upstashWrite(
-    keys,
+    dailyKeys,
+    totalKeys,
     context.ttlSeconds,
     uniqueKeys,
     context.uniqueTtlSeconds,
@@ -220,6 +221,26 @@ function getClientIp(req) {
 }
 
 async function lookupGeo(req, ip) {
+  // 1. ipinfo (Primary)
+  const token = process.env.IPINFO_TOKEN;
+  if (token && ip) {
+    try {
+      const url = `https://ipinfo.io/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          city: data.city || "Unknown",
+          country: data.country || "Unknown",
+        };
+      }
+      console.warn(`[telemetry] ipinfo failed: ${res.status}`);
+    } catch (err) {
+      console.error("[telemetry] ipinfo error", err);
+    }
+  }
+
+  // 2. Vercel / Cloudflare Headers (Backup)
   if (shouldUseVercelGeo(req)) {
     const vercelGeo = getVercelGeo(req);
     if (vercelGeo.city || vercelGeo.country) {
@@ -227,33 +248,7 @@ async function lookupGeo(req, ip) {
     }
   }
 
-  const token = process.env.IPINFO_TOKEN;
-  if (!token || !ip) {
-    return { city: "Unknown" };
-  }
-
-  const url = `https://ipinfo.io/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
-  const debugGeo = shouldLogGeo(req);
-
-  try {
-    const response = await fetch(url, { method: "GET" });
-    if (!response.ok) {
-      return { city: "Unknown" };
-    }
-
-    const data = await response.json();
-    const city = typeof data.city === "string" ? data.city.trim() : "Unknown";
-    const country = typeof data.country === "string" ? data.country.trim() : "Unknown";
-    if (debugGeo) {
-      console.log("[telemetry] ipinfo", { ip, city, country, url });
-    }
-    return {
-      city: city || "Unknown",
-      country: country || "Unknown",
-    };
-  } catch (error) {
-    return { city: "Unknown", country: "Unknown" };
-  }
+  return { city: "Unknown", country: "Unknown" };
 }
 
 function getVercelGeo(req) {
@@ -307,8 +302,9 @@ function normalizeKeyPart(value) {
 }
 
 function buildKeys({ day, hour, city, country, brand, model, language, event }) {
-  return [
+  const dailyKeys = [
     `telemetry:day:${day}:city:${city}:brand:${brand}:event:${event}`,
+    `telemetry:day:${day}:city:${city}:model:${model}:event:${event}`,
     `telemetry:day:${day}:city:${city}:event:${event}`,
     `telemetry:day:${day}:brand:${brand}:event:${event}`,
     `telemetry:day:${day}:model:${model}:event:${event}`,
@@ -317,6 +313,18 @@ function buildKeys({ day, hour, city, country, brand, model, language, event }) 
     `telemetry:day:${day}:event:${event}`,
     `telemetry:day:${day}:hour:${hour}:event:${event}`,
   ];
+
+  const totalKeys = [
+    `telemetry:total:city:${city}:event:${event}`,
+    `telemetry:total:brand:${brand}:event:${event}`,
+    `telemetry:total:model:${model}:event:${event}`,
+    `telemetry:total:city:${city}:model:${model}:event:${event}`,
+    `telemetry:total:country:${country}:event:${event}`,
+    `telemetry:total:lang:${language}:event:${event}`,
+    `telemetry:total:event:${event}`,
+  ];
+
+  return { dailyKeys, totalKeys };
 }
 
 function buildUniqueKeys(city) {
@@ -341,7 +349,8 @@ function getIsoWeekKey(date) {
 }
 
 async function upstashWrite(
-  keys,
+  dailyKeys,
+  totalKeys,
   ttlSeconds,
   uniqueKeys,
   uniqueTtlSeconds,
@@ -357,9 +366,17 @@ async function upstashWrite(
   }
 
   const pipeline = [];
-  for (const key of keys) {
+  // Daily Keys (expire)
+  for (const key of dailyKeys) {
     pipeline.push(["INCR", key]);
     pipeline.push(["EXPIRE", key, ttlSeconds]);
+  }
+
+  // Total Keys (no expire)
+  if (totalKeys) {
+    for (const key of totalKeys) {
+      pipeline.push(["INCR", key]);
+    }
   }
 
   for (const key of uniqueKeys) {
