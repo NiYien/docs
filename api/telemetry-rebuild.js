@@ -73,9 +73,13 @@ export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }
       raw_events: events.length,
       opens_keys: Object.keys(aggregates.opens).length,
       unique_keys: Object.keys(aggregates.unique).length,
+      new_user_candidates: aggregates.anonIds.length,
       applied: false,
       deleted_day_keys: 0,
       writes: 0,
+      new_user_writes: 0,
+      new_users_created: 0,
+      new_users_corrected: 0,
     };
 
     if (apply) {
@@ -86,6 +90,10 @@ export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }
       }
 
       summary.writes = await writeDayAggregates(aggregates, countTtlSeconds, uniqueTtlSeconds);
+      const newUserResult = await writeDayNewUsers(day, aggregates.anonIds, uniqueTtlSeconds);
+      summary.new_user_writes = newUserResult.writes;
+      summary.new_users_created = newUserResult.created;
+      summary.new_users_corrected = newUserResult.corrected;
       summary.applied = true;
     }
 
@@ -177,6 +185,7 @@ function streamFieldsToObject(fields) {
 function buildDayAggregates(events, targetDay) {
   const opens = {};
   const uniqueSets = {};
+  const anonIds = new Set();
 
   for (const row of events) {
     const event = String(row.event || "").trim();
@@ -206,6 +215,8 @@ function buildDayAggregates(events, targetDay) {
     if (!anonId) {
       continue;
     }
+
+    anonIds.add(anonId);
 
     const openKeys = [
       `telemetry:day:${targetDay}:city:${city}:brand:${brand}:event:open`,
@@ -243,7 +254,16 @@ function buildDayAggregates(events, targetDay) {
     unique[key] = Array.from(value);
   }
 
-  return { opens, unique };
+  return { opens, unique, anonIds: Array.from(anonIds) };
+}
+
+function buildDayNewUsersKey(day) {
+  return `telemetry:day:${day}:new:all`;
+}
+
+function buildFirstSeenKey(anonId) {
+  const normalized = encodeURIComponent(String(anonId || "").trim().slice(0, 128) || "unknown");
+  return `telemetry:user:first_seen:${normalized}`;
 }
 
 function normalizeKeyPart(value) {
@@ -279,6 +299,54 @@ async function writeDayAggregates(aggregates, countTtlSeconds, uniqueTtlSeconds)
   return writes;
 }
 
+async function writeDayNewUsers(day, anonIds, uniqueTtlSeconds) {
+  if (!anonIds.length) {
+    return { writes: 0, created: 0, corrected: 0 };
+  }
+
+  const firstSeenKeys = anonIds.map((anonId) => buildFirstSeenKey(anonId));
+  const existingValues = await getValues(firstSeenKeys);
+  const dayNewUsersKey = buildDayNewUsersKey(day);
+  const commands = [];
+  let created = 0;
+  let corrected = 0;
+
+  for (let i = 0; i < anonIds.length; i += 1) {
+    const anonId = anonIds[i];
+    const existingDay = normalizeDay(String(existingValues[i] || "").trim());
+    const firstSeenKey = firstSeenKeys[i];
+
+    if (!existingDay) {
+      commands.push(["SET", firstSeenKey, day]);
+      commands.push(["SADD", dayNewUsersKey, anonId]);
+      if (uniqueTtlSeconds > 0) {
+        commands.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+      }
+      created += 1;
+      continue;
+    }
+
+    if (day < existingDay) {
+      commands.push(["SET", firstSeenKey, day]);
+      commands.push(["SREM", buildDayNewUsersKey(existingDay), anonId]);
+      commands.push(["SADD", dayNewUsersKey, anonId]);
+      if (uniqueTtlSeconds > 0) {
+        commands.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+      }
+      corrected += 1;
+    }
+  }
+
+  let writes = 0;
+  for (let i = 0; i < commands.length; i += 200) {
+    const chunk = commands.slice(i, i + 200);
+    await upstashPipeline(chunk);
+    writes += chunk.length;
+  }
+
+  return { writes, created, corrected };
+}
+
 async function scanKeys(pattern) {
   const keys = [];
   let cursor = "0";
@@ -303,6 +371,24 @@ async function scanKeys(pattern) {
   }
 
   return keys;
+}
+
+async function getValues(keys) {
+  if (!keys.length) {
+    return [];
+  }
+
+  const result = [];
+  const chunkSize = 200;
+
+  for (let i = 0; i < keys.length; i += chunkSize) {
+    const chunk = keys.slice(i, i + chunkSize);
+    const [mgetResult] = await upstashPipeline([["MGET", ...chunk]]);
+    const values = (mgetResult && mgetResult.result) || [];
+    result.push(...values);
+  }
+
+  return result;
 }
 
 async function deleteKeys(keys) {

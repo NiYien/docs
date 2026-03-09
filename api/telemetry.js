@@ -245,6 +245,7 @@ async function processEvent(fields, context) {
 
   return upstashWrite(
     keys,
+    keyParts.day,
     context.ttlSeconds,
     uniqueKeys,
     context.uniqueTtlSeconds,
@@ -449,6 +450,19 @@ function buildUniqueKeys({ day, city, brand, model, country }) {
   ];
 }
 
+function buildDayNewUsersKey(day) {
+  return `telemetry:day:${day}:new:all`;
+}
+
+function buildFirstSeenKey(anonId) {
+  const normalized = encodeURIComponent(String(anonId || "").trim().slice(0, 128) || "unknown");
+  return `telemetry:user:first_seen:${normalized}`;
+}
+
+function normalizeDay(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || "")) ? String(value) : "";
+}
+
 function buildWeekUserKey(weekKey, anonId) {
   return `telemetry:week:${weekKey}:user:${anonId}`;
 }
@@ -474,6 +488,7 @@ function getIsoWeekKey(date) {
 
 async function upstashWrite(
   keys,
+  day,
   ttlSeconds,
   uniqueKeys,
   uniqueTtlSeconds,
@@ -493,6 +508,20 @@ async function upstashWrite(
     return { processed: false };
   }
 
+  const firstSeenKey = buildFirstSeenKey(anonId);
+  const dayNewUsersKey = buildDayNewUsersKey(day);
+  const firstSeenResponse = await upstashCommand(["SET", firstSeenKey, day, "NX"]);
+  const isNewUser = firstSeenResponse && firstSeenResponse.result === "OK";
+  let correctedFirstSeenDay = "";
+
+  if (!isNewUser) {
+    const firstSeenValue = await upstashCommand(["GET", firstSeenKey]);
+    const existingFirstSeenDay = normalizeDay(firstSeenValue && firstSeenValue.result ? firstSeenValue.result : "");
+    if (existingFirstSeenDay && day < existingFirstSeenDay) {
+      correctedFirstSeenDay = existingFirstSeenDay;
+    }
+  }
+
   const pipeline = [];
   for (const key of keys) {
     pipeline.push(["INCR", key]);
@@ -508,6 +537,20 @@ async function upstashWrite(
 
   pipeline.push(["INCR", weekUserKey]);
   pipeline.push(["EXPIRE", weekUserKey, weekTtlSeconds]);
+
+  if (isNewUser) {
+    pipeline.push(["SADD", dayNewUsersKey, anonId]);
+    if (uniqueTtlSeconds > 0) {
+      pipeline.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+    }
+  } else if (correctedFirstSeenDay) {
+    pipeline.push(["SET", firstSeenKey, day]);
+    pipeline.push(["SREM", buildDayNewUsersKey(correctedFirstSeenDay), anonId]);
+    pipeline.push(["SADD", dayNewUsersKey, anonId]);
+    if (uniqueTtlSeconds > 0) {
+      pipeline.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+    }
+  }
 
   if (rawStreamEnabled) {
     const rawFieldPairs = [];

@@ -126,6 +126,7 @@ async function collectStats(dayList, weekQuery) {
     modelTotals,
     countryTotals,
   });
+  const newTotals = await collectNewTotals(dayList, uniqueTotals);
   const weeklyUsage = await collectWeeklyUsage(weekQuery);
 
   return {
@@ -144,6 +145,9 @@ async function collectStats(dayList, weekQuery) {
     unique_source: uniqueTotals.source,
     missing_unique_data: uniqueTotals.missingUniqueData,
     unique_observed_only: true,
+    global_new_total: newTotals.globalNewTotal,
+    new_source: newTotals.source,
+    missing_new_data: newTotals.missingNewData,
     weekly_usage: weeklyUsage,
   };
 }
@@ -366,6 +370,23 @@ async function getGlobalUniqueTotal(dayList) {
   return getUnionCardinality(keys);
 }
 
+async function collectNewTotals(dayList, uniqueTotals) {
+  const keys = dayList.map((day) => `telemetry:day:${day}:new:all`);
+  const globalNewTotal = await getUnionCardinality(keys);
+  const hasStoredNewData = await hasAnyExistingKeys(keys);
+  const missingNewData =
+    !uniqueTotals.missingUniqueData &&
+    uniqueTotals.globalUniqueTotal > 0 &&
+    globalNewTotal === 0 &&
+    !hasStoredNewData;
+
+  return {
+    globalNewTotal,
+    source: missingNewData ? "day-first-seen-missing" : "day-first-seen",
+    missingNewData,
+  };
+}
+
 async function getScopedUniqueTotals(dayList, names, scope) {
   if (!names.length) {
     return {};
@@ -403,6 +424,25 @@ async function getUnionCardinality(keys) {
   const cardResponse = responses[2];
   const total = cardResponse && cardResponse.result ? cardResponse.result : 0;
   return parseInt(total, 10) || 0;
+}
+
+async function hasAnyExistingKeys(keys) {
+  const list = keys.filter((key) => !!key);
+  if (!list.length) {
+    return false;
+  }
+
+  const chunkSize = 200;
+  for (let i = 0; i < list.length; i += chunkSize) {
+    const chunk = list.slice(i, i + chunkSize);
+    const commands = chunk.map((key) => ["EXISTS", key]);
+    const responses = await upstashPipeline(commands);
+    if (responses.some((item) => parseInt(item && item.result ? item.result : 0, 10) > 0)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 async function collectWeeklyUsage(weekQuery) {

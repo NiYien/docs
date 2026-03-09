@@ -723,8 +723,11 @@
         const uniqueSourceHint = data.unique_source
           ? ` · 人数口径: ${formatUniqueSource(data.unique_source)}`
           : "";
+        const newSourceHint = data.new_source
+          ? ` · 新用户口径: ${formatNewSource(data.new_source)}`
+          : "";
         const breakpointStatusHint = formatBreakpointStatus(data.breakpoint);
-        statusEl.textContent = `${baseStatus}${authWarning}${uniqueSourceHint}${breakpointStatusHint}`;
+        statusEl.textContent = `${baseStatus}${authWarning}${uniqueSourceHint}${newSourceHint}${breakpointStatusHint}`;
         breakpointHintEl.textContent = formatBreakpointBanner(data.breakpoint);
       } catch (error) {
         lastPayload = null;
@@ -748,6 +751,7 @@
       const brandTotals = data.brand_totals || {};
       const totalOpens = Object.values(cityTotals).reduce((sum, val) => sum + (val || 0), 0);
       const uniquePeople = data.missing_unique_data ? "—" : (data.global_unique_total || 0);
+      const newPeople = data.missing_new_data ? "—" : (data.global_new_total || 0);
       const activeCities = Object.keys(cityTotals).length;
       const activeBrands = Object.keys(brandTotals).length;
       const weeklyUsage = data.weekly_usage || {};
@@ -756,12 +760,23 @@
 
       kpiEl.innerHTML = [
         buildKpi("独立人数", uniquePeople),
+        buildKpi("新用户人数", newPeople),
         buildKpi("总打开次数", totalOpens),
         buildKpi("活跃城市", activeCities),
         buildKpi("活跃品牌", activeBrands),
         buildKpi("周活跃用户", weeklyUsers),
         buildKpi("重度占比", `${Math.round(heavyRatio * 100)}%`),
       ].join("");
+    }
+
+    function formatNewSource(source) {
+      if (source === "day-first-seen") {
+        return "按历史首次出现统计";
+      }
+      if (source === "day-first-seen-missing") {
+        return "首次出现数据缺失";
+      }
+      return source || "未知";
     }
 
     function buildKpi(label, value) {
