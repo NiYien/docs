@@ -334,6 +334,12 @@ async function writeDayNewUsers(day, anonIds, uniqueTtlSeconds) {
         commands.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
       }
       corrected += 1;
+    } else if (existingDay === day) {
+      commands.push(["SADD", dayNewUsersKey, anonId]);
+      if (uniqueTtlSeconds > 0) {
+        commands.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+      }
+      corrected += 1;
     }
   }
 
