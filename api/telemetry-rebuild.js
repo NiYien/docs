@@ -1,3 +1,17 @@
+import {
+  buildEventAggregationPlan,
+  buildRawStreamKey,
+  deleteKeys,
+  extractEventFields,
+  getValues,
+  normalizeDay,
+  safeJsonParse,
+  scanKeys,
+  streamFieldsToObject,
+  upstashPipeline,
+  validateEventFields,
+} from "./_telemetry-shared";
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
 
@@ -16,7 +30,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const body = typeof req.body === "string" ? safeJsonParse(req.body) : (req.body || {});
+  const body = typeof req.body === "string" ? safeJsonParse(req.body) : req.body || {};
   if (!body || typeof body !== "object") {
     return res.status(400).json({ error: "Invalid JSON" });
   }
@@ -51,14 +65,17 @@ export default async function handler(req, res) {
       ...result,
     });
   } catch (error) {
-    return res.status(500).json({ error: "Rebuild failed", detail: error.message || String(error) });
+    return res.status(500).json({
+      error: "Rebuild failed",
+      detail: error.message || String(error),
+    });
   }
 }
 
 export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }) {
   const countTtlDays = parseInt(process.env.TELEMETRY_TTL_DAYS || "90", 10);
   const countTtlSeconds = Math.max(countTtlDays, 1) * 86400;
-  const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "0", 10);
+  const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "120", 10);
   const uniqueTtlSeconds = uniqueTtlDays > 0 ? uniqueTtlDays * 86400 : 0;
 
   const summaries = [];
@@ -71,9 +88,9 @@ export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }
       day,
       stream_key: streamKey,
       raw_events: events.length,
-      opens_keys: Object.keys(aggregates.opens).length,
+      count_keys: Object.keys(aggregates.counts).length,
       unique_keys: Object.keys(aggregates.unique).length,
-      new_user_candidates: aggregates.anonIds.length,
+      new_user_candidates: aggregates.newUserEntries.length,
       applied: false,
       deleted_day_keys: 0,
       writes: 0,
@@ -90,7 +107,7 @@ export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }
       }
 
       summary.writes = await writeDayAggregates(aggregates, countTtlSeconds, uniqueTtlSeconds);
-      const newUserResult = await writeDayNewUsers(day, aggregates.anonIds, uniqueTtlSeconds);
+      const newUserResult = await writeDayNewUsers(aggregates.newUserEntries, uniqueTtlSeconds);
       summary.new_user_writes = newUserResult.writes;
       summary.new_users_created = newUserResult.created;
       summary.new_users_corrected = newUserResult.corrected;
@@ -110,18 +127,6 @@ export function getUtcDay(offsetDays = 0) {
   return d.toISOString().slice(0, 10);
 }
 
-function safeJsonParse(value) {
-  try {
-    return JSON.parse(value);
-  } catch (error) {
-    return null;
-  }
-}
-
-function normalizeDay(value) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
-}
-
 function buildDayRange(startDay, endDay) {
   const start = new Date(`${startDay}T00:00:00Z`);
   const end = new Date(`${endDay}T00:00:00Z`);
@@ -137,21 +142,14 @@ function buildDayRange(startDay, endDay) {
   return list;
 }
 
-function buildRawStreamKey(day) {
-  return `telemetry:raw:day:${day}`;
-}
-
 async function readRawEvents(streamKey, count) {
   const rows = [];
   let start = "-";
 
   while (true) {
-    const [response] = await upstashPipeline([
-      ["XRANGE", streamKey, start, "+", "COUNT", count],
-    ]);
-
+    const [response] = await upstashPipeline([["XRANGE", streamKey, start, "+", "COUNT", count]]);
     const result = response && response.result;
-    if (!Array.isArray(result) || result.length === 0) {
+    if (!Array.isArray(result) || !result.length) {
       break;
     }
 
@@ -174,115 +172,66 @@ async function readRawEvents(streamKey, count) {
   return rows;
 }
 
-function streamFieldsToObject(fields) {
-  const obj = {};
-  for (let i = 0; i < fields.length; i += 2) {
-    obj[String(fields[i])] = fields[i + 1];
-  }
-  return obj;
-}
-
 function buildDayAggregates(events, targetDay) {
-  const opens = {};
+  const counts = {};
   const uniqueSets = {};
-  const anonIds = new Set();
+  const newUserEntries = new Map();
 
   for (const row of events) {
-    const event = String(row.event || "").trim();
-    if (event !== "open") {
+    const fields = extractEventFields(row, {});
+    const error = validateEventFields(fields);
+    if (error) {
       continue;
     }
 
-    const ts = Number(row.ts || 0);
-    if (!Number.isFinite(ts) || ts <= 0) {
+    const plan = buildEventAggregationPlan(fields, {
+      city: row.city || "Unknown",
+      country: row.country || "Unknown",
+    });
+    if (plan.day !== targetDay) {
       continue;
     }
 
-    const d = new Date(ts * 1000);
-    const iso = d.toISOString();
-    const day = iso.slice(0, 10);
-    if (day !== targetDay) {
-      continue;
+    for (const key of plan.countKeys) {
+      counts[key] = (counts[key] || 0) + 1;
     }
 
-    const hour = iso.slice(11, 13);
-    const city = normalizeKeyPart(String(row.city || "Unknown"));
-    const country = normalizeKeyPart(String(row.country || "Unknown"));
-    const brand = normalizeKeyPart(String(row.camera_brand || "Other"));
-    const model = normalizeKeyPart(String(row.camera_model || "Unknown"));
-    const language = normalizeKeyPart(String(row.language || "Unknown"));
-    const anonId = String(row.anon_id || "").trim();
-    if (!anonId) {
-      continue;
-    }
-
-    anonIds.add(anonId);
-
-    const openKeys = [
-      `telemetry:day:${targetDay}:city:${city}:brand:${brand}:event:open`,
-      `telemetry:day:${targetDay}:city:${city}:event:open`,
-      `telemetry:day:${targetDay}:brand:${brand}:event:open`,
-      `telemetry:day:${targetDay}:model:${model}:event:open`,
-      `telemetry:day:${targetDay}:lang:${language}:event:open`,
-      `telemetry:day:${targetDay}:country:${country}:event:open`,
-      `telemetry:day:${targetDay}:event:open`,
-      `telemetry:day:${targetDay}:hour:${hour}:event:open`,
-    ];
-
-    for (const key of openKeys) {
-      opens[key] = (opens[key] || 0) + 1;
-    }
-
-    const uniqueKeys = [
-      `telemetry:day:${targetDay}:unique:all`,
-      `telemetry:day:${targetDay}:unique:city:${city}`,
-      `telemetry:day:${targetDay}:unique:brand:${brand}`,
-      `telemetry:day:${targetDay}:unique:model:${model}`,
-      `telemetry:day:${targetDay}:unique:country:${country}`,
-    ];
-
-    for (const key of uniqueKeys) {
+    for (const key of plan.uniqueKeys) {
       if (!uniqueSets[key]) {
         uniqueSets[key] = new Set();
       }
-      uniqueSets[key].add(anonId);
+      uniqueSets[key].add(fields.anonId);
+    }
+
+    for (const context of plan.dayNewUserContexts) {
+      if (!newUserEntries.has(context.firstSeenKey)) {
+        newUserEntries.set(context.firstSeenKey, context);
+      }
     }
   }
 
   const unique = {};
-  for (const [key, value] of Object.entries(uniqueSets)) {
-    unique[key] = Array.from(value);
+  for (const [key, anonIds] of Object.entries(uniqueSets)) {
+    unique[key] = Array.from(anonIds);
   }
 
-  return { opens, unique, anonIds: Array.from(anonIds) };
-}
-
-function buildDayNewUsersKey(day) {
-  return `telemetry:day:${day}:new:all`;
-}
-
-function buildFirstSeenKey(anonId) {
-  const normalized = encodeURIComponent(String(anonId || "").trim().slice(0, 128) || "unknown");
-  return `telemetry:user:first_seen:${normalized}`;
-}
-
-function normalizeKeyPart(value) {
-  const trimmed = String(value || "").trim().slice(0, 64);
-  if (!trimmed) {
-    return "Unknown";
-  }
-  return encodeURIComponent(trimmed);
+  return {
+    counts,
+    unique,
+    newUserEntries: Array.from(newUserEntries.values()),
+  };
 }
 
 async function writeDayAggregates(aggregates, countTtlSeconds, uniqueTtlSeconds) {
   const commands = [];
-  for (const [key, count] of Object.entries(aggregates.opens)) {
+
+  for (const [key, count] of Object.entries(aggregates.counts)) {
     commands.push(["SET", key, String(count)]);
     commands.push(["EXPIRE", key, countTtlSeconds]);
   }
 
   for (const [key, anonIds] of Object.entries(aggregates.unique)) {
-    if (anonIds.length > 0) {
+    if (anonIds.length) {
       commands.push(["SADD", key, ...anonIds]);
     }
     if (uniqueTtlSeconds > 0) {
@@ -296,48 +245,54 @@ async function writeDayAggregates(aggregates, countTtlSeconds, uniqueTtlSeconds)
     await upstashPipeline(chunk);
     writes += chunk.length;
   }
+
   return writes;
 }
 
-async function writeDayNewUsers(day, anonIds, uniqueTtlSeconds) {
-  if (!anonIds.length) {
+async function writeDayNewUsers(entries, uniqueTtlSeconds) {
+  if (!entries.length) {
     return { writes: 0, created: 0, corrected: 0 };
   }
 
-  const firstSeenKeys = anonIds.map((anonId) => buildFirstSeenKey(anonId));
+  const firstSeenKeys = entries.map((entry) => entry.firstSeenKey);
   const existingValues = await getValues(firstSeenKeys);
-  const dayNewUsersKey = buildDayNewUsersKey(day);
   const commands = [];
   let created = 0;
   let corrected = 0;
 
-  for (let i = 0; i < anonIds.length; i += 1) {
-    const anonId = anonIds[i];
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i];
+    const day = extractDayFromTelemetryKey(entry.dayNewUsersKey);
     const existingDay = normalizeDay(String(existingValues[i] || "").trim());
-    const firstSeenKey = firstSeenKeys[i];
+    if (!day) {
+      continue;
+    }
 
     if (!existingDay) {
-      commands.push(["SET", firstSeenKey, day]);
-      commands.push(["SADD", dayNewUsersKey, anonId]);
+      commands.push(["SET", entry.firstSeenKey, day]);
+      commands.push(["SADD", entry.dayNewUsersKey, entry.anonId]);
       if (uniqueTtlSeconds > 0) {
-        commands.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+        commands.push(["EXPIRE", entry.dayNewUsersKey, uniqueTtlSeconds]);
       }
       created += 1;
       continue;
     }
 
     if (day < existingDay) {
-      commands.push(["SET", firstSeenKey, day]);
-      commands.push(["SREM", buildDayNewUsersKey(existingDay), anonId]);
-      commands.push(["SADD", dayNewUsersKey, anonId]);
+      commands.push(["SET", entry.firstSeenKey, day]);
+      commands.push(["SREM", replaceDayInTelemetryKey(entry.dayNewUsersKey, existingDay), entry.anonId]);
+      commands.push(["SADD", entry.dayNewUsersKey, entry.anonId]);
       if (uniqueTtlSeconds > 0) {
-        commands.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+        commands.push(["EXPIRE", entry.dayNewUsersKey, uniqueTtlSeconds]);
       }
       corrected += 1;
-    } else if (existingDay === day) {
-      commands.push(["SADD", dayNewUsersKey, anonId]);
+      continue;
+    }
+
+    if (existingDay === day) {
+      commands.push(["SADD", entry.dayNewUsersKey, entry.anonId]);
       if (uniqueTtlSeconds > 0) {
-        commands.push(["EXPIRE", dayNewUsersKey, uniqueTtlSeconds]);
+        commands.push(["EXPIRE", entry.dayNewUsersKey, uniqueTtlSeconds]);
       }
       corrected += 1;
     }
@@ -353,83 +308,11 @@ async function writeDayNewUsers(day, anonIds, uniqueTtlSeconds) {
   return { writes, created, corrected };
 }
 
-async function scanKeys(pattern) {
-  const keys = [];
-  let cursor = "0";
-
-  for (let i = 0; i < 60; i += 1) {
-    const [response] = await upstashPipeline([
-      ["SCAN", cursor, "MATCH", pattern, "COUNT", 1000],
-    ]);
-
-    const data = response && response.result;
-    if (!Array.isArray(data) || data.length < 2) {
-      break;
-    }
-
-    cursor = data[0];
-    const batch = Array.isArray(data[1]) ? data[1] : [];
-    keys.push(...batch);
-
-    if (cursor === "0") {
-      break;
-    }
-  }
-
-  return keys;
+function extractDayFromTelemetryKey(key) {
+  const match = String(key || "").match(/telemetry:day:(\d{4}-\d{2}-\d{2}):/);
+  return match ? match[1] : "";
 }
 
-async function getValues(keys) {
-  if (!keys.length) {
-    return [];
-  }
-
-  const result = [];
-  const chunkSize = 200;
-
-  for (let i = 0; i < keys.length; i += chunkSize) {
-    const chunk = keys.slice(i, i + chunkSize);
-    const [mgetResult] = await upstashPipeline([["MGET", ...chunk]]);
-    const values = (mgetResult && mgetResult.result) || [];
-    result.push(...values);
-  }
-
-  return result;
-}
-
-async function deleteKeys(keys) {
-  if (!keys.length) {
-    return;
-  }
-
-  const chunkSize = 200;
-  for (let i = 0; i < keys.length; i += chunkSize) {
-    const chunk = keys.slice(i, i + chunkSize);
-    await upstashPipeline([["DEL", ...chunk]]);
-  }
-}
-
-async function upstashPipeline(commands) {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (!url || !token) {
-    throw new Error("Missing Upstash config");
-  }
-
-  const response = await fetch(`${url}/pipeline`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(commands),
-  });
-
-  if (!response.ok) {
-    throw new Error("Upstash pipeline error");
-  }
-
-  const data = await response.json();
-  return Array.isArray(data) ? data : [];
+function replaceDayInTelemetryKey(key, day) {
+  return String(key || "").replace(/telemetry:day:\d{4}-\d{2}-\d{2}:/, `telemetry:day:${day}:`);
 }

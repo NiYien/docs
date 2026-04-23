@@ -445,6 +445,30 @@
           <input id="token" type="password" placeholder="可选" />
         </label>
         <label>
+          product_id
+          <input id="productId" type="text" value="gyroflow_niyien" />
+        </label>
+        <label>
+          source_app_id
+          <select id="sourceAppId">
+            <option value="">全部来源</option>
+            <option value="niyien_tool">niyien_tool</option>
+            <option value="gyroflow_niyien">gyroflow_niyien</option>
+          </select>
+        </label>
+        <label>
+          事件
+          <input id="eventName" type="text" list="eventNames" value="open" />
+          <datalist id="eventNames">
+            <option value="open"></option>
+            <option value="manifest_fetch"></option>
+            <option value="download_result"></option>
+            <option value="sdk_download_result"></option>
+            <option value="plugin_download_result"></option>
+            <option value="manual_version_click"></option>
+          </datalist>
+        </label>
+        <label>
           天数
           <select id="days">
             <option value="7">最近 7 天</option>
@@ -501,6 +525,10 @@
         <h2>周使用 (人数)</h2>
         <div id="weeklyUsage"></div>
       </div>
+      <div class="card span-6">
+        <h2>来源拆分</h2>
+        <div id="sourceSummary"></div>
+      </div>
       <div class="card span-12">
         <h2>城市 x 品牌矩阵（Top 10 城市 / Top 8 品牌）</h2>
         <div id="matrix"></div>
@@ -515,6 +543,9 @@
     const daysEl = document.getElementById("days");
     const refreshEl = document.getElementById("refresh");
     const tokenEl = document.getElementById("token");
+    const productIdEl = document.getElementById("productId");
+    const sourceAppIdEl = document.getElementById("sourceAppId");
+    const eventNameEl = document.getElementById("eventName");
     const cityRankMetricEl = document.getElementById("cityRankMetric");
     const exportJsonEl = document.getElementById("exportJson");
     const exportCsvEl = document.getElementById("exportCsv");
@@ -659,6 +690,27 @@
       localStorage.setItem("telemetry_stats_token", tokenEl.value.trim());
     });
 
+    productIdEl.value = normalizeProductId(localStorage.getItem("telemetry_stats_product_id") || "gyroflow_niyien");
+    productIdEl.addEventListener("change", () => {
+      productIdEl.value = normalizeProductId(productIdEl.value);
+      localStorage.setItem("telemetry_stats_product_id", productIdEl.value);
+      loadStats();
+    });
+
+    sourceAppIdEl.value = normalizeSourceAppId(localStorage.getItem("telemetry_stats_source_app_id") || "");
+    sourceAppIdEl.addEventListener("change", () => {
+      sourceAppIdEl.value = normalizeSourceAppId(sourceAppIdEl.value);
+      localStorage.setItem("telemetry_stats_source_app_id", sourceAppIdEl.value);
+      loadStats();
+    });
+
+    eventNameEl.value = normalizeEventName(localStorage.getItem("telemetry_stats_event") || "open");
+    eventNameEl.addEventListener("change", () => {
+      eventNameEl.value = normalizeEventName(eventNameEl.value);
+      localStorage.setItem("telemetry_stats_event", eventNameEl.value);
+      loadStats();
+    });
+
     cityRankMetricEl.value = normalizeRankMetric(localStorage.getItem("telemetry_stats_city_rank_metric"));
     cityRankMetricEl.addEventListener("change", () => {
       cityRankMetricEl.value = normalizeRankMetric(cityRankMetricEl.value);
@@ -687,16 +739,28 @@
       const days = daysEl.value;
       const token = tokenEl.value.trim();
       const headers = token ? { "X-Stats-Token": token } : {};
+      const productId = normalizeProductId(productIdEl.value);
+      const sourceAppId = normalizeSourceAppId(sourceAppIdEl.value);
+      const eventName = normalizeEventName(eventNameEl.value);
+      const params = new URLSearchParams({
+        days: String(days),
+        product_id: productId,
+        event: eventName,
+        _ts: String(Date.now()),
+      });
+      if (sourceAppId) {
+        params.set("source_app_id", sourceAppId);
+      }
 
       try {
-        const cacheBuster = Date.now();
-        const response = await fetch(`/api/telemetry-stats?days=${encodeURIComponent(days)}&_ts=${cacheBuster}`, { headers });
+        const response = await fetch(`/api/telemetry-stats?${params.toString()}`, { headers });
         if (!response.ok) {
           throw new Error("Bad response");
         }
 
         const data = await response.json();
         lastPayload = data;
+        syncSourceOptions(data.available_sources || []);
         renderKpis(data);
         renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {}, cityRankMetricEl.value);
         renderTable("brands", data.brand_totals || {}, data.brand_unique_totals || {}, "品牌", cityRankMetricEl.value);
@@ -704,6 +768,7 @@
         renderTable("countries", data.country_totals || {}, data.country_unique_totals || {}, "国家/地区", cityRankMetricEl.value);
         renderHours("hours", data.hour_totals || []);
         renderWeeklyUsage("weeklyUsage", data.weekly_usage || {});
+        renderSourceSummary("sourceSummary", data.source_totals || {}, data.source_unique_totals || {}, data.filters || {});
         renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
 
         let mapOk = true;
@@ -714,6 +779,7 @@
           console.error("[stats] renderMap failed", mapError);
         }
 
+        const filterHint = ` · product=${data.filters?.product_id || productId} · source=${data.filters?.source_app_id || "all"} · event=${data.filters?.event || eventName}`;
         const baseStatus = mapOk
           ? `已更新 (UTC 日期: ${data.days ? data.days.join(", ") : ""})`
           : `已更新 (地图渲染失败 · UTC 日期: ${data.days ? data.days.join(", ") : ""})`;
@@ -727,7 +793,7 @@
           ? ` · 新用户口径: ${formatNewSource(data.new_source)}`
           : "";
         const breakpointStatusHint = formatBreakpointStatus(data.breakpoint);
-        statusEl.textContent = `${baseStatus}${authWarning}${uniqueSourceHint}${newSourceHint}${breakpointStatusHint}`;
+        statusEl.textContent = `${baseStatus}${filterHint}${authWarning}${uniqueSourceHint}${newSourceHint}${breakpointStatusHint}`;
         breakpointHintEl.textContent = formatBreakpointBanner(data.breakpoint);
       } catch (error) {
         lastPayload = null;
@@ -740,6 +806,7 @@
         document.getElementById("countries").innerHTML = "";
         document.getElementById("hours").innerHTML = "";
         document.getElementById("weeklyUsage").innerHTML = "";
+        document.getElementById("sourceSummary").innerHTML = "";
         document.getElementById("matrix").innerHTML = "";
       } finally {
         document.body.classList.remove("loading");
@@ -754,6 +821,7 @@
       const newPeople = data.missing_new_data ? "—" : (data.global_new_total || 0);
       const activeCities = Object.keys(cityTotals).length;
       const activeBrands = Object.keys(brandTotals).length;
+      const activeSources = Object.keys(data.source_totals || {}).length;
       const weeklyUsage = data.weekly_usage || {};
       const weeklyUsers = weeklyUsage.total_users || 0;
       const heavyRatio = weeklyUsage.heavy_ratio || 0;
@@ -764,6 +832,7 @@
         buildKpi("总打开次数", totalOpens),
         buildKpi("活跃城市", activeCities),
         buildKpi("活跃品牌", activeBrands),
+        buildKpi("来源数", activeSources),
         buildKpi("周活跃用户", weeklyUsers),
         buildKpi("重度占比", `${Math.round(heavyRatio * 100)}%`),
       ].join("");
@@ -942,6 +1011,39 @@
       container.innerHTML = "";
       container.appendChild(table);
       container.appendChild(summary);
+    }
+
+    function renderSourceSummary(targetId, sourceTotals, sourceUniqueTotals, filters) {
+      const container = document.getElementById(targetId);
+      const entries = Object.entries(sourceTotals || {})
+        .map(([source, opens]) => [source, sourceUniqueTotals[source] || 0, opens])
+        .sort((a, b) => b[2] - a[2]);
+
+      if (!entries.length) {
+        container.innerHTML = "<p class=\"hint\">暂无来源拆分数据</p>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      const header = document.createElement("tr");
+      header.innerHTML = "<th>来源</th><th>人数</th><th>打开次数</th>";
+      table.appendChild(header);
+
+      entries.forEach(([source, people, opens]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(source))}</td><td>${people}</td><td>${opens}</td>`;
+        table.appendChild(row);
+      });
+
+      const summary = document.createElement("p");
+      summary.className = "hint";
+      summary.textContent = filters && filters.source_app_id
+        ? `当前已按 source_app_id=${filters.source_app_id} 过滤`
+        : "当前显示 product 维度下的全部来源";
+
+      container.innerHTML = "";
+      container.appendChild(summary);
+      container.appendChild(table);
     }
 
     function renderMatrix(targetId, matrix, cityTotals, brandTotals) {
@@ -1203,6 +1305,8 @@
         model_totals: modelTotals = {},
         language_totals: languageTotals = {},
         country_totals: countryTotals = {},
+        source_totals: sourceTotals = {},
+        source_unique_totals: sourceUniqueTotals = {},
         hour_totals: hourTotals = [],
         city_brand_totals: cityBrand = {},
         city_unique_totals: cityUnique = {},
@@ -1210,10 +1314,14 @@
         model_unique_totals: modelUnique = {},
         country_unique_totals: countryUnique = {},
         weekly_usage: weeklyUsage = {},
+        filters: filters = {},
       } = lastPayload;
 
       lines.push(`meta,city_rank_metric,,${cityRankMetric}`);
       lines.push(`meta,rank_metric,,${cityRankMetric}`);
+      lines.push(`meta,product_id,,${csvEscape(filters.product_id || normalizeProductId(productIdEl.value))}`);
+      lines.push(`meta,source_app_id,,${csvEscape(filters.source_app_id || "all")}`);
+      lines.push(`meta,event,,${csvEscape(filters.event || normalizeEventName(eventNameEl.value))}`);
 
       Object.entries(cityTotals).forEach(([city, count]) => {
         lines.push(`city,${csvEscape(cleanLabel(city))},,${count}`);
@@ -1249,6 +1357,14 @@
 
       Object.entries(countryUnique).forEach(([country, count]) => {
         lines.push(`country_unique,${csvEscape(cleanLabel(country))},,${count}`);
+      });
+
+      Object.entries(sourceTotals).forEach(([source, count]) => {
+        lines.push(`source,${csvEscape(cleanLabel(source))},,${count}`);
+      });
+
+      Object.entries(sourceUniqueTotals).forEach(([source, count]) => {
+        lines.push(`source_unique,${csvEscape(cleanLabel(source))},,${count}`);
       });
 
       hourTotals.forEach((count, hour) => {
@@ -1302,6 +1418,58 @@
 
     function normalizeRankMetric(value) {
       return value === "opens" ? "opens" : "people";
+    }
+
+    function normalizeProductId(value) {
+      const normalized = String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_")
+        .replace(/[^a-z0-9._]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      return normalized || "gyroflow_niyien";
+    }
+
+    function normalizeSourceAppId(value) {
+      const normalized = String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_")
+        .replace(/[^a-z0-9._]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      return normalized;
+    }
+
+    function normalizeEventName(value) {
+      const normalized = String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_")
+        .replace(/[^a-z0-9._]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      return normalized || "open";
+    }
+
+    function syncSourceOptions(sourceNames) {
+      const values = new Set(["", "niyien_tool", "gyroflow_niyien", ...(sourceNames || [])]);
+      const current = normalizeSourceAppId(sourceAppIdEl.value);
+      const sorted = Array.from(values).sort((a, b) => {
+        if (a === "") return -1;
+        if (b === "") return 1;
+        return a.localeCompare(b);
+      });
+
+      sourceAppIdEl.innerHTML = "";
+      sorted.forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value || "全部来源";
+        sourceAppIdEl.appendChild(option);
+      });
+      sourceAppIdEl.value = current;
     }
 
     function resolveCountryCoord(country) {

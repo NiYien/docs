@@ -1,6 +1,33 @@
 {
   "headers": [
     {
+      "source": "/api/manifest",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/download",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/download/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
       "source": "/api/telemetry",
       "headers": [
         {
@@ -75,6 +102,16 @@
     {
       "path": "/api/telemetry-rebuild-cron?scope=yesterday",
       "schedule": "15 0 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/download/app/([^/]+)/(.+)",
+      "destination": "/api/download?scope=app&tag=$1&path=$2"
+    },
+    {
+      "source": "/api/download/content/([^/]+)/(.+)",
+      "destination": "/api/download?scope=content&tag=$1&path=$2"
     }
   ]
 }

@@ -1,4 +1,18 @@
 ## NiYien Tool Update Log
+
+Version：V1.4.4RC（minimum Gyroflow version: V1.6.3)
+>1. Fixed rolling shutter parameters for Panasonic M43 models.
+>2. Fixed incorrect crop mode detection for Fujifilm models.
+>3. Fixed rolling shutter parameters for Nikon APS-C cameras.
+>4. Fixed BMD BRAW camera recognition issues.
+>5. ZR R3D is now supported directly without requiring proxy videos.
+>6. Added support for additional cameras:
+>     a. Canon 650D, 700D, M200
+>     b. RED RAVEN 4.5K
+>     c. Sony A7, A6100
+>     d. ARRI ALEXA Mini, ALEXA Mini LF, ALEXA 35
+>     e. BMD BMCC 6K
+
 Version：V1.4.4（minimum Gyroflow version: V1.6.3)
 >1. Fix some setting issues.
 >2. Add support for additional cameras:

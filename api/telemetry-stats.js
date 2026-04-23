@@ -1,5 +1,23 @@
+import { DEFAULT_PRODUCT_ID, LEGACY_SOURCE_APP_ID } from "./_control-plane";
+import {
+  DEFAULT_TELEMETRY_EVENT,
+  buildDayNewUsersKey,
+  buildScopedUniqueKey,
+  buildStatsBasePrefix,
+  buildUniqueAllKey,
+  buildWeeklyUsagePattern,
+  decodeKeyPart,
+  getIsoWeekKey,
+  getUnionCardinality,
+  getValues,
+  hasAnyExistingKeys,
+  normalizeTelemetryQueryToken,
+  scanKeys,
+} from "./_telemetry-shared";
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
+
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -7,28 +25,51 @@ export default async function handler(req, res) {
 
   const requiredToken = process.env.TELEMETRY_STATS_TOKEN;
   const provided = String(req.headers["x-stats-token"] || "").trim();
-  if (requiredToken) {
-    if (!provided || provided !== requiredToken) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  if (requiredToken && provided !== requiredToken) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   const dayQuery = String(req.query.day || "").trim();
   const daysQuery = String(req.query.days || "7").trim();
   const weekQuery = String(req.query.week || "").trim();
-  const days = clampNumber(parseInt(daysQuery, 10) || 7, 1, 30);
+  const productId =
+    normalizeTelemetryQueryToken(req.query.product_id, DEFAULT_PRODUCT_ID) || DEFAULT_PRODUCT_ID;
+  const sourceAppId = normalizeTelemetryQueryToken(req.query.source_app_id, "");
+  const event =
+    normalizeTelemetryQueryToken(req.query.event, DEFAULT_TELEMETRY_EVENT) ||
+    DEFAULT_TELEMETRY_EVENT;
 
+  const days = clampNumber(parseInt(daysQuery, 10) || 7, 1, 30);
   const dayList = dayQuery ? [normalizeDay(dayQuery)] : buildDayList(days);
-  if (dayList.some((d) => !d)) {
+  if (dayList.some((day) => !day)) {
     return res.status(400).json({ error: "Invalid day" });
   }
 
   try {
-    const results = await collectStats(dayList, weekQuery);
+    const results = await collectStats(dayList, weekQuery, {
+      productId,
+      sourceAppId,
+      event,
+    });
     const breakpoint = buildBreakpointMeta(dayList);
-    return res.status(200).json({ ok: true, days: dayList, auth_required: !!requiredToken, breakpoint, ...results });
+
+    return res.status(200).json({
+      ok: true,
+      days: dayList,
+      filters: {
+        product_id: productId,
+        source_app_id: sourceAppId || null,
+        event,
+      },
+      auth_required: !!requiredToken,
+      breakpoint,
+      ...results,
+    });
   } catch (error) {
-    return res.status(500).json({ error: "Stats error" });
+    return res.status(500).json({
+      error: "Stats error",
+      detail: error.message || String(error),
+    });
   }
 }
 
@@ -41,9 +82,6 @@ function buildBreakpointMeta(dayList) {
   let hasBefore = false;
   let hasAfter = false;
   for (const item of dayList) {
-    if (!item) {
-      continue;
-    }
     if (item < day) {
       hasBefore = true;
     } else {
@@ -51,14 +89,13 @@ function buildBreakpointMeta(dayList) {
     }
   }
 
-  const crosses = hasBefore && hasAfter;
   const note = String(
     process.env.TELEMETRY_BREAKPOINT_NOTE || "断点日前后口径不同，建议分段查看，不做同比。"
   );
 
   return {
     day,
-    crosses,
+    crosses: hasBefore && hasAfter,
     all_before: hasBefore && !hasAfter,
     all_after: hasAfter && !hasBefore,
     note,
@@ -70,11 +107,7 @@ function clampNumber(value, min, max) {
 }
 
 function normalizeDay(value) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return "";
-  }
-
-  return value;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
 }
 
 function buildDayList(days) {
@@ -90,44 +123,134 @@ function buildDayList(days) {
   return list;
 }
 
-async function collectStats(dayList, weekQuery) {
+async function collectStats(dayList, weekQuery, filters) {
   const cityTotals = {};
   const brandTotals = {};
   const modelTotals = {};
   const languageTotals = {};
   const countryTotals = {};
   const cityBrandTotals = {};
+  const sourceTotals = {};
+  const platformTotals = {};
+  const statusTotals = {};
+  const artifactTotals = {};
+  const selectedSourceTotals = {};
+  const platformStatusTotals = {};
+  const selectedSourceStatusTotals = {};
+  const artifactStatusTotals = {};
   const hourTotals = Array.from({ length: 24 }, () => 0);
+  const legacyDaysUsed = [];
+  const legacyFallbackEnabled = shouldUseLegacyFallback(filters);
 
   for (const day of dayList) {
-    const cityBrandPattern = `telemetry:day:${day}:city:*:brand:*:event:open`;
-    const modelPattern = `telemetry:day:${day}:model:*:event:open`;
-    const languagePattern = `telemetry:day:${day}:lang:*:event:open`;
-    const countryPattern = `telemetry:day:${day}:country:*:event:open`;
-    const hourPattern = `telemetry:day:${day}:hour:*:event:open`;
-
-    const cityBrandKeys = await scanKeys(cityBrandPattern);
-    const modelKeys = await scanKeys(modelPattern);
-    const languageKeys = await scanKeys(languagePattern);
-    const countryKeys = await scanKeys(countryPattern);
-    const hourKeys = await scanKeys(hourPattern);
+    const basePrefix = buildStatsBasePrefix(day, filters.productId, filters.event, filters.sourceAppId);
+    const sourcePrefix = `telemetry:day:${day}:product:${filters.productId}:source:*:event:${filters.event}`;
+    const platformPattern = `${basePrefix}:platform:*`;
+    const statusPattern = `${basePrefix}:status:*`;
+    const artifactPattern = `${basePrefix}:artifact:*`;
+    const selectedSourcePattern = `${basePrefix}:selected_source:*`;
+    const platformStatusPattern = `${basePrefix}:platform:*:status:*`;
+    const sourceStatusPattern = `${basePrefix}:selected_source:*:status:*`;
+    const artifactStatusPattern = `${basePrefix}:artifact:*:status:*`;
+    const [
+      cityBrandKeys,
+      modelKeys,
+      languageKeys,
+      countryKeys,
+      hourKeys,
+      sourceKeys,
+      platformKeys,
+      statusKeys,
+      artifactKeys,
+      selectedSourceKeys,
+      platformStatusKeys,
+      sourceStatusKeys,
+      artifactStatusKeys,
+      filteredSourceValue,
+    ] = await Promise.all([
+      scanKeys(`${basePrefix}:city:*:brand:*`),
+      scanKeys(`${basePrefix}:model:*`),
+      scanKeys(`${basePrefix}:lang:*`),
+      scanKeys(`${basePrefix}:country:*`),
+      scanKeys(`${basePrefix}:hour:*`),
+      filters.sourceAppId ? Promise.resolve([]) : scanKeys(sourcePrefix),
+      scanKeys(platformPattern),
+      scanKeys(statusPattern),
+      scanKeys(artifactPattern),
+      scanKeys(selectedSourcePattern),
+      scanKeys(platformStatusPattern),
+      scanKeys(sourceStatusPattern),
+      scanKeys(artifactStatusPattern),
+      filters.sourceAppId ? getValues([basePrefix]) : Promise.resolve([]),
+    ]);
 
     await accumulateCityBrand(cityBrandKeys, cityTotals, brandTotals, cityBrandTotals);
     await accumulateSingleTotals(modelKeys, modelTotals, "model");
     await accumulateSingleTotals(languageKeys, languageTotals, "lang");
     await accumulateSingleTotals(countryKeys, countryTotals, "country");
+    await accumulateSourceTotals(sourceKeys, sourceTotals);
+    await accumulateSingleTrailingTotals(platformKeys, platformTotals, "platform");
+    await accumulateSingleTrailingTotals(statusKeys, statusTotals, "status");
+    await accumulateSingleTrailingTotals(artifactKeys, artifactTotals, "artifact");
+    await accumulateSingleTrailingTotals(
+      selectedSourceKeys,
+      selectedSourceTotals,
+      "selected_source"
+    );
+    await accumulateDoubleTrailingTotals(
+      platformStatusKeys,
+      platformStatusTotals,
+      "platform",
+      "status"
+    );
+    await accumulateDoubleTrailingTotals(
+      sourceStatusKeys,
+      selectedSourceStatusTotals,
+      "selected_source",
+      "status"
+    );
+    await accumulateDoubleTrailingTotals(
+      artifactStatusKeys,
+      artifactStatusTotals,
+      "artifact",
+      "status"
+    );
     await accumulateHours(hourKeys, hourTotals);
+
+    if (filters.sourceAppId) {
+      const count = parseInt(filteredSourceValue[0] || "0", 10);
+      if (count > 0) {
+        sourceTotals[filters.sourceAppId] = (sourceTotals[filters.sourceAppId] || 0) + count;
+      }
+    }
+
+    if (legacyFallbackEnabled) {
+      const legacyUsed = await accumulateLegacyDayTotals(day, {
+        cityTotals,
+        brandTotals,
+        modelTotals,
+        languageTotals,
+        countryTotals,
+        cityBrandTotals,
+        hourTotals,
+        sourceTotals,
+      });
+      if (legacyUsed) {
+        legacyDaysUsed.push(day);
+      }
+    }
   }
 
-  const uniqueTotals = await collectUniqueTotals({
-    dayList,
+  const uniqueTotals = await collectUniqueTotals(dayList, filters, {
     cityTotals,
     brandTotals,
     modelTotals,
     countryTotals,
   });
-  const newTotals = await collectNewTotals(dayList, uniqueTotals);
-  const weeklyUsage = await collectWeeklyUsage(weekQuery);
+  const newTotals = await collectNewTotals(dayList, filters, uniqueTotals);
+  const weeklyUsage = await collectWeeklyUsage(weekQuery, filters);
+  const sourceUniqueTotals = await collectSourceUniqueTotals(dayList, filters, sourceTotals);
+  const availableSources = Array.from(new Set(Object.keys(sourceTotals))).sort();
 
   return {
     city_totals: cityTotals,
@@ -136,6 +259,16 @@ async function collectStats(dayList, weekQuery) {
     language_totals: languageTotals,
     country_totals: countryTotals,
     city_brand_totals: cityBrandTotals,
+    source_totals: sourceTotals,
+    source_unique_totals: sourceUniqueTotals,
+    platform_totals: platformTotals,
+    status_totals: statusTotals,
+    artifact_totals: artifactTotals,
+    selected_source_totals: selectedSourceTotals,
+    platform_status_totals: platformStatusTotals,
+    selected_source_status_totals: selectedSourceStatusTotals,
+    artifact_status_totals: artifactStatusTotals,
+    available_sources: availableSources,
     hour_totals: hourTotals,
     city_unique_totals: uniqueTotals.cityUniqueTotals,
     brand_unique_totals: uniqueTotals.brandUniqueTotals,
@@ -149,31 +282,35 @@ async function collectStats(dayList, weekQuery) {
     new_source: newTotals.source,
     missing_new_data: newTotals.missingNewData,
     weekly_usage: weeklyUsage,
+    legacy_fallback_used: legacyDaysUsed.length > 0,
+    legacy_days_used: legacyDaysUsed,
   };
 }
 
 async function accumulateCityBrand(keys, cityTotals, brandTotals, cityBrandTotals) {
-  const values = await getValues(keys);
+  if (!keys.length) {
+    return;
+  }
 
+  const values = await getValues(keys);
   for (let i = 0; i < keys.length; i += 1) {
-    const key = keys[i];
     const count = parseInt(values[i] || "0", 10);
     if (!count) {
       continue;
     }
 
-    const parsed = parseCityBrandKey(key);
-    if (!parsed) {
+    const city = parseKeyValue(keys[i], "city");
+    const brand = parseKeyValue(keys[i], "brand");
+    if (!city || !brand) {
       continue;
     }
 
-    cityTotals[parsed.city] = (cityTotals[parsed.city] || 0) + count;
-    brandTotals[parsed.brand] = (brandTotals[parsed.brand] || 0) + count;
-    if (!cityBrandTotals[parsed.city]) {
-      cityBrandTotals[parsed.city] = {};
+    cityTotals[city] = (cityTotals[city] || 0) + count;
+    brandTotals[brand] = (brandTotals[brand] || 0) + count;
+    if (!cityBrandTotals[city]) {
+      cityBrandTotals[city] = {};
     }
-    cityBrandTotals[parsed.city][parsed.brand] =
-      (cityBrandTotals[parsed.city][parsed.brand] || 0) + count;
+    cityBrandTotals[city][brand] = (cityBrandTotals[city][brand] || 0) + count;
   }
 }
 
@@ -189,27 +326,95 @@ async function accumulateSingleTotals(keys, totals, label) {
       continue;
     }
 
-    const item = parseSingleKey(keys[i], label);
-    if (!item) {
+    const value = parseKeyValue(keys[i], label);
+    if (!value) {
       continue;
     }
 
-    totals[item] = (totals[item] || 0) + count;
+    totals[value] = (totals[value] || 0) + count;
   }
 }
 
-async function accumulateHours(keys, hourTotals) {
-  const values = await getValues(keys);
+async function accumulateSingleTrailingTotals(keys, totals, label) {
+  if (!keys.length) {
+    return;
+  }
 
+  const values = await getValues(keys);
   for (let i = 0; i < keys.length; i += 1) {
-    const key = keys[i];
     const count = parseInt(values[i] || "0", 10);
     if (!count) {
       continue;
     }
 
-    const hour = parseHourKey(key);
-    if (hour === null) {
+    const value = parseTrailingKeyValue(keys[i], label);
+    if (!value) {
+      continue;
+    }
+
+    totals[value] = (totals[value] || 0) + count;
+  }
+}
+
+async function accumulateDoubleTrailingTotals(keys, totals, labelA, labelB) {
+  if (!keys.length) {
+    return;
+  }
+
+  const values = await getValues(keys);
+  for (let i = 0; i < keys.length; i += 1) {
+    const count = parseInt(values[i] || "0", 10);
+    if (!count) {
+      continue;
+    }
+
+    const pair = parseTrailingKeyPair(keys[i], labelA, labelB);
+    if (!pair) {
+      continue;
+    }
+
+    if (!totals[pair.a]) {
+      totals[pair.a] = {};
+    }
+    totals[pair.a][pair.b] = (totals[pair.a][pair.b] || 0) + count;
+  }
+}
+
+async function accumulateSourceTotals(keys, totals) {
+  if (!keys.length) {
+    return;
+  }
+
+  const values = await getValues(keys);
+  for (let i = 0; i < keys.length; i += 1) {
+    const count = parseInt(values[i] || "0", 10);
+    if (!count) {
+      continue;
+    }
+
+    const source = parseSourceEventKey(keys[i]);
+    if (!source) {
+      continue;
+    }
+
+    totals[source] = (totals[source] || 0) + count;
+  }
+}
+
+async function accumulateHours(keys, hourTotals) {
+  if (!keys.length) {
+    return;
+  }
+
+  const values = await getValues(keys);
+  for (let i = 0; i < keys.length; i += 1) {
+    const count = parseInt(values[i] || "0", 10);
+    if (!count) {
+      continue;
+    }
+
+    const hour = parseInt(parseKeyValue(keys[i], "hour"), 10);
+    if (!Number.isFinite(hour) || hour < 0 || hour > 23) {
       continue;
     }
 
@@ -217,138 +422,18 @@ async function accumulateHours(keys, hourTotals) {
   }
 }
 
-function parseCityBrandKey(key) {
-  const parts = key.split(":");
-  const cityIndex = parts.indexOf("city");
-  const brandIndex = parts.indexOf("brand");
+async function collectUniqueTotals(dayList, filters, totals) {
+  const cityNames = Object.keys(totals.cityTotals || {});
+  const brandNames = Object.keys(totals.brandTotals || {});
+  const modelNames = Object.keys(totals.modelTotals || {});
+  const countryNames = Object.keys(totals.countryTotals || {});
 
-  if (cityIndex < 0 || brandIndex < 0) {
-    return null;
-  }
-
-  const city = decodeKeyPart(parts[cityIndex + 1]);
-  const brand = decodeKeyPart(parts[brandIndex + 1]);
-
-  if (!city || !brand) {
-    return null;
-  }
-
-  return { city, brand };
-}
-
-function parseHourKey(key) {
-  const parts = key.split(":");
-  const hourIndex = parts.indexOf("hour");
-
-  if (hourIndex < 0) {
-    return null;
-  }
-
-  const hourValue = parts[hourIndex + 1];
-  const hour = parseInt(hourValue, 10);
-
-  if (Number.isNaN(hour) || hour < 0 || hour > 23) {
-    return null;
-  }
-
-  return hour;
-}
-
-function parseSingleKey(key, label) {
-  const parts = key.split(":");
-  const index = parts.indexOf(label);
-
-  if (index < 0) {
-    return "";
-  }
-
-  return decodeKeyPart(parts[index + 1]);
-}
-
-function decodeKeyPart(value) {
-  try {
-    return decodeURIComponent(value || "");
-  } catch (error) {
-    return "";
-  }
-}
-
-function encodeKeyPart(value) {
-  const text = String(value || "").trim().slice(0, 64);
-  if (!text) {
-    return "Unknown";
-  }
-
-  return encodeURIComponent(text);
-}
-
-async function scanKeys(pattern) {
-  let cursor = "0";
-  const keys = [];
-
-  for (let i = 0; i < 50; i += 1) {
-    const [scanResult] = await upstashPipeline([
-      ["SCAN", cursor, "MATCH", pattern, "COUNT", 1000],
-    ]);
-
-    const data = scanResult && scanResult.result;
-    if (!Array.isArray(data) || data.length < 2) {
-      break;
-    }
-
-    cursor = data[0];
-    const batch = Array.isArray(data[1]) ? data[1] : [];
-    keys.push(...batch);
-
-    if (cursor === "0") {
-      break;
-    }
-  }
-
-  return keys;
-}
-
-async function getValues(keys) {
-  if (!keys.length) {
-    return [];
-  }
-
-  const result = [];
-  const chunkSize = 200;
-
-  for (let i = 0; i < keys.length; i += chunkSize) {
-    const chunk = keys.slice(i, i + chunkSize);
-    const [mgetResult] = await upstashPipeline([["MGET", ...chunk]]);
-    const values = (mgetResult && mgetResult.result) || [];
-    result.push(...values);
-  }
-
-  return result;
-}
-
-async function collectUniqueTotals({ dayList, cityTotals, brandTotals, modelTotals, countryTotals }) {
-  const cityNames = Object.keys(cityTotals);
-  const brandNames = Object.keys(brandTotals);
-  const modelNames = Object.keys(modelTotals);
-  const countryNames = Object.keys(countryTotals);
-
-  let cityUniqueTotals = await getScopedUniqueTotals(dayList, cityNames, "city");
-  let brandUniqueTotals = await getScopedUniqueTotals(dayList, brandNames, "brand");
-  let modelUniqueTotals = await getScopedUniqueTotals(dayList, modelNames, "model");
-  let countryUniqueTotals = await getScopedUniqueTotals(dayList, countryNames, "country");
-  let globalUniqueTotal = await getGlobalUniqueTotal(dayList);
-  let source = "day-observed";
-
-  const hasOpenTotals =
-    hasAnyTotals(cityTotals) ||
-    hasAnyTotals(brandTotals) ||
-    hasAnyTotals(modelTotals) ||
-    hasAnyTotals(countryTotals);
-  const missingUniqueData = hasOpenTotals && globalUniqueTotal === 0;
-
-  if (missingUniqueData) {
-    source = "day-observed-missing";
-  }
+  const cityUniqueTotals = await getScopedUniqueTotals(dayList, cityNames, "city", filters);
+  const brandUniqueTotals = await getScopedUniqueTotals(dayList, brandNames, "brand", filters);
+  const modelUniqueTotals = await getScopedUniqueTotals(dayList, modelNames, "model", filters);
+  const countryUniqueTotals = await getScopedUniqueTotals(dayList, countryNames, "country", filters);
+  const globalUniqueTotal = await getGlobalUniqueTotal(dayList, filters);
+  const missingUniqueData = hasAnyTotals(totals) && globalUniqueTotal === 0;
 
   return {
     cityUniqueTotals,
@@ -356,22 +441,18 @@ async function collectUniqueTotals({ dayList, cityTotals, brandTotals, modelTota
     modelUniqueTotals,
     countryUniqueTotals,
     globalUniqueTotal,
-    source,
+    source: missingUniqueData ? "day-observed-missing" : "day-observed",
     missingUniqueData,
   };
 }
 
-function hasAnyTotals(totals) {
-  return Object.values(totals || {}).some((value) => (parseInt(value || "0", 10) || 0) > 0);
-}
-
-async function getGlobalUniqueTotal(dayList) {
-  const keys = dayList.map((day) => `telemetry:day:${day}:unique:all`);
-  return getUnionCardinality(keys);
-}
-
-async function collectNewTotals(dayList, uniqueTotals) {
-  const keys = dayList.map((day) => `telemetry:day:${day}:new:all`);
+async function collectNewTotals(dayList, filters, uniqueTotals) {
+  const keys = dayList.map((day) =>
+    buildDayNewUsersKey(day, filters.productId, filters.event, filters.sourceAppId)
+  );
+  if (shouldUseLegacyFallback(filters)) {
+    keys.push(...dayList.map((day) => `telemetry:day:${day}:new:all`));
+  }
   const globalNewTotal = await getUnionCardinality(keys);
   const hasStoredNewData = await hasAnyExistingKeys(keys);
   const missingNewData =
@@ -387,72 +468,88 @@ async function collectNewTotals(dayList, uniqueTotals) {
   };
 }
 
-async function getScopedUniqueTotals(dayList, names, scope) {
+async function collectSourceUniqueTotals(dayList, filters, sourceTotals) {
+  const result = {};
+  const sourceNames = Array.from(
+    new Set([
+      ...Object.keys(sourceTotals || {}),
+      ...(filters.sourceAppId ? [filters.sourceAppId] : []),
+      ...(shouldUseLegacyFallback(filters) ? [LEGACY_SOURCE_APP_ID] : []),
+    ])
+  ).filter(Boolean);
+
+  for (const source of sourceNames) {
+    const keys = dayList.map((day) =>
+      buildUniqueAllKey(day, filters.productId, filters.event, source)
+    );
+    if (shouldUseLegacyFallback(filters) && source === LEGACY_SOURCE_APP_ID) {
+      keys.push(...dayList.map((day) => `telemetry:day:${day}:unique:all`));
+    }
+    const total = await getUnionCardinality(keys);
+    if (total > 0 || (!filters.sourceAppId && sourceTotals[source])) {
+      result[source] = total;
+    }
+  }
+
+  return result;
+}
+
+function hasAnyTotals(totals) {
+  return [
+    totals.cityTotals,
+    totals.brandTotals,
+    totals.modelTotals,
+    totals.countryTotals,
+  ].some((bucket) =>
+    Object.values(bucket || {}).some((value) => (parseInt(value || "0", 10) || 0) > 0)
+  );
+}
+
+async function getGlobalUniqueTotal(dayList, filters) {
+  const keys = dayList.map((day) =>
+    buildUniqueAllKey(day, filters.productId, filters.event, filters.sourceAppId)
+  );
+  if (shouldUseLegacyFallback(filters)) {
+    keys.push(...dayList.map((day) => `telemetry:day:${day}:unique:all`));
+  }
+  return getUnionCardinality(keys);
+}
+
+async function getScopedUniqueTotals(dayList, names, scope, filters) {
   if (!names.length) {
     return {};
   }
 
   const result = {};
   for (const name of names) {
-    const keys = dayList.map((day) => `telemetry:day:${day}:unique:${scope}:${encodeKeyPart(name)}`);
+    const keys = dayList.map((day) =>
+      buildScopedUniqueKey(day, filters.productId, filters.event, scope, name, filters.sourceAppId)
+    );
+    if (shouldUseLegacyFallback(filters)) {
+      const encodedName = encodeLegacyKeyPart(name);
+      keys.push(...dayList.map((day) => `telemetry:day:${day}:unique:${scope}:${encodedName}`));
+    }
     result[name] = await getUnionCardinality(keys);
   }
 
   return result;
 }
 
-async function getUnionCardinality(keys) {
-  const list = keys.filter((key) => !!key);
-  if (!list.length) {
-    return 0;
+async function collectWeeklyUsage(weekQuery, filters) {
+  const weekKey =
+    weekQuery && /^\d{4}-W\d{2}$/.test(weekQuery) ? weekQuery : getIsoWeekKey(new Date());
+  const pattern = buildWeeklyUsagePattern(weekKey, filters.productId, filters.event, filters.sourceAppId);
+  const patterns = [pattern];
+  if (shouldUseLegacyFallback(filters)) {
+    patterns.push(`telemetry:week:${weekKey}:user:*`);
   }
 
-  if (list.length === 1) {
-    const [response] = await upstashPipeline([["SCARD", list[0]]]);
-    const total = response && response.result ? response.result : 0;
-    return parseInt(total, 10) || 0;
+  const keyLists = await Promise.all(patterns.map((item) => scanKeys(item)));
+  const userCounts = new Map();
+  for (const keys of keyLists) {
+    const values = await getValues(keys);
+    mergeWeeklyUserCounts(keys, values, userCounts);
   }
-
-  const tempKey = `telemetry:tmp:stats:union:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
-  const responses = await upstashPipeline([
-    ["SUNIONSTORE", tempKey, ...list],
-    ["EXPIRE", tempKey, 30],
-    ["SCARD", tempKey],
-    ["DEL", tempKey],
-  ]);
-
-  const cardResponse = responses[2];
-  const total = cardResponse && cardResponse.result ? cardResponse.result : 0;
-  return parseInt(total, 10) || 0;
-}
-
-async function hasAnyExistingKeys(keys) {
-  const list = keys.filter((key) => !!key);
-  if (!list.length) {
-    return false;
-  }
-
-  const chunkSize = 200;
-  for (let i = 0; i < list.length; i += chunkSize) {
-    const chunk = list.slice(i, i + chunkSize);
-    const commands = chunk.map((key) => ["EXISTS", key]);
-    const responses = await upstashPipeline(commands);
-    if (responses.some((item) => parseInt(item && item.result ? item.result : 0, 10) > 0)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-async function collectWeeklyUsage(weekQuery) {
-  const weekKey = weekQuery && /^\d{4}-W\d{2}$/.test(weekQuery)
-    ? weekQuery
-    : getIsoWeekKey(new Date());
-
-  const pattern = `telemetry:week:${weekKey}:user:*`;
-  const keys = await scanKeys(pattern);
-  const values = await getValues(keys);
 
   const buckets = {
     "1": 0,
@@ -466,8 +563,7 @@ async function collectWeeklyUsage(weekQuery) {
   let heavyUsers = 0;
   const heavyThreshold = 6;
 
-  for (let i = 0; i < values.length; i += 1) {
-    const count = parseInt(values[i] || "0", 10);
+  for (const count of userCounts.values()) {
     if (!count) {
       continue;
     }
@@ -490,49 +586,123 @@ async function collectWeeklyUsage(weekQuery) {
     }
   }
 
-  const ratio = totalUsers ? Math.round((heavyUsers / totalUsers) * 1000) / 1000 : 0;
-
   return {
     week: weekKey,
     total_users: totalUsers,
     heavy_users: heavyUsers,
-    heavy_ratio: ratio,
+    heavy_ratio: totalUsers ? Math.round((heavyUsers / totalUsers) * 1000) / 1000 : 0,
     heavy_threshold: heavyThreshold,
     buckets,
   };
 }
 
-function getIsoWeekKey(date) {
-  const temp = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dayNum = temp.getUTCDay() || 7;
-  temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((temp - yearStart) / 86400000 + 1) / 7);
-  const year = temp.getUTCFullYear();
-  return `${year}-W${String(week).padStart(2, "0")}`;
+function shouldUseLegacyFallback(filters) {
+  return (
+    filters.productId === DEFAULT_PRODUCT_ID &&
+    filters.event === DEFAULT_TELEMETRY_EVENT &&
+    (!filters.sourceAppId || filters.sourceAppId === LEGACY_SOURCE_APP_ID)
+  );
 }
 
-async function upstashPipeline(commands) {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+async function accumulateLegacyDayTotals(day, totals) {
+  const [
+    cityBrandKeys,
+    modelKeys,
+    languageKeys,
+    countryKeys,
+    hourKeys,
+    legacyEventValues,
+  ] = await Promise.all([
+    scanKeys(`telemetry:day:${day}:city:*:brand:*:event:open`),
+    scanKeys(`telemetry:day:${day}:model:*:event:open`),
+    scanKeys(`telemetry:day:${day}:lang:*:event:open`),
+    scanKeys(`telemetry:day:${day}:country:*:event:open`),
+    scanKeys(`telemetry:day:${day}:hour:*:event:open`),
+    getValues([`telemetry:day:${day}:event:open`]),
+  ]);
 
-  if (!url || !token) {
-    throw new Error("Missing Upstash config");
+  await accumulateCityBrand(cityBrandKeys, totals.cityTotals, totals.brandTotals, totals.cityBrandTotals);
+  await accumulateSingleTotals(modelKeys, totals.modelTotals, "model");
+  await accumulateSingleTotals(languageKeys, totals.languageTotals, "lang");
+  await accumulateSingleTotals(countryKeys, totals.countryTotals, "country");
+  await accumulateHours(hourKeys, totals.hourTotals);
+
+  const legacyEventCount = parseInt(legacyEventValues[0] || "0", 10);
+  if (legacyEventCount > 0) {
+    totals.sourceTotals[LEGACY_SOURCE_APP_ID] =
+      (totals.sourceTotals[LEGACY_SOURCE_APP_ID] || 0) + legacyEventCount;
   }
 
-  const response = await fetch(`${url}/pipeline`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(commands),
-  });
+  return (
+    cityBrandKeys.length > 0 ||
+    modelKeys.length > 0 ||
+    languageKeys.length > 0 ||
+    countryKeys.length > 0 ||
+    hourKeys.length > 0 ||
+    legacyEventCount > 0
+  );
+}
 
-  if (!response.ok) {
-    throw new Error("Upstash pipeline error");
+function parseKeyValue(key, label) {
+  const parts = String(key || "").split(":");
+  const index = parts.indexOf(label);
+  if (index < 0) {
+    return "";
+  }
+  return decodeKeyPart(parts[index + 1]);
+}
+
+function parseTrailingKeyValue(key, label) {
+  const parts = String(key || "").split(":");
+  if (parts.length < 2 || parts[parts.length - 2] !== label) {
+    return "";
+  }
+  return decodeKeyPart(parts[parts.length - 1]);
+}
+
+function parseTrailingKeyPair(key, labelA, labelB) {
+  const parts = String(key || "").split(":");
+  if (
+    parts.length < 4 ||
+    parts[parts.length - 4] !== labelA ||
+    parts[parts.length - 2] !== labelB
+  ) {
+    return null;
   }
 
-  const data = await response.json();
-  return Array.isArray(data) ? data : [];
+  return {
+    a: decodeKeyPart(parts[parts.length - 3]),
+    b: decodeKeyPart(parts[parts.length - 1]),
+  };
+}
+
+function parseSourceEventKey(key) {
+  const match = String(key || "").match(/:source:([^:]+):event:[^:]+$/);
+  return match ? decodeKeyPart(match[1]) : "";
+}
+
+function mergeWeeklyUserCounts(keys, values, totals) {
+  for (let i = 0; i < keys.length; i += 1) {
+    const count = parseInt(values[i] || "0", 10);
+    if (!count) {
+      continue;
+    }
+
+    const match = String(keys[i] || "").match(/:user:(.+)$/);
+    if (!match) {
+      continue;
+    }
+
+    const anonId = decodeKeyPart(match[1]);
+    if (!anonId) {
+      continue;
+    }
+
+    totals.set(anonId, (totals.get(anonId) || 0) + count);
+  }
+}
+
+function encodeLegacyKeyPart(value) {
+  const text = String(value || "").trim().slice(0, 96);
+  return encodeURIComponent(text || "Unknown");
 }
