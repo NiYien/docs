@@ -155,6 +155,13 @@ export async function buildManifestPayload(req) {
   const resolvedContentTag = String(
     resolvedEntry?.content_tag || process.env.NIYIEN_CONTENT_RELEASE_TAG || autoEntry?.content_tag || ""
   ).trim();
+  const resolvedPluginSourceMode = String(
+    resolvedEntry?.plugins_source_mode || process.env.NIYIEN_PLUGINS_SOURCE_MODE || "release"
+  )
+    .trim()
+    .toLowerCase();
+  const resolvedPluginSourceRef = String(resolvedEntry?.plugins_source_ref || "").trim();
+  const resolvedPluginSourceTag = String(resolvedEntry?.plugins_source_tag || "").trim();
   const resolvedLensVersion = coerceScalarValue(
     resolvedEntry?.lens_version ?? process.env.NIYIEN_LENS_VERSION ?? ""
   );
@@ -190,13 +197,12 @@ export async function buildManifestPayload(req) {
       ? `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`
       : "";
   } else {
-    const resolvedSourceMode = String(resolvedEntry?.app_source_mode || "release").trim().toLowerCase();
+    const resolvedAppSourceMode = String(resolvedEntry?.app_source_mode || "release").trim().toLowerCase();
     const resolvedLensTag = resolvedEntry?.tag || autoEntry?.tag || "";
     appUrl = autoEntry ? resolveGlobalAppUrl(autoEntry, source.base, platform) : "";
-    if (resolvedSourceMode === "artifact" && resolvedContentTag) {
+    if (resolvedAppSourceMode === "artifact" && resolvedContentTag) {
       lensUrl = buildDownloadApiUrl(req, "content", resolvedContentTag, getLensAssetName());
       sdkBase = `${buildDownloadApiUrl(req, "content", resolvedContentTag, "sdk")}/`;
-      pluginsBase = `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`;
     } else {
       lensUrl = resolvedLensTag
         ? buildReleaseAssetUrl(source.base, resolvedLensTag, getLensAssetName())
@@ -204,10 +210,15 @@ export async function buildManifestPayload(req) {
       sdkBase = `${stripTrailingSlash(
         process.env.NIYIEN_GLOBAL_SDK_BASE || DEFAULT_GLOBAL_SDK_BASE
       )}/`;
-      pluginsBase = `${stripTrailingSlash(
-        process.env.NIYIEN_GLOBAL_PLUGINS_BASE || DEFAULT_GLOBAL_PLUGINS_BASE
-      )}/`;
     }
+    pluginsBase =
+      resolvedPluginSourceMode === "artifact" && resolvedContentTag
+        ? `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`
+        : `${stripTrailingSlash(
+            resolvedEntry?.global_plugins_base ||
+              process.env.NIYIEN_GLOBAL_PLUGINS_BASE ||
+              DEFAULT_GLOBAL_PLUGINS_BASE
+          )}/`;
   }
 
   return {
@@ -230,6 +241,9 @@ export async function buildManifestPayload(req) {
     },
     sdk_base: sdkBase,
     plugins_base: pluginsBase,
+    plugins_source_mode: resolvedPluginSourceMode,
+    plugins_source_ref: resolvedPluginSourceRef,
+    plugins_source_tag: resolvedPluginSourceTag,
   };
 }
 
@@ -261,6 +275,16 @@ function normalizePolicyEntry(entry) {
         ? ""
         : coerceScalarValue(entry.lens_version),
     lens_sha256: typeof entry.lens_sha256 === "string" ? entry.lens_sha256.trim() : "",
+    plugins_source_mode:
+      typeof entry.plugins_source_mode === "string" && entry.plugins_source_mode.trim()
+        ? entry.plugins_source_mode.trim().toLowerCase()
+        : "",
+    plugins_source_ref:
+      typeof entry.plugins_source_ref === "string" ? entry.plugins_source_ref.trim() : "",
+    plugins_source_tag:
+      typeof entry.plugins_source_tag === "string" ? entry.plugins_source_tag.trim() : "",
+    global_plugins_base:
+      typeof entry.global_plugins_base === "string" ? entry.global_plugins_base.trim() : "",
   };
 }
 
