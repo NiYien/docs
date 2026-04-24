@@ -1,3 +1,5 @@
+import { getGeo } from "./_geo";
+
 export const DEFAULT_PRODUCT_ID = "gyroflow_niyien";
 export const LEGACY_SOURCE_APP_ID = "niyien_tool";
 export const CURRENT_SOURCE_APP_ID = "gyroflow_niyien";
@@ -55,15 +57,9 @@ export function buildReleaseAssetUrl(sourceBase, tag, filename) {
   return `${stripTrailingSlash(sourceBase)}/${tag}/${filename}`;
 }
 
-export function getCountry(req) {
-  return String(
-    req?.headers?.["x-vercel-ip-country"] ||
-      req?.headers?.["x-country-code"] ||
-      req?.query?.country ||
-      "US"
-  )
-    .trim()
-    .toUpperCase();
+export async function getCountry(req) {
+  const geo = await getGeo(req, { fallbackCountry: "US" });
+  return geo.country || "US";
 }
 
 export function getRoutingConfig() {
@@ -142,8 +138,9 @@ export function loadReleasePolicy() {
   };
 }
 
-export function buildManifestPayload(req) {
-  const country = getCountry(req);
+export async function buildManifestPayload(req) {
+  const geo = await getGeo(req, { fallbackCountry: "US" });
+  const country = geo.country || "US";
   const platform = normalizePlatform(req?.query?.platform);
   const requestedAppVersion = String(req?.query?.app_version || "").trim();
   const source = selectSourceForCountry(country);
@@ -215,6 +212,8 @@ export function buildManifestPayload(req) {
 
   return {
     country: source.country,
+    country_source: geo.source || "",
+    city: geo.city || "Unknown",
     region: source.region,
     selected_source: source.selectedSource,
     product_id: DEFAULT_PRODUCT_ID,

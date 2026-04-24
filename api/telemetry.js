@@ -10,6 +10,7 @@ import {
   upstashPipeline,
   validateEventFields,
 } from "./_telemetry-shared";
+import { getClientIp, getGeo, shouldLogGeo } from "./_geo";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const geo = await lookupGeo(req, ip);
+  const geo = await getGeo(req, { fallbackCountry: "Unknown" });
   const city = geo.city || "Unknown";
   const country = geo.country || "Unknown";
   const ttlDays = parseInt(process.env.TELEMETRY_TTL_DAYS || "90", 10);
@@ -97,6 +98,7 @@ export default async function handler(req, res) {
         received: items.length,
         city,
         country,
+        country_source: geo.source || "",
       });
     } catch (error) {
       return res.status(500).json({
@@ -135,6 +137,7 @@ export default async function handler(req, res) {
       hour: iso.slice(11, 13),
       city,
       country,
+      country_source: geo.source || "",
       deduped: !result.processed,
       event: fields.event,
       product_id: fields.productId,
@@ -242,106 +245,6 @@ async function processEvent(fields, options) {
 
   await upstashPipeline(pipeline);
   return { processed: true };
-}
-
-function getClientIp(req) {
-  const cfConnectingIp = req.headers["cf-connecting-ip"];
-  if (typeof cfConnectingIp === "string" && cfConnectingIp.length > 0) {
-    return cfConnectingIp.trim();
-  }
-
-  const trueClientIp = req.headers["true-client-ip"];
-  if (typeof trueClientIp === "string" && trueClientIp.length > 0) {
-    return trueClientIp.trim();
-  }
-
-  const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.length > 0) {
-    return forwarded.split(",")[0].trim();
-  }
-
-  return req.socket?.remoteAddress || "";
-}
-
-async function lookupGeo(req, ip) {
-  if (shouldUseVercelGeo(req)) {
-    const vercelGeo = getVercelGeo(req);
-    if (vercelGeo.city || vercelGeo.country) {
-      return vercelGeo;
-    }
-  }
-
-  const token = process.env.IPINFO_TOKEN;
-  if (!token || !ip) {
-    return { city: "Unknown", country: "Unknown" };
-  }
-
-  const url = `https://ipinfo.io/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
-  const debugGeo = shouldLogGeo(req);
-
-  try {
-    const response = await fetch(url, { method: "GET" });
-    if (!response.ok) {
-      return { city: "Unknown", country: "Unknown" };
-    }
-
-    const data = await response.json();
-    const city = typeof data.city === "string" ? data.city.trim() : "Unknown";
-    const country = typeof data.country === "string" ? data.country.trim() : "Unknown";
-    if (debugGeo) {
-      console.log("[telemetry] ipinfo", { ip, city, country, url });
-    }
-    return {
-      city: city || "Unknown",
-      country: country || "Unknown",
-    };
-  } catch (error) {
-    return { city: "Unknown", country: "Unknown" };
-  }
-}
-
-function getVercelGeo(req) {
-  let city = String(req.headers["x-vercel-ip-city"] || "").trim();
-  let country = String(req.headers["x-vercel-ip-country"] || "").trim();
-
-  try {
-    city = decodeURIComponent(city);
-  } catch (error) {}
-  try {
-    country = decodeURIComponent(country);
-  } catch (error) {}
-
-  if (shouldLogGeo(req)) {
-    console.log("[telemetry] vercel-geo", { city, country });
-  }
-
-  return {
-    city: city || "",
-    country: country || "",
-  };
-}
-
-function shouldUseVercelGeo(req) {
-  const cfConnectingIp = req.headers["cf-connecting-ip"];
-  if (typeof cfConnectingIp === "string" && cfConnectingIp.length > 0) {
-    return false;
-  }
-
-  const trueClientIp = req.headers["true-client-ip"];
-  if (typeof trueClientIp === "string" && trueClientIp.length > 0) {
-    return false;
-  }
-
-  return true;
-}
-
-function shouldLogGeo(req) {
-  const enabled = String(process.env.TELEMETRY_DEBUG_GEO || "").toLowerCase() === "true";
-  if (!enabled) {
-    return false;
-  }
-
-  return String(req.headers["x-telemetry-debug"] || "") === "1";
 }
 
 function replaceDayInTelemetryKey(key, day) {
