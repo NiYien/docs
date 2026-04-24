@@ -171,7 +171,7 @@ export function buildManifestPayload(req) {
       url:
         source.region === "cn"
           ? buildDownloadApiUrl(req, "app", item.tag, getAppAssetName(platform))
-          : buildAppUrl(source.base, item.tag, platform),
+          : resolveGlobalAppUrl(item, source.base, platform),
       changelog: item.changelog,
       recommended: item.recommended,
     }));
@@ -193,17 +193,24 @@ export function buildManifestPayload(req) {
       ? `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`
       : "";
   } else {
+    const resolvedSourceMode = String(resolvedEntry?.app_source_mode || "release").trim().toLowerCase();
     const resolvedLensTag = resolvedEntry?.tag || autoEntry?.tag || "";
-    appUrl = autoEntry ? buildAppUrl(source.base, autoEntry.tag, platform) : "";
-    lensUrl = resolvedLensTag
-      ? buildReleaseAssetUrl(source.base, resolvedLensTag, getLensAssetName())
-      : "";
-    sdkBase = `${stripTrailingSlash(
-      process.env.NIYIEN_GLOBAL_SDK_BASE || DEFAULT_GLOBAL_SDK_BASE
-    )}/`;
-    pluginsBase = `${stripTrailingSlash(
-      process.env.NIYIEN_GLOBAL_PLUGINS_BASE || DEFAULT_GLOBAL_PLUGINS_BASE
-    )}/`;
+    appUrl = autoEntry ? resolveGlobalAppUrl(autoEntry, source.base, platform) : "";
+    if (resolvedSourceMode === "artifact" && resolvedContentTag) {
+      lensUrl = buildDownloadApiUrl(req, "content", resolvedContentTag, getLensAssetName());
+      sdkBase = `${buildDownloadApiUrl(req, "content", resolvedContentTag, "sdk")}/`;
+      pluginsBase = `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`;
+    } else {
+      lensUrl = resolvedLensTag
+        ? buildReleaseAssetUrl(source.base, resolvedLensTag, getLensAssetName())
+        : "";
+      sdkBase = `${stripTrailingSlash(
+        process.env.NIYIEN_GLOBAL_SDK_BASE || DEFAULT_GLOBAL_SDK_BASE
+      )}/`;
+      pluginsBase = `${stripTrailingSlash(
+        process.env.NIYIEN_GLOBAL_PLUGINS_BASE || DEFAULT_GLOBAL_PLUGINS_BASE
+      )}/`;
+    }
   }
 
   return {
@@ -244,6 +251,11 @@ function normalizePolicyEntry(entry) {
     channels: normalizeChannels(entry.channels),
     changelog: typeof entry.changelog === "string" ? entry.changelog.trim() : "",
     recommended: Boolean(entry.recommended),
+    app_source_mode:
+      typeof entry.app_source_mode === "string" && entry.app_source_mode.trim()
+        ? entry.app_source_mode.trim().toLowerCase()
+        : "release",
+    app_urls: normalizeAppUrls(entry.app_urls),
     content_tag: typeof entry.content_tag === "string" ? entry.content_tag.trim() : "",
     lens_version:
       entry.lens_version === undefined || entry.lens_version === null || entry.lens_version === ""
@@ -251,6 +263,36 @@ function normalizePolicyEntry(entry) {
         : coerceScalarValue(entry.lens_version),
     lens_sha256: typeof entry.lens_sha256 === "string" ? entry.lens_sha256.trim() : "",
   };
+}
+
+function normalizeAppUrls(value) {
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+  const result = {};
+  for (const [platform, url] of Object.entries(value)) {
+    const key = normalizePlatform(platform);
+    const normalizedUrl = String(url || "").trim();
+    if (normalizedUrl) {
+      result[key] = normalizedUrl;
+    }
+  }
+  return result;
+}
+
+function resolveGlobalAppUrl(entry, sourceBase, platform) {
+  if (
+    entry &&
+    String(entry.app_source_mode || "").trim().toLowerCase() === "artifact" &&
+    entry.app_urls &&
+    typeof entry.app_urls === "object"
+  ) {
+    const artifactUrl = String(entry.app_urls[normalizePlatform(platform)] || "").trim();
+    if (artifactUrl) {
+      return artifactUrl;
+    }
+  }
+  return buildAppUrl(sourceBase, entry?.tag || "", platform);
 }
 
 function normalizeChannels(channels) {
