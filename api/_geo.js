@@ -63,54 +63,75 @@ export async function getCountry(req, fallbackCountry = DEFAULT_COUNTRY) {
 
 export async function getGeo(req, options = {}) {
   const fallbackCountry = normalizeCountry(options.fallbackCountry || DEFAULT_COUNTRY) || DEFAULT_COUNTRY;
+  const ip = getClientIp(req);
   const queryCountry = normalizeCountry(req?.query?.country);
   if (queryCountry) {
-    return { city: UNKNOWN_CITY, country: queryCountry, source: "query" };
+    return logResolvedGeo(req, ip, {
+      city: UNKNOWN_CITY,
+      country: queryCountry,
+      source: "query",
+      cache_hit: false,
+    });
   }
 
   const headerCountry = normalizeCountry(req?.headers?.["x-country-code"]);
   if (headerCountry) {
-    return { city: UNKNOWN_CITY, country: headerCountry, source: "header" };
+    return logResolvedGeo(req, ip, {
+      city: UNKNOWN_CITY,
+      country: headerCountry,
+      source: "header",
+      cache_hit: false,
+    });
   }
 
-  const ip = getClientIp(req);
   const ipInfoGeo = await lookupGeoByIpInfo(req, ip);
   if (ipInfoGeo.country || ipInfoGeo.city) {
-    return {
+    return logResolvedGeo(req, ip, {
       city: ipInfoGeo.city || UNKNOWN_CITY,
       country: ipInfoGeo.country || fallbackCountry,
       source: ipInfoGeo.source,
-    };
+      cache_hit: Boolean(ipInfoGeo.cache_hit),
+    });
   }
 
   const vercelGeo = getVercelGeo(req);
   if (vercelGeo.city || vercelGeo.country) {
-    return {
+    return logResolvedGeo(req, ip, {
       city: normalizeCity(vercelGeo.city) || UNKNOWN_CITY,
       country: normalizeCountry(vercelGeo.country) || fallbackCountry,
       source: "vercel",
-    };
+      cache_hit: false,
+    });
   }
 
-  return {
+  return logResolvedGeo(req, ip, {
     city: UNKNOWN_CITY,
     country: fallbackCountry || UNKNOWN_COUNTRY,
     source: "fallback",
-  };
+    cache_hit: false,
+  });
 }
 
 async function lookupGeoByIpInfo(req, ip) {
   const token = String(process.env.IPINFO_TOKEN || "").trim();
   if (!token || !ip) {
-    return { city: "", country: "", source: "none" };
+    return { city: "", country: "", source: "none", cache_hit: false };
   }
 
-  const cached = readGeoCache(ip);
-  if (cached) {
-    if (shouldLogGeo(req)) {
-      console.log("[geo] ipinfo-cache", { ip, city: cached.city, country: cached.country });
+  const bypassCache = shouldBypassGeoCache(req);
+  if (!bypassCache) {
+    const cached = readGeoCache(ip);
+    if (cached) {
+      return { ...cached, source: "ipinfo_cache", cache_hit: true };
     }
-    return { ...cached, source: "ipinfo_cache" };
+  }
+
+  if (shouldLogGeo(req) && bypassCache) {
+    console.log("[geo] ipinfo-bypass-cache", { ip, source: "ipinfo", cache_hit: false });
+  }
+
+  if (bypassCache) {
+    return fetchGeoByIpInfo(ip, token);
   }
 
   let pending = GEO_PENDING.get(ip);
@@ -126,21 +147,9 @@ async function lookupGeoByIpInfo(req, ip) {
         GEO_PENDING.delete(ip);
       });
     GEO_PENDING.set(ip, pending);
-  } else if (shouldLogGeo(req)) {
-    console.log("[geo] ipinfo-pending", { ip });
   }
 
-  const result = await pending;
-  if (shouldLogGeo(req)) {
-    console.log("[geo] ipinfo", {
-      ip,
-      city: result.city,
-      country: result.country,
-      url: result.url,
-      source: result.source,
-    });
-  }
-  return result;
+  return pending;
 }
 
 async function fetchGeoByIpInfo(ip, token) {
@@ -148,7 +157,7 @@ async function fetchGeoByIpInfo(ip, token) {
   try {
     const response = await fetch(url, { method: "GET" });
     if (!response.ok) {
-      return { city: "", country: "", source: "ipinfo_error", url };
+      return { city: "", country: "", source: "ipinfo_error", url, cache_hit: false };
     }
 
     const data = await response.json();
@@ -157,10 +166,33 @@ async function fetchGeoByIpInfo(ip, token) {
       country: normalizeCountry(data?.country),
       source: "ipinfo",
       url,
+      cache_hit: false,
     };
   } catch (_) {
-    return { city: "", country: "", source: "ipinfo_error", url };
+    return { city: "", country: "", source: "ipinfo_error", url, cache_hit: false };
   }
+}
+
+function shouldBypassGeoCache(req) {
+  const headerValue = String(req?.headers?.["x-geo-bypass-cache"] || "").trim().toLowerCase();
+  const queryValue = String(req?.query?.geo_bypass_cache || req?.query?.bypass_geo_cache || "")
+    .trim()
+    .toLowerCase();
+  return headerValue === "1" || headerValue === "true" || queryValue === "1" || queryValue === "true";
+}
+
+function logResolvedGeo(req, ip, geo) {
+  if (shouldLogGeo(req)) {
+    console.log("[geo] resolved", {
+      ip,
+      city: geo.city || UNKNOWN_CITY,
+      country: geo.country || UNKNOWN_COUNTRY,
+      source: geo.source || "unknown",
+      cache_hit: Boolean(geo.cache_hit),
+      bypass_cache: shouldBypassGeoCache(req),
+    });
+  }
+  return geo;
 }
 
 function normalizeCountry(value) {
