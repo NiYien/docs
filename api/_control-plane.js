@@ -190,9 +190,12 @@ export async function buildManifestPayload(req) {
     lensUrl = resolvedContentTag
       ? buildDownloadApiUrl(req, "content", resolvedContentTag, getLensAssetName())
       : "";
-    sdkBase = resolvedContentTag
-      ? `${buildDownloadApiUrl(req, "content", resolvedContentTag, "sdk")}/`
-      : "";
+    // SDK is shared across releases (publish_pan123_release.py uploads to
+    // a flat `releases/sdk/` directory rather than per-release
+    // `content-{hash}/sdk/`), so its base URL has no content_tag segment.
+    // The download rewrite `/api/download/content/sdk/<file>` resolves to
+    // RELEASES_ROOT/sdk/<file> via _pan123.js's segment-walk.
+    sdkBase = `${getDownloadApiBase(req)}/content/sdk/`;
     pluginsBase = resolvedContentTag
       ? `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`
       : "";
@@ -202,7 +205,8 @@ export async function buildManifestPayload(req) {
     appUrl = autoEntry ? resolveGlobalAppUrl(autoEntry, source.base, platform) : "";
     if (resolvedAppSourceMode === "artifact" && resolvedContentTag) {
       lensUrl = buildDownloadApiUrl(req, "content", resolvedContentTag, getLensAssetName());
-      sdkBase = `${buildDownloadApiUrl(req, "content", resolvedContentTag, "sdk")}/`;
+      // Same flat shared-SDK layout as cn — see comment above.
+      sdkBase = `${getDownloadApiBase(req)}/content/sdk/`;
     } else {
       lensUrl = resolvedLensTag
         ? buildReleaseAssetUrl(source.base, resolvedLensTag, getLensAssetName())
