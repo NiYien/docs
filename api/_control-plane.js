@@ -162,9 +162,14 @@ export async function buildManifestPayload(req) {
     .toLowerCase();
   const resolvedPluginSourceRef = String(resolvedEntry?.plugins_source_ref || "").trim();
   const resolvedPluginSourceTag = String(resolvedEntry?.plugins_source_tag || "").trim();
-  const resolvedLensVersion = coerceScalarValue(
+  // gyroflow client deserializes lens.version as u64 — coerceScalarValue
+  // returns "" when no source has a value, which breaks `serde_json` parse
+  // ("expected u64, got string"). Coerce empty string to 0 so the client
+  // can parse the manifest cleanly and fall through to its own defaults.
+  const lensVersionRaw = coerceScalarValue(
     resolvedEntry?.lens_version ?? process.env.NIYIEN_LENS_VERSION ?? ""
   );
+  const resolvedLensVersion = typeof lensVersionRaw === "number" ? lensVersionRaw : 0;
   const resolvedLensSha = String(
     resolvedEntry?.lens_sha256 || process.env.NIYIEN_LENS_SHA256 || ""
   ).trim();
