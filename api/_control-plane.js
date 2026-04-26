@@ -8,7 +8,7 @@ const DEFAULT_GLOBAL_RELEASE_BASE = "https://github.com/NiYien/gyroflow/releases
 const DEFAULT_CN_RELEASE_BASE = "https://download.niyien.com/releases";
 const DEFAULT_GLOBAL_SDK_BASE = "https://api.gyroflow.xyz/sdk";
 const DEFAULT_GLOBAL_PLUGINS_BASE =
-  "https://github.com/gyroflow/gyroflow-plugins/releases/latest/download";
+  "https://github.com/NiYien/gyroflow-plugins/releases/latest/download";
 const DEFAULT_DOWNLOAD_API_BASE = "https://www.niyien.com/api/download";
 const DEFAULT_CN_COUNTRIES = ["CN"];
 const DEFAULT_LENS_ASSET_NAME = "gyroflow-niyien-lens.cbor.gz";
