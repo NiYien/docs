@@ -10,6 +10,7 @@ const DEFAULT_GLOBAL_SDK_BASE = "https://api.gyroflow.xyz/sdk";
 const DEFAULT_GLOBAL_PLUGINS_BASE =
   "https://github.com/NiYien/gyroflow-plugins/releases/latest/download";
 const DEFAULT_DOWNLOAD_API_BASE = "https://www.niyien.com/api/download";
+const DEFAULT_GLOBAL_NIGHTLY_BASE = "https://nightly.link/NiYien/gyroflow/actions/runs";
 const DEFAULT_CN_COUNTRIES = ["CN"];
 const DEFAULT_LENS_ASSET_NAME = "gyroflow-niyien-lens.cbor.gz";
 
@@ -200,11 +201,15 @@ export async function buildManifestPayload(req) {
         req,
         buildPlatformPackage(req, item, source, platform)
       );
+      const manualPackages = Object.keys(manualPackage).length
+        ? { [platform]: manualPackage }
+        : {};
       return {
         version: item.version,
         url: manualPackage.installer_url || manualPackage.package_url || "",
         changelog: item.changelog,
         recommended: item.recommended,
+        packages: manualPackages,
       };
     });
   const platformPackage = withAbsolutePackageUrls(
@@ -448,10 +453,30 @@ function resolvePlatformPackageUrls(req, entry, source, platform, metadata) {
 
   if (String(entry.app_source_mode || "").trim().toLowerCase() === "artifact") {
     const artifactUrls = entry.app_urls?.[platform] || {};
-    return {
-      installer_url: toAbsoluteManifestUrl(req, artifactUrls.installer_url || ""),
-      package_url: toAbsoluteManifestUrl(req, artifactUrls.package_url || ""),
-    };
+    if (artifactUrls.installer_url || artifactUrls.package_url) {
+      return {
+        installer_url: toAbsoluteManifestUrl(req, artifactUrls.installer_url || ""),
+        package_url: toAbsoluteManifestUrl(req, artifactUrls.package_url || ""),
+      };
+    }
+
+    // GLOBAL nightly: route to nightly.link proxy.
+    // entry.tag is "actions-run-{run_id}" (set by publish_pan123_release.py
+    // resolve_app_source when mode == artifact).
+    const runIdMatch = String(entry.tag || "").match(/^(?:actions-run-|run-)(\d+)$/);
+    if (runIdMatch) {
+      const runId = runIdMatch[1];
+      const nightlyBase = stripTrailingSlash(
+        process.env.NIYIEN_GLOBAL_NIGHTLY_BASE || DEFAULT_GLOBAL_NIGHTLY_BASE
+      );
+      const installerName = metadata.installer_filename || getAppInstallerAssetName(platform);
+      const packageName = metadata.package_filename || getAppPackageAssetName(platform);
+      return {
+        installer_url: installerName ? `${nightlyBase}/${runId}/${installerName}.zip` : "",
+        package_url: `${nightlyBase}/${runId}/${packageName}.zip`,
+      };
+    }
+    return { installer_url: "", package_url: "" };
   }
 
   return {
