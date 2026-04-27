@@ -460,9 +460,9 @@ function resolvePlatformPackageUrls(req, entry, source, platform, metadata) {
       };
     }
 
-    // GLOBAL nightly: route to nightly.link proxy.
-    // entry.tag is "actions-run-{run_id}" (set by publish_pan123_release.py
-    // resolve_app_source when mode == artifact).
+    // GLOBAL artifact builds do not have a GitHub Release tag. Use
+    // nightly.link for global clients when policy only has the synthetic
+    // run tag; CN clients are handled by the branch above via /api/download.
     const runIdMatch = String(entry.tag || "").match(/^(?:actions-run-|run-)(\d+)$/);
     if (runIdMatch) {
       const runId = runIdMatch[1];
