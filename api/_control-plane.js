@@ -111,37 +111,45 @@ export function selectSourceForCountry(country) {
   };
 }
 
-export function loadReleasePolicy() {
-  const fallbackVersion = String(
-    process.env.NIYIEN_APP_VERSION || `${process.env.npm_package_version || "1.6.3"}-niyien.1`
-  ).trim();
-  const fallbackTag = String(process.env.NIYIEN_RELEASE_TAG || `v${fallbackVersion}`).trim();
-  const fallback = {
-    auto_version: fallbackVersion,
+// Env-only fallback. We intentionally do not hardcode any default version
+// here -- a hardcoded fallback resurrects deleted releases when ops clears
+// NIYIEN_RELEASE_POLICY_JSON to retire a version. Returning an empty policy
+// instead lets the manifest expose app.version="" so the client treats it
+// as "no release available".
+function buildEnvFallback() {
+  const envVersion = String(process.env.NIYIEN_APP_VERSION || "").trim();
+  if (!envVersion) {
+    return { auto_version: "", versions: [] };
+  }
+  const envTag = String(process.env.NIYIEN_RELEASE_TAG || `v${envVersion}`).trim();
+  return {
+    auto_version: envVersion,
     versions: [
       {
-        version: fallbackVersion,
-        tag: fallbackTag,
+        version: envVersion,
+        tag: envTag,
         channels: ["auto", "manual"],
         changelog: String(process.env.NIYIEN_APP_CHANGELOG || "").trim(),
         recommended: true,
       },
     ],
   };
+}
 
+export function loadReleasePolicy() {
   const raw = String(process.env.NIYIEN_RELEASE_POLICY_JSON || "").trim();
   if (!raw) {
-    return fallback;
+    return buildEnvFallback();
   }
 
   const parsed = safeJsonParse(raw, null);
   if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.versions)) {
-    return fallback;
+    return buildEnvFallback();
   }
 
   const versions = parsed.versions.map(normalizePolicyEntry).filter(Boolean);
   if (!versions.length) {
-    return fallback;
+    return buildEnvFallback();
   }
 
   const autoVersion =
@@ -150,7 +158,7 @@ export function loadReleasePolicy() {
       : (versions.find((item) => item.channels.includes("auto")) || versions[0]).version;
 
   if (!versions.some((item) => item.version === autoVersion)) {
-    return fallback;
+    return buildEnvFallback();
   }
 
   return {
