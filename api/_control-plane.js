@@ -10,7 +10,6 @@ const DEFAULT_GLOBAL_SDK_BASE = "https://api.gyroflow.xyz/sdk";
 const DEFAULT_GLOBAL_PLUGINS_BASE =
   "https://github.com/NiYien/gyroflow-plugins/releases/latest/download";
 const DEFAULT_DOWNLOAD_API_BASE = "https://www.niyien.com/api/download";
-const DEFAULT_GLOBAL_NIGHTLY_BASE = "https://nightly.link/NiYien/gyroflow/actions/runs";
 const DEFAULT_CN_COUNTRIES = ["CN"];
 const DEFAULT_LENS_ASSET_NAME = "gyroflow-niyien-lens.cbor.gz";
 
@@ -460,31 +459,18 @@ function resolvePlatformPackageUrls(req, entry, source, platform, metadata) {
   }
 
   if (String(entry.app_source_mode || "").trim().toLowerCase() === "artifact") {
+    // The publish pipeline (`_scripts/publish_pan123_release.py
+    // build_global_artifact_app_urls`) writes nightly.link URLs into
+    // `entry.app_urls[platform]` whose artifact names match the V4 short-name
+    // upload steps in `.github/workflows/release.yml`. There is no longer a
+    // path that derives a nightly URL from `entry.tag` alone — if `app_urls`
+    // is empty for a given platform, the deliverable was not published for
+    // that platform and we return empty URLs.
     const artifactUrls = entry.app_urls?.[platform] || {};
-    if (artifactUrls.installer_url || artifactUrls.package_url) {
-      return {
-        installer_url: toAbsoluteManifestUrl(req, artifactUrls.installer_url || ""),
-        package_url: toAbsoluteManifestUrl(req, artifactUrls.package_url || ""),
-      };
-    }
-
-    // GLOBAL artifact builds do not have a GitHub Release tag. Use
-    // nightly.link for global clients when policy only has the synthetic
-    // run tag; CN clients are handled by the branch above via /api/download.
-    const runIdMatch = String(entry.tag || "").match(/^(?:actions-run-|run-)(\d+)$/);
-    if (runIdMatch) {
-      const runId = runIdMatch[1];
-      const nightlyBase = stripTrailingSlash(
-        process.env.NIYIEN_GLOBAL_NIGHTLY_BASE || DEFAULT_GLOBAL_NIGHTLY_BASE
-      );
-      const installerName = metadata.installer_filename || getAppInstallerAssetName(platform);
-      const packageName = metadata.package_filename || getAppPackageAssetName(platform);
-      return {
-        installer_url: installerName ? `${nightlyBase}/${runId}/${installerName}.zip` : "",
-        package_url: `${nightlyBase}/${runId}/${packageName}.zip`,
-      };
-    }
-    return { installer_url: "", package_url: "" };
+    return {
+      installer_url: toAbsoluteManifestUrl(req, artifactUrls.installer_url || ""),
+      package_url: toAbsoluteManifestUrl(req, artifactUrls.package_url || ""),
+    };
   }
 
   return {
