@@ -183,6 +183,20 @@ export async function buildManifestPayload(req) {
   const resolvedContentTag = String(
     resolvedEntry?.content_tag || process.env.NIYIEN_CONTENT_RELEASE_TAG || autoEntry?.content_tag || ""
   ).trim();
+  // Decoupled bundle layout: lens lives in `releases/lens-<sha12>/`, plugin in
+  // `releases/plugin-<sha12>/`. Each is independent — a publish that updates
+  // only one of them leaves the other untouched. Legacy fallback: when the
+  // new tags aren't seeded yet, derive them from the old `content_tag`
+  // ("content-<sha12>/" had lens flat + plugins/ subdir).
+  const resolvedLensTagBundle = String(
+    resolvedEntry?.lens_tag || process.env.NIYIEN_LENS_RELEASE_TAG || autoEntry?.lens_tag || ""
+  ).trim();
+  const resolvedPluginTagBundle = String(
+    resolvedEntry?.plugin_tag || process.env.NIYIEN_PLUGIN_RELEASE_TAG || autoEntry?.plugin_tag || ""
+  ).trim();
+  const lensTagOrLegacy = resolvedLensTagBundle || resolvedContentTag;
+  const pluginPathOrLegacy = resolvedPluginTagBundle
+    || (resolvedContentTag ? `${resolvedContentTag}/plugins` : "");
   const resolvedPluginSourceMode = String(
     resolvedEntry?.plugins_source_mode || process.env.NIYIEN_PLUGINS_SOURCE_MODE || "release"
   )
@@ -229,24 +243,34 @@ export async function buildManifestPayload(req) {
   let sdkBase = "";
   let pluginsBase = "";
 
+  // Build a directory base URL under /api/download/content/<tag>/ where
+  // <tag> may be a single segment (`lens-<sha>` / `plugin-<sha>`) or the
+  // legacy 2-segment form (`content-<sha>/plugins`). Each segment is
+  // url-encoded; trailing slash is included so client-side `pluginsBase +
+  // filename` and `lensBase + filename` produce valid URLs.
+  const buildContentDirUrl = (tagOrPath) => {
+    if (!tagOrPath) return "";
+    const encoded = String(tagOrPath).split("/").map(encodeURIComponent).join("/");
+    return `${getDownloadApiBase(req)}/content/${encoded}/`;
+  };
   if (source.region === "cn") {
-    lensUrl = resolvedContentTag
-      ? buildDownloadApiUrl(req, "content", resolvedContentTag, getLensAssetName())
+    // CN clients get URLs proxied through `/api/download/content/<tag>/<file>`,
+    // which _pan123.js resolves by walking RELEASES_ROOT children. The new
+    // bundle layout (`lens-<sha12>/`, `plugin-<sha12>/`) is just a different
+    // top-level dir name; the segment walker handles either shape.
+    lensUrl = lensTagOrLegacy
+      ? buildDownloadApiUrl(req, "content", lensTagOrLegacy, getLensAssetName())
       : "";
     // SDK is shared across releases (publish_pan123_release.py uploads to
     // a flat `releases/sdk/` directory rather than per-release
     // `content-{hash}/sdk/`), so its base URL has no content_tag segment.
-    // The download rewrite `/api/download/content/sdk/<file>` resolves to
-    // RELEASES_ROOT/sdk/<file> via _pan123.js's segment-walk.
     sdkBase = `${getDownloadApiBase(req)}/content/sdk/`;
-    pluginsBase = resolvedContentTag
-      ? `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`
-      : "";
+    pluginsBase = buildContentDirUrl(pluginPathOrLegacy);
   } else {
     const resolvedAppSourceMode = String(resolvedEntry?.app_source_mode || "release").trim().toLowerCase();
     const resolvedLensTag = resolvedEntry?.tag || autoEntry?.tag || "";
-    if (resolvedAppSourceMode === "artifact" && resolvedContentTag) {
-      lensUrl = buildDownloadApiUrl(req, "content", resolvedContentTag, getLensAssetName());
+    if (resolvedAppSourceMode === "artifact" && lensTagOrLegacy) {
+      lensUrl = buildDownloadApiUrl(req, "content", lensTagOrLegacy, getLensAssetName());
       // Same flat shared-SDK layout as cn — see comment above.
       sdkBase = `${getDownloadApiBase(req)}/content/sdk/`;
     } else {
@@ -258,8 +282,8 @@ export async function buildManifestPayload(req) {
       )}/`;
     }
     pluginsBase =
-      resolvedPluginSourceMode === "artifact" && resolvedContentTag
-        ? `${buildDownloadApiUrl(req, "content", resolvedContentTag, "plugins")}/`
+      resolvedPluginSourceMode === "artifact" && pluginPathOrLegacy
+        ? buildContentDirUrl(pluginPathOrLegacy)
         : `${stripTrailingSlash(
             resolvedEntry?.global_plugins_base ||
               process.env.NIYIEN_GLOBAL_PLUGINS_BASE ||
@@ -323,6 +347,8 @@ function normalizePolicyEntry(entry) {
     app_urls: normalizeAppUrls(entry.app_urls),
     packages: normalizePackages(entry.packages),
     content_tag: typeof entry.content_tag === "string" ? entry.content_tag.trim() : "",
+    lens_tag: typeof entry.lens_tag === "string" ? entry.lens_tag.trim() : "",
+    plugin_tag: typeof entry.plugin_tag === "string" ? entry.plugin_tag.trim() : "",
     lens_version:
       entry.lens_version === undefined || entry.lens_version === null || entry.lens_version === ""
         ? ""
