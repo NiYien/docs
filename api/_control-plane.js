@@ -9,6 +9,10 @@ const DEFAULT_CN_RELEASE_BASE = "https://download.niyien.com/releases";
 const DEFAULT_GLOBAL_SDK_BASE = "https://api.gyroflow.xyz/sdk";
 const DEFAULT_GLOBAL_PLUGINS_BASE =
   "https://github.com/NiYien/gyroflow-plugins/releases/latest/download";
+// Lens data lives in a separate niyien-lens-data repo since 2026-04-21 (code+data
+// split). Global lens.url always points here, regardless of app publish mode.
+const DEFAULT_LENS_DATA_RELEASE_BASE =
+  "https://github.com/NiYien/niyien-lens-data/releases/download";
 const DEFAULT_DOWNLOAD_API_BASE = "https://www.niyien.com/api/download";
 const DEFAULT_CN_COUNTRIES = ["CN"];
 const DEFAULT_LENS_ASSET_NAME = "gyroflow-niyien-lens.cbor.gz";
@@ -180,23 +184,18 @@ export async function buildManifestPayload(req) {
   const requestEntry =
     releasePolicy.versions.find((item) => item.version === requestedAppVersion) || null;
   const resolvedEntry = requestEntry || autoEntry;
-  const resolvedContentTag = String(
-    resolvedEntry?.content_tag || process.env.NIYIEN_CONTENT_RELEASE_TAG || autoEntry?.content_tag || ""
-  ).trim();
   // Decoupled bundle layout: lens lives in `releases/lens-<sha12>/`, plugin in
   // `releases/plugin-<sha12>/`. Each is independent — a publish that updates
-  // only one of them leaves the other untouched. Legacy fallback: when the
-  // new tags aren't seeded yet, derive them from the old `content_tag`
-  // ("content-<sha12>/" had lens flat + plugins/ subdir).
+  // only one of them leaves the other untouched.
   const resolvedLensTagBundle = String(
     resolvedEntry?.lens_tag || process.env.NIYIEN_LENS_RELEASE_TAG || autoEntry?.lens_tag || ""
   ).trim();
   const resolvedPluginTagBundle = String(
     resolvedEntry?.plugin_tag || process.env.NIYIEN_PLUGIN_RELEASE_TAG || autoEntry?.plugin_tag || ""
   ).trim();
-  const lensTagOrLegacy = resolvedLensTagBundle || resolvedContentTag;
-  const pluginPathOrLegacy = resolvedPluginTagBundle
-    || (resolvedContentTag ? `${resolvedContentTag}/plugins` : "");
+  const resolvedLensReleaseTag = String(
+    resolvedEntry?.lens_release_tag || autoEntry?.lens_release_tag || ""
+  ).trim();
   const resolvedPluginSourceMode = String(
     resolvedEntry?.plugins_source_mode || process.env.NIYIEN_PLUGINS_SOURCE_MODE || "release"
   )
@@ -243,52 +242,43 @@ export async function buildManifestPayload(req) {
   let sdkBase = "";
   let pluginsBase = "";
 
-  // Build a directory base URL under /api/download/content/<tag>/ where
-  // <tag> may be a single segment (`lens-<sha>` / `plugin-<sha>`) or the
-  // legacy 2-segment form (`content-<sha>/plugins`). Each segment is
-  // url-encoded; trailing slash is included so client-side `pluginsBase +
-  // filename` and `lensBase + filename` produce valid URLs.
-  const buildContentDirUrl = (tagOrPath) => {
-    if (!tagOrPath) return "";
-    const encoded = String(tagOrPath).split("/").map(encodeURIComponent).join("/");
+  // Build a directory base URL under /api/download/content/<tag>/. Each
+  // segment is url-encoded; trailing slash is included so client-side
+  // `pluginsBase + filename` and `lensBase + filename` produce valid URLs.
+  const buildContentDirUrl = (tag) => {
+    if (!tag) return "";
+    const encoded = String(tag).split("/").map(encodeURIComponent).join("/");
     return `${getDownloadApiBase(req)}/content/${encoded}/`;
   };
   if (source.region === "cn") {
     // CN clients get URLs proxied through `/api/download/content/<tag>/<file>`,
-    // which _pan123.js resolves by walking RELEASES_ROOT children. The new
-    // bundle layout (`lens-<sha12>/`, `plugin-<sha12>/`) is just a different
-    // top-level dir name; the segment walker handles either shape.
-    lensUrl = lensTagOrLegacy
-      ? buildDownloadApiUrl(req, "content", lensTagOrLegacy, getLensAssetName())
+    // which _pan123.js resolves by walking RELEASES_ROOT children. The bundle
+    // layout (`lens-<sha12>/`, `plugin-<sha12>/`, `sdk/`) is just a top-level
+    // dir name; the segment walker handles any shape.
+    lensUrl = resolvedLensTagBundle
+      ? buildDownloadApiUrl(req, "content", resolvedLensTagBundle, getLensAssetName())
       : "";
-    // SDK is shared across releases (publish_pan123_release.py uploads to
-    // a flat `releases/sdk/` directory rather than per-release
-    // `content-{hash}/sdk/`), so its base URL has no content_tag segment.
+    // SDK is shared across releases (publish_pan123_release.py uploads to a
+    // flat `releases/sdk/` directory), so its base URL has no tag segment.
     sdkBase = `${getDownloadApiBase(req)}/content/sdk/`;
-    pluginsBase = buildContentDirUrl(pluginPathOrLegacy);
+    pluginsBase = buildContentDirUrl(resolvedPluginTagBundle);
   } else {
-    const resolvedAppSourceMode = String(resolvedEntry?.app_source_mode || "release").trim().toLowerCase();
-    const resolvedLensTag = resolvedEntry?.tag || autoEntry?.tag || "";
-    if (resolvedAppSourceMode === "artifact" && lensTagOrLegacy) {
-      lensUrl = buildDownloadApiUrl(req, "content", lensTagOrLegacy, getLensAssetName());
-      // Same flat shared-SDK layout as cn — see comment above.
-      sdkBase = `${getDownloadApiBase(req)}/content/sdk/`;
-    } else {
-      lensUrl = resolvedLensTag
-        ? buildReleaseAssetUrl(source.base, resolvedLensTag, getLensAssetName())
-        : "";
-      sdkBase = `${stripTrailingSlash(
-        process.env.NIYIEN_GLOBAL_SDK_BASE || DEFAULT_GLOBAL_SDK_BASE
-      )}/`;
-    }
-    pluginsBase =
-      resolvedPluginSourceMode === "artifact" && pluginPathOrLegacy
-        ? buildContentDirUrl(pluginPathOrLegacy)
-        : `${stripTrailingSlash(
-            resolvedEntry?.global_plugins_base ||
-              process.env.NIYIEN_GLOBAL_PLUGINS_BASE ||
-              DEFAULT_GLOBAL_PLUGINS_BASE
-          )}/`;
+    // Global users always go through GitHub releases / nightly.link. Lens has
+    // only one source (niyien-lens-data release); SDK is always the static
+    // CDN; plugins follow plugins_source_mode (release latest vs nightly.link
+    // for the specific run captured in entry.global_plugins_base).
+    sdkBase = `${stripTrailingSlash(
+      process.env.NIYIEN_GLOBAL_SDK_BASE || DEFAULT_GLOBAL_SDK_BASE
+    )}/`;
+    lensUrl = resolvedLensReleaseTag
+      ? buildReleaseAssetUrl(getLensDataReleaseBase(), resolvedLensReleaseTag, getLensAssetName())
+      : "";
+    pluginsBase = `${stripTrailingSlash(
+      resolvedEntry?.global_plugins_base ||
+        autoEntry?.global_plugins_base ||
+        process.env.NIYIEN_GLOBAL_PLUGINS_BASE ||
+        DEFAULT_GLOBAL_PLUGINS_BASE
+    )}/`;
   }
 
   appUrl = toAbsoluteManifestUrl(req, appUrl);
@@ -349,6 +339,8 @@ function normalizePolicyEntry(entry) {
     content_tag: typeof entry.content_tag === "string" ? entry.content_tag.trim() : "",
     lens_tag: typeof entry.lens_tag === "string" ? entry.lens_tag.trim() : "",
     plugin_tag: typeof entry.plugin_tag === "string" ? entry.plugin_tag.trim() : "",
+    lens_release_tag:
+      typeof entry.lens_release_tag === "string" ? entry.lens_release_tag.trim() : "",
     lens_version:
       entry.lens_version === undefined || entry.lens_version === null || entry.lens_version === ""
         ? ""
@@ -631,6 +623,12 @@ function buildDownloadApiUrl(req, scope, tag, relativePath) {
 
 function getLensAssetName() {
   return String(process.env.NIYIEN_LENS_ASSET_NAME || DEFAULT_LENS_ASSET_NAME).trim();
+}
+
+function getLensDataReleaseBase() {
+  return stripTrailingSlash(
+    process.env.NIYIEN_LENS_DATA_RELEASE_BASE || DEFAULT_LENS_DATA_RELEASE_BASE
+  );
 }
 
 function coerceScalarValue(value) {
