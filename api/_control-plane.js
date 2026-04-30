@@ -491,14 +491,19 @@ function resolvePlatformPackageUrls(req, entry, source, platform, metadata) {
     };
   }
 
+  // Global GitHub Release path: ignore `metadata.*_filename` because the
+  // publish pipeline writes those as the CN short-name zip wrapper (used to
+  // dodge 123 disk's auto-`.bak` rename on .exe/.apk uploads). GH Release
+  // hosts the raw deliverables under their default names — always use those
+  // here so global users land on the bare .exe / .apk / .dmg.
   return {
     installer_url: getAppInstallerAssetName(platform)
-      ? buildReleaseAssetUrl(source.base, entry.tag, metadata.installer_filename || getAppInstallerAssetName(platform))
+      ? buildReleaseAssetUrl(source.base, entry.tag, getAppInstallerAssetName(platform))
       : "",
     package_url: buildReleaseAssetUrl(
       source.base,
       entry.tag,
-      metadata.package_filename || getAppPackageAssetName(platform)
+      getAppPackageAssetName(platform)
     ),
   };
 }
