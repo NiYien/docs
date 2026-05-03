@@ -11,7 +11,7 @@
 //   7. Return 200 with id + region + upload payload + expires_at.
 
 import { safeJsonParse, upstashCommand, upstashPipeline } from "./_telemetry-shared";
-import { getClientIp, getVercelGeo } from "./_geo";
+import { getClientIp, getCountry } from "./_geo";
 import { signR2PutUrl, getR2BucketName } from "./_r2";
 import { signPan123UploadInit } from "./_pan123";
 
@@ -23,7 +23,6 @@ const PENDING_TTL_SECONDS = 300;
 const RATE_LIMIT_TTL_SECONDS = 86400;
 const RATE_LIMIT_PER_DAY = 10;
 const UPLOAD_TTL_SECONDS = 1800;
-const IPINFO_TIMEOUT_MS = 500;
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -159,51 +158,13 @@ function validateBody(body) {
   return { error: "" };
 }
 
-// Region detection: trust vercel header first; if it says CN, return cn.
-// Otherwise consult ipinfo with a 500ms timeout. If ipinfo agrees CN, return
-// cn; on any other answer or timeout, fall back to the vercel header value
-// (CN → cn, anything else → global).
+// Region detection: defer to _geo.js::getCountry, which already implements
+// vercel-header + ipinfo fallback with a 6h GEO_CACHE and per-IP pending-
+// request dedup. Sharing that cache means the manifest endpoint and this
+// endpoint don't double-bill ipinfo on the same client IP.
 async function detectRegion(req) {
-  const vercelGeo = getVercelGeo(req);
-  const headerCountry = String(vercelGeo.country || "").toUpperCase();
-  if (headerCountry === "CN") {
-    return "cn";
-  }
-
-  // Header is non-CN (or empty). ipinfo only matters if it disagrees and
-  // says CN — otherwise we already have the answer.
-  const ip = getClientIp(req);
-  const token = String(process.env.IPINFO_TOKEN || "").trim();
-  if (!token || !ip) {
-    return headerCountry ? "global" : "global";
-  }
-
-  try {
-    const ipinfoCountry = await fetchIpinfoCountry(ip, token, IPINFO_TIMEOUT_MS);
-    if (String(ipinfoCountry || "").toUpperCase() === "CN") {
-      return "cn";
-    }
-  } catch (error) {
-    // Timeout / network error — fall back to header.
-  }
-
-  return "global";
-}
-
-async function fetchIpinfoCountry(ip, token, timeoutMs) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const url = `https://ipinfo.io/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
-    const resp = await fetch(url, { method: "GET", signal: controller.signal });
-    if (!resp.ok) {
-      return "";
-    }
-    const data = await resp.json();
-    return String(data?.country || "").trim();
-  } finally {
-    clearTimeout(timer);
-  }
+  const country = await getCountry(req, "US");
+  return String(country || "").toUpperCase() === "CN" ? "cn" : "global";
 }
 
 async function applyRateLimit(ip, yyyymmdd) {
