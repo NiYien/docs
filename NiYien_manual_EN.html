@@ -333,6 +333,33 @@
                   </div>
                 </div>
               </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Mac beta software download -->
+                <div class="download-card flex flex-col items-center h-full p-4">
+                  <div class="flex items-center mb-3 justify-center w-full">
+                    <i class="fab fa-apple text-gray-600 text-4xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">Beta Test for Mac</h3>
+                  </div>
+                  <p id="betaMacVersionText" class="text-sm text-gray-500 text-center w-full"></p>
+                  <p class="download-desc compact-desc text-center w-full">Testing version.</p>
+                  <button class="download-button compact-button w-full md:w-auto" onclick="startBetaDownload('macos')">
+                    <i class="fa fa-flask mr-2"></i> Beta Download
+                  </button>
+                </div>
+
+                <!-- Windows beta software download -->
+                <div class="download-card flex flex-col items-center h-full p-4">
+                  <div class="flex items-center mb-3 justify-center w-full">
+                    <i class="fab fa-windows text-gray-600 text-4xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">Beta Test for Windows</h3>
+                  </div>
+                  <p id="betaWindowsVersionText" class="text-sm text-gray-500 text-center w-full"></p>
+                  <p class="download-desc compact-desc text-center w-full">Testing version.</p>
+                  <button class="download-button compact-button w-full md:w-auto" onclick="startBetaDownload('windows')">
+                    <i class="fa fa-flask mr-2"></i> Beta Download
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -449,6 +476,7 @@
         downloadWindows: "https://dl.niyien.com/niyien_gyroflow_windows.zip",
         downloadMacBackup: "https://drive.google.com/drive/folders/14lVHH6HA2oLJyfxAodWUDE8_jFBOleJf?usp=sharing",
         downloadWindowsBackup: "https://drive.google.com/drive/folders/1JcgBvcy9HCDQzrZVCUgb1-XcJmI7s8ma?usp=sharing",
+        betaManifest: "/api/manifest",
         chineseManual: "NiYien_manual_ZH.html"
       },
       images: {
@@ -703,6 +731,8 @@
           });
         })
        .catch(error => console.error('Error loading version:', error));
+
+      loadBetaVersions();
     });
 
     // Chapter collapse/expand function
@@ -919,6 +949,58 @@
           modal.style.display = 'none';
         }
       }
+    }
+
+    function getManifestAppUrl(data, platform) {
+      const app = data && data.app ? data.app : {};
+      const packageInfo = app.packages && app.packages[platform] ? app.packages[platform] : {};
+      if (platform === 'windows') {
+        return packageInfo.installer_url || app.url || packageInfo.package_url || '';
+      }
+      return app.url || packageInfo.installer_url || packageInfo.package_url || '';
+    }
+
+    function fetchBetaManifest(platform) {
+      const url = `${config.urls.betaManifest}?platform=${encodeURIComponent(platform)}`;
+      return fetch(url).then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      });
+    }
+
+    function startBetaDownload(platform) {
+      fetchBetaManifest(platform)
+        .then(data => {
+          const url = getManifestAppUrl(data, platform);
+          if (!url) throw new Error('Missing beta download URL');
+          showDownloadModal(url);
+        })
+        .catch(error => {
+          console.error('Error loading beta download:', error);
+          alert('Unable to fetch the beta download link. Please try again later.');
+        });
+    }
+
+    function loadBetaVersion(platform, elementId) {
+      const target = document.getElementById(elementId);
+      fetchBetaManifest(platform)
+        .then(data => {
+          const version = data?.app?.version || '';
+          if (target) {
+            target.textContent = version ? `Beta version: ${version}` : '';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading beta version:', error);
+          if (target) {
+            target.textContent = '';
+          }
+        });
+    }
+
+    function loadBetaVersions() {
+      loadBetaVersion('macos', 'betaMacVersionText');
+      loadBetaVersion('windows', 'betaWindowsVersionText');
     }
     
     const originalRenderVideos = renderVideos;
