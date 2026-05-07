@@ -122,7 +122,7 @@ export function selectSourceForCountry(country) {
 function buildEnvFallback() {
   const envVersion = String(process.env.NIYIEN_APP_VERSION || "").trim();
   if (!envVersion) {
-    return { auto_version: "", versions: [] };
+    return { auto_version: "", versions: [], hidden_plugins: [] };
   }
   const envTag = String(process.env.NIYIEN_RELEASE_TAG || `v${envVersion}`).trim();
   return {
@@ -136,6 +136,7 @@ function buildEnvFallback() {
         recommended: true,
       },
     ],
+    hidden_plugins: [],
   };
 }
 
@@ -164,10 +165,58 @@ export function loadReleasePolicy() {
     return buildEnvFallback();
   }
 
+  // hidden_plugins[] is a top-level plugin blacklist. Each row is shaped
+  // {kind: "release", ref: <tag>} or {kind: "artifact", run_id: <int>}.
+  // Defaults to [] when missing from older policy values.
+  const hiddenPlugins = Array.isArray(parsed.hidden_plugins)
+    ? parsed.hidden_plugins.filter((row) => row && typeof row === "object")
+    : [];
+
   return {
     auto_version: autoVersion,
     versions,
+    hidden_plugins: hiddenPlugins,
   };
+}
+
+// Canonical plugin identity for a policy entry: {kind: "release", ref: <tag>}
+// for release-mode entries, {kind: "artifact", run_id: <int>} for
+// artifact-mode entries (parsed from `actions-run-<id>` in plugins_source_ref),
+// or null when the entry has no plugin info. Mirrors the gyroflow backend
+// helper `Api._canonical_plugin_key` so both sides agree on the matcher.
+function canonicalPluginKey(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const mode = String(entry.plugins_source_mode || "").trim().toLowerCase();
+  if (mode === "artifact") {
+    const ref = String(entry.plugins_source_ref || "").trim();
+    const prefix = "actions-run-";
+    if (ref.startsWith(prefix)) {
+      const n = parseInt(ref.slice(prefix.length), 10);
+      if (Number.isFinite(n)) return { kind: "artifact", run_id: n };
+    }
+    return null;
+  }
+  const tag = String(entry.plugin_tag || "").trim();
+  if (tag) return { kind: "release", ref: tag };
+  return null;
+}
+
+function pluginKeysMatch(a, b) {
+  if (!a || !b) return false;
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "release") return String(a.ref || "") === String(b.ref || "");
+  if (a.kind === "artifact") {
+    const an = parseInt(a.run_id, 10);
+    const bn = parseInt(b.run_id, 10);
+    return Number.isFinite(an) && Number.isFinite(bn) && an === bn;
+  }
+  return false;
+}
+
+function isEntryPluginHidden(entry, hiddenPlugins) {
+  const key = canonicalPluginKey(entry);
+  if (!key || !Array.isArray(hiddenPlugins) || !hiddenPlugins.length) return false;
+  return hiddenPlugins.some((row) => pluginKeysMatch(key, row));
 }
 
 export async function buildManifestPayload(req) {
@@ -190,19 +239,38 @@ export async function buildManifestPayload(req) {
   const resolvedLensTagBundle = String(
     resolvedEntry?.lens_tag || process.env.NIYIEN_LENS_RELEASE_TAG || autoEntry?.lens_tag || ""
   ).trim();
+  // Per-entry plugin blacklist check. When the resolved entry's plugin
+  // identity (release tag or artifact run_id) is in policy.hidden_plugins[],
+  // we skip the entry's plugin fields and fall back to env / autoEntry,
+  // and also skip autoEntry's plugin if the autoEntry itself is the one
+  // that's hidden — otherwise hiding the auto entry's plugin would have
+  // no effect on most clients.
+  const hiddenPlugins = releasePolicy.hidden_plugins || [];
+  const resolvedEntryPluginHidden = isEntryPluginHidden(resolvedEntry, hiddenPlugins);
+  const autoEntryPluginHidden = isEntryPluginHidden(autoEntry, hiddenPlugins);
+  const pluginEntryFor = (preferResolved) => {
+    // Choose which entry's plugin fields to read. When the requested
+    // entry's plugin is hidden, fall through to autoEntry; if autoEntry
+    // is also hidden, fall through to env / defaults below.
+    if (preferResolved && resolvedEntry && !resolvedEntryPluginHidden) return resolvedEntry;
+    if (autoEntry && !autoEntryPluginHidden) return autoEntry;
+    return null;
+  };
+  const pluginEntry = pluginEntryFor(true);
+
   const resolvedPluginTagBundle = String(
-    resolvedEntry?.plugin_tag || process.env.NIYIEN_PLUGIN_RELEASE_TAG || autoEntry?.plugin_tag || ""
+    pluginEntry?.plugin_tag || process.env.NIYIEN_PLUGIN_RELEASE_TAG || ""
   ).trim();
   const resolvedLensReleaseTag = String(
     resolvedEntry?.lens_release_tag || autoEntry?.lens_release_tag || ""
   ).trim();
   const resolvedPluginSourceMode = String(
-    resolvedEntry?.plugins_source_mode || process.env.NIYIEN_PLUGINS_SOURCE_MODE || "release"
+    pluginEntry?.plugins_source_mode || process.env.NIYIEN_PLUGINS_SOURCE_MODE || "release"
   )
     .trim()
     .toLowerCase();
-  const resolvedPluginSourceRef = String(resolvedEntry?.plugins_source_ref || "").trim();
-  const resolvedPluginSourceTag = String(resolvedEntry?.plugins_source_tag || "").trim();
+  const resolvedPluginSourceRef = String(pluginEntry?.plugins_source_ref || "").trim();
+  const resolvedPluginSourceTag = String(pluginEntry?.plugins_source_tag || "").trim();
   // gyroflow client deserializes lens.version as u64 — coerceScalarValue
   // returns "" when no source has a value, which breaks `serde_json` parse
   // ("expected u64, got string"). Coerce empty string to 0 so the client
@@ -274,8 +342,7 @@ export async function buildManifestPayload(req) {
       ? buildReleaseAssetUrl(getLensDataReleaseBase(), resolvedLensReleaseTag, getLensAssetName())
       : "";
     pluginsBase = `${stripTrailingSlash(
-      resolvedEntry?.global_plugins_base ||
-        autoEntry?.global_plugins_base ||
+      pluginEntry?.global_plugins_base ||
         process.env.NIYIEN_GLOBAL_PLUGINS_BASE ||
         DEFAULT_GLOBAL_PLUGINS_BASE
     )}/`;
