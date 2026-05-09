@@ -6,7 +6,7 @@ export const CURRENT_SOURCE_APP_ID = "gyroflow_niyien";
 
 const DEFAULT_GLOBAL_RELEASE_BASE = "https://github.com/NiYien/gyroflow/releases/download";
 const DEFAULT_CN_RELEASE_BASE = "https://download.niyien.com/releases";
-const DEFAULT_GLOBAL_SDK_BASE = "https://api.niyien.com/sdk";
+const DEFAULT_GLOBAL_SDK_BASE = "https://www.niyien.com/api/sdk";
 const DEFAULT_GLOBAL_PLUGINS_BASE =
   "https://github.com/NiYien/gyroflow-plugins/releases/latest/download";
 // Lens data lives in a separate niyien-lens-data repo since 2026-04-21 (code+data

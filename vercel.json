@@ -37,6 +37,15 @@
       ]
     },
     {
+      "source": "/api/sdk/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=86400"
+        }
+      ]
+    },
+    {
       "source": "/api/telemetry",
       "headers": [
         {
@@ -99,7 +108,7 @@
         }
       ]
     },
-	{
+    {
       "source": "/assets/qrcode/(.*)",
       "headers": [
         {
@@ -114,7 +123,8 @@
         {
           "key": "Cache-Control",
           "value": "public, s-maxage=86400, max-age=86400"
-        }, {
+        },
+        {
           "key": "Vercel-CDN-Cache-Control",
           "value": "max-age=86400"
         }
@@ -142,6 +152,10 @@
     },
     {
       "source": "/sdk/(.+)",
+      "destination": "/api/sdk?path=$1"
+    },
+    {
+      "source": "/api/sdk/(.+)",
       "destination": "/api/sdk?path=$1"
     }
   ]
