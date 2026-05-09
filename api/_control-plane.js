@@ -6,7 +6,7 @@ export const CURRENT_SOURCE_APP_ID = "gyroflow_niyien";
 
 const DEFAULT_GLOBAL_RELEASE_BASE = "https://github.com/NiYien/gyroflow/releases/download";
 const DEFAULT_CN_RELEASE_BASE = "https://download.niyien.com/releases";
-const DEFAULT_GLOBAL_SDK_BASE = "https://api.gyroflow.xyz/sdk";
+const DEFAULT_GLOBAL_SDK_BASE = "https://api.niyien.com/sdk";
 const DEFAULT_GLOBAL_PLUGINS_BASE =
   "https://github.com/NiYien/gyroflow-plugins/releases/latest/download";
 // Lens data lives in a separate niyien-lens-data repo since 2026-04-21 (code+data
@@ -336,7 +336,10 @@ export async function buildManifestPayload(req) {
     // CDN; plugins follow plugins_source_mode (release latest vs nightly.link
     // for the specific run captured in entry.global_plugins_base).
     sdkBase = `${stripTrailingSlash(
-      process.env.NIYIEN_GLOBAL_SDK_BASE || DEFAULT_GLOBAL_SDK_BASE
+      resolvedEntry?.global_sdk_base ||
+        autoEntry?.global_sdk_base ||
+        process.env.NIYIEN_GLOBAL_SDK_BASE ||
+        DEFAULT_GLOBAL_SDK_BASE
     )}/`;
     lensUrl = resolvedLensReleaseTag
       ? buildReleaseAssetUrl(getLensDataReleaseBase(), resolvedLensReleaseTag, getLensAssetName())
@@ -421,6 +424,8 @@ function normalizePolicyEntry(entry) {
       typeof entry.plugins_source_ref === "string" ? entry.plugins_source_ref.trim() : "",
     plugins_source_tag:
       typeof entry.plugins_source_tag === "string" ? entry.plugins_source_tag.trim() : "",
+    global_sdk_base:
+      typeof entry.global_sdk_base === "string" ? entry.global_sdk_base.trim() : "",
     global_plugins_base:
       typeof entry.global_plugins_base === "string" ? entry.global_plugins_base.trim() : "",
   };
