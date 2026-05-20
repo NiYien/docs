@@ -1,7 +1,12 @@
 import { buildManifestPayload } from "./_control-plane";
 
 export default async function handler(req, res) {
-  res.setHeader("Cache-Control", "no-store, max-age=0");
+  // Browser caches 5min (same user reuses response); shared caches (Vercel
+  // CDN / generic CDN) must not store, otherwise geo-specific responses leak
+  // across users on the same edge node.
+  res.setHeader("Cache-Control", "private, max-age=300");
+  res.setHeader("Vercel-CDN-Cache-Control", "no-store");
+  res.setHeader("CDN-Cache-Control", "no-store");
 
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
