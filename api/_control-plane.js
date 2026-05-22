@@ -296,6 +296,11 @@ export async function buildManifestPayload(req) {
         version: item.version,
         url: manualPackage.installer_url || manualPackage.package_url || "",
         changelog: item.changelog,
+        // release-notes-i18n: per-language release notes. Empty {} for
+        // legacy entries written before this change; clients use
+        // `pick_changelog` to choose by locale and fall back to legacy
+        // `changelog` when the map is empty.
+        changelogs: item.changelogs || {},
         recommended: item.recommended,
         packages: manualPackages,
       };
@@ -367,6 +372,9 @@ export async function buildManifestPayload(req) {
       version: autoEntry?.version || "",
       url: appUrl,
       changelog: autoEntry?.changelog || "",
+      // release-notes-i18n: same fallback semantics as the manual versions —
+      // clients pick by locale, fall back to `changelog` when empty.
+      changelogs: autoEntry?.changelogs || {},
       manual_versions: manualVersions,
       packages: appPackages,
     },
@@ -399,6 +407,7 @@ function normalizePolicyEntry(entry) {
     tag,
     channels: normalizeChannels(entry.channels),
     changelog: typeof entry.changelog === "string" ? entry.changelog.trim() : "",
+    changelogs: normalizeChangelogs(entry.changelogs),
     recommended: Boolean(entry.recommended),
     app_source_mode:
       typeof entry.app_source_mode === "string" && entry.app_source_mode.trim()
@@ -429,6 +438,32 @@ function normalizePolicyEntry(entry) {
     global_plugins_base:
       typeof entry.global_plugins_base === "string" ? entry.global_plugins_base.trim() : "",
   };
+}
+
+// Multi-language release notes (release-notes-i18n). Input is a free-form
+// map authored by the publisher's 9-language tabs; here we coerce it into
+// a clean { lang_code: text } shape, dropping non-string entries and
+// stripping whitespace-only values. The contract is: only languages the
+// publisher actually filled survive into the manifest, so clients can
+// rely on `key present` <=> `non-empty content`.
+function normalizeChangelogs(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  const result = {};
+  for (const [code, text] of Object.entries(value)) {
+    if (typeof code !== "string" || !code) {
+      continue;
+    }
+    if (typeof text !== "string") {
+      continue;
+    }
+    if (!text.trim()) {
+      continue;
+    }
+    result[code] = text;
+  }
+  return result;
 }
 
 function normalizeAppUrls(value) {
