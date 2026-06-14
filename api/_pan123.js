@@ -12,6 +12,10 @@ const tokenCache = {
 
 const listCache = new Map();
 const pathCache = new Map();
+// Caches resolved first-level tag folder ids (run-XXX / lens-XXX / sdk /
+// plugin-XXX) so repeated requests for different files in the same release
+// reuse a single folder resolution.
+const tagFolderCache = new Map();
 
 export class Pan123NotFoundError extends Error {
   constructor(message) {
@@ -186,8 +190,19 @@ async function resolveReleasePathToFileId(tag, relativePath) {
     return cached;
   }
 
-  const segments = [normalizedTag, ...normalizedPath.split("/")];
-  let parentFileId = releasesRootId;
+  // The releases root holds one folder per published tag (run-XXX / lens-XXX
+  // / sdk / plugin-XXX) and grows unbounded over time, so paginating the whole
+  // root to find the tag folder was the dominant cold-resolve cost (and the
+  // source of intermittent 504s when it exceeded the serverless function
+  // timeout). Resolve the tag folder with a single global exact search, then
+  // walk only the (small) remaining path segments inside that folder.
+  const tagFolderId = await resolveTagFolderId(releasesRootId, normalizedTag);
+  if (!tagFolderId) {
+    throw new Pan123NotFoundError(`123 release folder not found for ${normalizedTag}`);
+  }
+
+  const segments = normalizedPath.split("/");
+  let parentFileId = tagFolderId;
 
   for (let index = 0; index < segments.length; index += 1) {
     const name = segments[index];
@@ -202,6 +217,84 @@ async function resolveReleasePathToFileId(tag, relativePath) {
 
   writeCache(pathCache, cacheKey, parentFileId, PATH_CACHE_TTL_MS);
   return parentFileId;
+}
+
+// Resolve a first-level tag folder (run-XXX / lens-XXX / sdk / plugin-XXX)
+// under the releases root by name. Uses 123's global exact search so the
+// lookup cost is independent of how many historical release folders exist,
+// with a fallback to full enumeration for folders 123 has not indexed yet
+// (search index lag right after a publish).
+async function resolveTagFolderId(releasesRootId, tag) {
+  const cacheKey = `${releasesRootId}|${tag}`;
+  const cached = readCache(tagFolderCache, cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // Fast path: global exact search.
+  let folderId = await searchTagFolder(releasesRootId, tag);
+
+  // Slow fallback: a freshly published folder may not be in 123's search
+  // index yet. Fall back to the original enumeration so a just-released build
+  // never 404s while the index catches up.
+  if (!folderId) {
+    const item = await findChildByName(releasesRootId, tag, 1);
+    folderId = item ? item.fileId : null;
+  }
+
+  if (folderId) {
+    writeCache(tagFolderCache, cacheKey, folderId, PATH_CACHE_TTL_MS);
+  }
+  return folderId;
+}
+
+async function searchTagFolder(releasesRootId, tag) {
+  const targetParent = Number(releasesRootId);
+  let lastFileId = "";
+
+  // A unique tag name returns a single page, but `searchData` makes 123
+  // ignore parentFileId and search the whole drive (including trash), so page
+  // through and strictly filter the matches back down to a non-trashed
+  // directory named `tag` directly under the releases root.
+  while (true) {
+    const query = {
+      parentFileId: 0,
+      limit: 100,
+      searchData: tag,
+      searchMode: 1, // 1 = exact match (requires the full name)
+    };
+    if (lastFileId !== "" && lastFileId !== -1) {
+      query.lastFileId = lastFileId;
+    }
+
+    const data = await pan123Request("GET", "/api/v2/file/list", {
+      auth: true,
+      query,
+    });
+
+    const fileList = Array.isArray(data.fileList) ? data.fileList : [];
+    const hit = fileList.find(
+      (item) =>
+        String(item.filename || "") === tag &&
+        Number(item.type) === 1 &&
+        Number(item.trashed || 0) === 0 &&
+        // The list response field is `parentFileID` (per the 123 Go SDK), but
+        // the official doc example shows `parentFileId`; accept either casing.
+        Number(item.parentFileID ?? item.parentFileId) === targetParent
+    );
+    if (hit) {
+      return hit.fileId;
+    }
+
+    const nextFileId =
+      data.lastFileId === undefined || data.lastFileId === null
+        ? -1
+        : Number(data.lastFileId);
+    if (!Number.isFinite(nextFileId) || nextFileId === -1) {
+      return null;
+    }
+    lastFileId = nextFileId;
+  }
 }
 
 async function findChildByName(parentFileId, name, type) {
