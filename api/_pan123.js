@@ -432,11 +432,24 @@ async function pan123Request(method, path, options = {}) {
     headers.Authorization = `Bearer ${await getAccessToken()}`;
   }
 
-  const response = await fetch(url.toString(), {
-    method,
-    headers,
-    body,
-  });
+  // Bound every 123 open-API call so a hung cross-border fetch surfaces as a
+  // normal error through the caller's handling instead of running until the
+  // platform kills the function (FUNCTION_INVOCATION_TIMEOUT).
+  const timeoutMs = parsePositiveInteger(process.env.PAN123_API_TIMEOUT_MS) || 8000;
+  let response;
+  try {
+    response = await fetch(url.toString(), {
+      method,
+      headers,
+      body,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    if (error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      throw new Error(`123 API timeout after ${timeoutMs}ms: ${path}`);
+    }
+    throw error;
+  }
 
   const text = await response.text();
   let payload = null;

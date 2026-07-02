@@ -1,4 +1,5 @@
 import { Pan123NotFoundError, resolvePan123ReleaseDownloadUrl } from "./_pan123";
+import { buildDirectLinkUrl, signDirectLinkUrl } from "./_direct-link";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
@@ -18,6 +19,27 @@ export default async function handler(req, res) {
   }
   if (!tag || !relativePath) {
     return res.status(400).json({ error: "Missing tag or path" });
+  }
+
+  // direct (default): construct the 123 direct link locally (zero calls to
+  // open-api.123pan.com) and redirect. `api` restores the pre-change open-API
+  // resolution path as an operational fallback (env change + redeploy).
+  // Trade-off accepted in direct mode: no existence check, so a missing file
+  // 302s to the 123 CDN's 404 instead of returning 404 JSON here.
+  const mode = String(process.env.PAN123_DOWNLOAD_MODE || "direct").trim().toLowerCase();
+
+  if (mode !== "api") {
+    try {
+      const directUrl = signDirectLinkUrl(buildDirectLinkUrl(tag, relativePath));
+      res.statusCode = 302;
+      res.setHeader("Location", directUrl);
+      return res.end();
+    } catch (error) {
+      return res.status(502).json({
+        error: "Download resolution failed",
+        detail: error.message || String(error),
+      });
+    }
   }
 
   try {
