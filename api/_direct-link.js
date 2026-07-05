@@ -29,7 +29,14 @@ const DEFAULT_EXPIRE_SECONDS = 600;
 // releases path are already visible in every public download URL, so encoding
 // them here leaks nothing. Env vars exist only as overrides (e.g. if 123 ever
 // changes the direct-link entry domain or the space is reorganized).
-const DEFAULT_DIRECT_LINK_BASE = "https://vip.123pan.cn";
+//
+// Base switched to the upgraded CDN domain (123's 2026-06-22 notice: the old
+// vip.123pan.cn entry domain will eventually 302 to {uid}.cdn.123clouddisk.com;
+// verified 2026-07-05 that both domains resolve to the same edges and the new
+// domain serves the same paths). The uid must stay in the path — the new
+// domain returns 403 for uid-less paths, so the subdomain uid does NOT replace
+// the path uid. Rollback: PAN123_DIRECT_LINK_BASE=https://vip.123pan.cn.
+const DEFAULT_DIRECT_LINK_BASE = "https://1846941948.cdn.123clouddisk.com";
 const DEFAULT_DIRECT_LINK_PREFIX = "/1846941948/releases";
 
 export function buildDirectLinkUrl(tag, relativePath) {
