@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.87",
+      "tag": "run-29396559038",
+      "published_at": "2026-07-15T08:33:11Z",
+      "changelog": "1. Optimized manual lens handling workflow\n2. Optimized parameter adjustment workflow\n3. Fixed a bug where Kinefinity was not processed correctly\n4. Optimized version update notification",
+      "changelogs": {
+        "zh": "1. 优化手动镜头处理流程\n2. 优化参数调整流程\n3. 解决Kinefinity无法正确处理的bug\n4. 优化版本更新提示",
+        "en": "1. Optimized manual lens handling workflow\n2. Optimized parameter adjustment workflow\n3. Fixed a bug where Kinefinity was not processed correctly\n4. Optimized version update notification",
+        "ja": "1. マニュアルレンズの処理フローを最適化\n2. パラメータ調整のフローを最適化\n3. Kinefinityが正しく処理されないバグを修正\n4. バージョン更新通知を最適化",
+        "ko": "1. 수동 렌즈 처리 워크플로우 최적화\n2. 파라미터 조정 워크플로우 최적화\n3. Kinefinity가 올바르게 처리되지 않는 버그 수정\n4. 버전 업데이트 알림 최적화",
+        "de": "1. Workflow für manuelle Objektive optimiert\n2. Workflow für Parameteranpassung optimiert\n3. Fehler behoben, bei dem Kinefinity nicht korrekt verarbeitet wurde\n4. Versionsaktualisierungshinweis optimiert",
+        "fr": "1. Flux de traitement des objectifs manuels optimisé\n2. Flux de réglage des paramètres optimisé\n3. Correction d'un bug où Kinefinity n'était pas traité correctement\n4. Notification de mise à jour optimisée",
+        "es": "1. Flujo de trabajo de lentes manuales optimizado\n2. Flujo de ajuste de parámetros optimizado\n3. Se corrigió un error por el cual Kinefinity no se procesaba correctamente\n4. Notificación de actualización optimizada",
+        "ru": "1. Оптимизирован рабочий процесс обработки ручных объективов\n2. Оптимизирован процесс настройки параметров\n3. Исправлена ошибка, из-за которой Kinefinity не обрабатывался корректно\n4. Оптимизировано уведомление об обновлении версии",
+        "pt": "1. Fluxo de trabalho de lentes manuais otimizado\n2. Fluxo de ajuste de parâmetros otimizado\n3. Corrigido um bug em que o Kinefinity não era processado corretamente\n4. Notificação de atualização de versão otimizada"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.85",
       "tag": "run-29254064903",
       "published_at": "",
