@@ -333,7 +333,7 @@
                   </div>
                 </div>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Mac beta software download -->
                 <div class="download-card flex flex-col items-center h-full p-4">
                   <div class="flex items-center mb-3 justify-center w-full">
@@ -356,6 +356,19 @@
                   <p id="betaWindowsVersionText" class="text-sm text-gray-500 text-center w-full"></p>
                   <p class="download-desc compact-desc text-center w-full">Testing version.</p>
                   <button class="download-button compact-button w-full md:w-auto" onclick="startBetaDownload('windows')">
+                    <i class="fa fa-flask mr-2"></i> Beta Download
+                  </button>
+                </div>
+
+                <!-- Android beta software download -->
+                <div class="download-card flex flex-col items-center h-full p-4">
+                  <div class="flex items-center mb-3 justify-center w-full">
+                    <i class="fab fa-android text-gray-600 text-4xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">Beta Test for Android</h3>
+                  </div>
+                  <p id="betaAndroidVersionText" class="text-sm text-gray-500 text-center w-full"></p>
+                  <p class="download-desc compact-desc text-center w-full">Testing version.</p>
+                  <button class="download-button compact-button w-full md:w-auto" onclick="startBetaDownload('android')">
                     <i class="fa fa-flask mr-2"></i> Beta Download
                   </button>
                 </div>
@@ -455,6 +468,15 @@
             </div>
             <div class="pl-9">
               Frequently Asked Questions, <a href="./FAQ/FAQ_en.html" target="_blank" class="text-primary hover:underline">Click here</a>.
+            </div>
+          </li>
+          <li>
+            <div class="flex mb-1">
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">f</span>
+              <span><strong>Supported Cameras</strong></span>
+            </div>
+            <div class="pl-9">
+              To see camera models with built-in gyro data, <a href="./cameras/?lang=en" target="_blank" class="text-primary hover:underline">Click here</a>.
             </div>
           </li>
         </ul>
@@ -1001,6 +1023,7 @@
     function loadBetaVersions() {
       loadBetaVersion('macos', 'betaMacVersionText');
       loadBetaVersion('windows', 'betaWindowsVersionText');
+      loadBetaVersion('android', 'betaAndroidVersionText');
     }
     
     const originalRenderVideos = renderVideos;
