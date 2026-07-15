@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gyroflow (NiYien) Beta - 更新历史 / Update History</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --accent: #2563eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #334155;
+      --accent: #60a5fa;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 32px 20px 64px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  h1 { font-size: 1.5rem; margin: 0; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 24px; }
+  select {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: .9rem;
+  }
+  .entry {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .entry-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .version { font-size: 1.05rem; font-weight: 600; }
+  .date { color: var(--muted); font-size: .85rem; }
+  .badge {
+    font-size: .7rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .notes { white-space: pre-wrap; word-break: break-word; font-size: .95rem; }
+  .placeholder { color: var(--muted); text-align: center; padding: 48px 0; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="page-title">Gyroflow (NiYien) Beta 更新历史</h1>
+      <p class="subtitle" id="page-subtitle">所有已发布版本的更新内容</p>
+    </div>
+    <select id="lang-select" aria-label="Language"></select>
+  </header>
+  <div id="list"><p class="placeholder" id="loading-note">Loading...</p></div>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // UI chrome strings: Chinese when the resolved language is zh, English otherwise.
+  var CHROME = {
+    zh: { title: "Gyroflow (NiYien) Beta 更新历史", subtitle: "所有已发布版本的更新内容", empty: "暂无更新记录", error: "更新记录加载失败，请稍后重试" },
+    en: { title: "Gyroflow (NiYien) Beta Update History", subtitle: "Release notes for every published version", empty: "No update records yet", error: "Failed to load the update history, please retry later" }
+  };
+  var LANG_NAMES = {
+    zh: "中文", en: "English", ja: "日本語", ko: "한국어", de: "Deutsch",
+    fr: "Français", es: "Español", ru: "Русский", pt: "Português"
+  };
+
+  function baseLang(locale) {
+    var s = String(locale || "").trim();
+    if (!s) return "";
+    var head = s.split(/[-_]/)[0].toLowerCase();
+    return head.length >= 2 ? head : "";
+  }
+
+  // Mirrors the gyroflow client's compare_app_versions ordering:
+  // numeric (major, minor, patch); bare base older than any suffixed build
+  // of the same base; ni > dev > other schemas; numeric sequence within a
+  // schema; unparseable versions sort oldest.
+  var SCHEMA_PRIORITY = { ni: 2, dev: 1 };
+  function versionKey(version) {
+    var trimmed = String(version || "").trim().replace(/^v/, "");
+    var dash = trimmed.indexOf("-");
+    var base = dash === -1 ? trimmed : trimmed.slice(0, dash);
+    var suffix = dash === -1 ? "" : trimmed.slice(dash + 1);
+    var parts = base.split(".");
+    if (parts.length === 3 && parts.every(function (p) { return /^\d+$/.test(p); })) {
+      var nums = parts.map(Number);
+      if (!suffix) return [1, nums[0], nums[1], nums[2], 0, 0, 0, ""];
+      var dot = suffix.indexOf(".");
+      var schema = dot === -1 ? suffix : suffix.slice(0, dot);
+      var seqRaw = dot === -1 ? "" : suffix.slice(dot + 1);
+      var priority = SCHEMA_PRIORITY[schema] || 0;
+      if (/^\d+$/.test(seqRaw)) return [1, nums[0], nums[1], nums[2], 1, priority, 1, Number(seqRaw)];
+      return [1, nums[0], nums[1], nums[2], 1, priority, 0, suffix];
+    }
+    return [0, 0, 0, 0, 0, 0, 0, trimmed];
+  }
+  function compareKeys(a, b) {
+    for (var i = 0; i < Math.max(a.length, b.length); i++) {
+      var x = a[i], y = b[i];
+      if (x === y) continue;
+      if (typeof x === "number" && typeof y === "number") return x - y;
+      return String(x) < String(y) ? -1 : 1;
+    }
+    return 0;
+  }
+
+  // Same fallback chain as the client's pick_changelog:
+  // changelogs[lang] -> en -> zh -> first key (sorted) -> legacy changelog.
+  function pickNotes(entry, lang) {
+    var map = entry.changelogs && typeof entry.changelogs === "object" ? entry.changelogs : {};
+    var keys = Object.keys(map).filter(function (k) { return typeof map[k] === "string" && map[k].trim(); }).sort();
+    if (keys.length) {
+      if (lang && typeof map[lang] === "string" && map[lang].trim()) return map[lang];
+      if (typeof map.en === "string" && map.en.trim()) return map.en;
+      if (typeof map.zh === "string" && map.zh.trim()) return map.zh;
+      return map[keys[0]];
+    }
+    return typeof entry.changelog === "string" ? entry.changelog : "";
+  }
+
+  function formatDate(iso) {
+    var s = String(iso || "").trim();
+    if (!s) return "";
+    var m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : "";
+  }
+
+  var state = { entries: [], lang: "" };
+
+  function availableLangs(entries) {
+    var set = {};
+    entries.forEach(function (e) {
+      var map = e.changelogs && typeof e.changelogs === "object" ? e.changelogs : {};
+      Object.keys(map).forEach(function (k) {
+        if (typeof map[k] === "string" && map[k].trim()) set[k] = true;
+      });
+    });
+    return Object.keys(set).sort();
+  }
+
+  function chrome() { return CHROME[state.lang === "zh" ? "zh" : "en"]; }
+
+  function renderChrome() {
+    var c = chrome();
+    document.getElementById("page-title").textContent = c.title;
+    document.getElementById("page-subtitle").textContent = c.subtitle;
+    document.title = c.title;
+  }
+
+  function renderList() {
+    var listEl = document.getElementById("list");
+    listEl.textContent = "";
+    if (!state.entries.length) {
+      var p = document.createElement("p");
+      p.className = "placeholder";
+      p.textContent = chrome().empty;
+      listEl.appendChild(p);
+      return;
+    }
+    state.entries.forEach(function (entry) {
+      var notes = pickNotes(entry, state.lang).trim();
+      var card = document.createElement("article");
+      card.className = "entry";
+      var head = document.createElement("div");
+      head.className = "entry-head";
+      var ver = document.createElement("span");
+      ver.className = "version";
+      ver.textContent = "v" + String(entry.version || "").replace(/^v/, "");
+      head.appendChild(ver);
+      var date = formatDate(entry.published_at);
+      if (date) {
+        var d = document.createElement("span");
+        d.className = "date";
+        d.textContent = date;
+        head.appendChild(d);
+      }
+      if (entry.recommended) {
+        var b = document.createElement("span");
+        b.className = "badge";
+        b.textContent = state.lang === "zh" ? "推荐" : "recommended";
+        head.appendChild(b);
+      }
+      card.appendChild(head);
+      var body = document.createElement("div");
+      body.className = "notes";
+      body.textContent = notes;
+      card.appendChild(body);
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderLangSelect(langs) {
+    var sel = document.getElementById("lang-select");
+    sel.textContent = "";
+    var options = langs.length ? langs : ["en"];
+    options.forEach(function (code) {
+      var opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = LANG_NAMES[code] || code;
+      sel.appendChild(opt);
+    });
+    if (options.indexOf(state.lang) === -1) state.lang = options[0];
+    sel.value = state.lang;
+    sel.onchange = function () {
+      state.lang = sel.value;
+      renderChrome();
+      renderList();
+    };
+  }
+
+  function showError() {
+    var listEl = document.getElementById("list");
+    listEl.textContent = "";
+    var p = document.createElement("p");
+    p.className = "placeholder";
+    p.textContent = chrome().error;
+    listEl.appendChild(p);
+  }
+
+  state.lang = baseLang(navigator.language) || "en";
+  renderChrome();
+
+  fetch("./archive.json", { cache: "no-cache" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (doc) {
+      var entries = doc && Array.isArray(doc.entries) ? doc.entries : [];
+      entries = entries.filter(function (e) {
+        return e && typeof e === "object" && String(e.version || "").trim();
+      });
+      entries.sort(function (a, b) {
+        return compareKeys(versionKey(b.version), versionKey(a.version));
+      });
+      state.entries = entries;
+      var langs = availableLangs(entries);
+      var preferred = baseLang(navigator.language);
+      state.lang = langs.indexOf(preferred) !== -1 ? preferred
+        : langs.indexOf("en") !== -1 ? "en"
+        : langs.indexOf("zh") !== -1 ? "zh"
+        : (langs[0] || "en");
+      renderLangSelect(langs);
+      renderChrome();
+      renderList();
+    })
+    .catch(function (err) {
+      // A missing archive (page deployed before the first migration) is a
+      // normal empty state, not an error.
+      if (String(err).indexOf("HTTP 404") !== -1) {
+        state.entries = [];
+        renderLangSelect([]);
+        renderChrome();
+        renderList();
+      } else {
+        showError();
+      }
+    });
+})();
+</script>
+</body>
+</html>
