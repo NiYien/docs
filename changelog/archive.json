@@ -1,0 +1,186 @@
+{
+  "schema": 1,
+  "product": "gyroflow-niyien",
+  "entries": [
+    {
+      "version": "1.6.3-ni.85",
+      "tag": "run-29254064903",
+      "published_at": "",
+      "changelog": "1. Fixed issue where mounting angle was not applied\n2. Fixed resolution parsing error for Nikon proxy videos\n3. Improved plugin installation prompts\n4. Fixed bug where device model was not displayed for FPV drones",
+      "changelogs": {
+        "zh": "1. 解决安装角度不生效的问题\n2. 解决尼康代理视频分辨率解析错误\n3. 优化插件安装提示\n4. 解决穿越机型号无法显示设备的bug",
+        "en": "1. Fixed issue where mounting angle was not applied\n2. Fixed resolution parsing error for Nikon proxy videos\n3. Improved plugin installation prompts\n4. Fixed bug where device model was not displayed for FPV drones",
+        "ja": "1. 取り付け角度が適用されない問題を修正\n2. ニコン代理動画の解像度解析エラーを修正\n3. プラグインインストール時のプロンプトを改善\n4. レーシングドローン（穿越機）でデバイスモデルが表示されないバグを修正",
+        "ko": "1. 장착 각도가 적용되지 않는 문제 해결\n2. Nikon 프록시 비디오 해상도 파싱 오류 수정\n3. 플러그인 설치 안내 개선\n4. FPV 드론에서 장치 모델이 표시되지 않는 버그 수정",
+        "de": "1. Problem behoben, dass der Montagewinkel nicht angewendet wurde\n2. Fehler bei der Auflösungsanalyse von Nikon-Proxy-Videos behoben\n3. Plugin-Installationshinweise optimiert\n4. Fehler behoben, bei dem das Gerätemodell für Renn-Drohnen nicht angezeigt wurde",
+        "fr": "1. Correction du problème où l'angle de montage n'était pas appliqué\n2. Correction de l'erreur d'analyse de résolution pour les vidéos proxy Nikon\n3. Amélioration des invites d'installation des plugins\n4. Correction du bug où le modèle de l'appareil n'était pas affiché pour les drones de course",
+        "es": "1. Se corrigió el problema de que el ángulo de montaje no se aplicaba\n2. Se corrigió el error de análisis de resolución para videos proxy de Nikon\n3. Se mejoraron los avisos de instalación de plugins\n4. Se corrigió el error de que no se mostraba el modelo del dispositivo para drones de carreras",
+        "ru": "1. Исправлена проблема, из-за которой угол установки не применялся\n2. Исправлена ошибка анализа разрешения для прокси-видео Nikon\n3. Улучшены подсказки при установке плагинов\n4. Исправлена ошибка, из-за которой не отображалась модель устройства для FPV-дронов",
+        "pt": "1. Corrigido problema em que o ângulo de montagem não era aplicado\n2. Corrigido erro de análise de resolução para vídeos proxy Nikon\n3. Melhorados os avisos de instalação de plugins\n4. Corrigido bug em que o modelo do dispositivo não era exibido para drones de corrida"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.82",
+      "tag": "run-29142697819",
+      "published_at": "",
+      "changelog": "1. Improve unsupported encoding hints\n2. Improve deep search",
+      "changelogs": {
+        "zh": "1. 优化不支持编码提示\n2. 优化深度搜索",
+        "en": "1. Improve unsupported encoding hints\n2. Improve deep search",
+        "ja": "1. 未サポートのエンコーディングヒントを最適化\n2. ディープサーチを最適化",
+        "ko": "1. 지원되지 않는 인코딩 힌트 최적화\n2. 심층 검색 최적화",
+        "de": "1. Optimierung nicht unterstützter Codierungshinweise\n2. Optimierung der Tiefensuche",
+        "fr": "1. Optimisation des conseils de codage non pris en charge\n2. Optimisation de la recherche approfondie",
+        "es": "1. Optimizar las sugerencias de codificación no compatibles\n2. Optimizar la búsqueda profunda",
+        "ru": "1. Оптимизация подсказок кодирования не поддерживается\n2. Оптимизация глубокого поиска",
+        "pt": "1. Otimizar dicas de codificação não suportadas\n2. Otimizar pesquisa profunda"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.81",
+      "tag": "run-28913147799",
+      "published_at": "",
+      "changelog": "1. Optimized depth matching prompts\n2. Optimized error prompts",
+      "changelogs": {
+        "zh": "1. 优化深度匹配提示\n2. 优化错误提示",
+        "en": "1. Optimized depth matching prompts\n2. Optimized error prompts",
+        "ja": "1. 深度マッチングのプロンプトを最適化\n2. エラープロンプトを最適化",
+        "ko": "1. 깊이 매칭 프롬프트 최적화\n2. 오류 프롬프트 최적화",
+        "de": "1. Optimierte Tiefenabgleich-Hinweise\n2. Optimierte Fehlerhinweise",
+        "fr": "1. Optimisation des invites de correspondance de profondeur\n2. Optimisation des invites d'erreur",
+        "es": "1. Optimización de indicaciones de coincidencia de profundidad\n2. Optimización de indicaciones de error",
+        "ru": "1. Оптимизированы подсказки глубинного сопоставления\n2. Оптимизированы подсказки об ошибках",
+        "pt": "1. Otimizados os prompts de correspondência de profundidade\n2. Otimizados os prompts de erro"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.80",
+      "tag": "run-28844371917",
+      "published_at": "",
+      "changelog": "1. Added automatic full search to deep search.",
+      "changelogs": {
+        "zh": "1. 给深度搜索添加自动全搜功能",
+        "en": "1. Added automatic full search to deep search.",
+        "ja": "1. 深度検索に自動全検索を追加しました。",
+        "ko": "1. 심층 검색에 자동 전체 검색 기능을 추가했습니다.",
+        "de": "1. Automatische Vollsuche zur Tiefensuche hinzugefügt.",
+        "fr": "1. Ajout de la recherche automatique complète à la recherche approfondie.",
+        "es": "1. Añadida búsqueda completa automática a la búsqueda profunda.",
+        "ru": "1. Добавлен автоматический полный поиск в глубокий поиск.",
+        "pt": "1. Adicionada pesquisa completa automática à pesquisa profunda."
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.79",
+      "tag": "run-28415078583",
+      "published_at": "",
+      "changelog": "1. Fixed deep matching errors caused by long matching time.",
+      "changelogs": {
+        "zh": "1. 修复深度匹配长时间匹配出错问题",
+        "en": "1. Fixed deep matching errors caused by long matching time.",
+        "ja": "1. ディープマッチングの長時間マッチングエラーを修正。",
+        "ko": "1. 딥 매칭의 장시간 매칭 오류 수정.",
+        "de": "1. Fehler bei langer Laufzeit des Deep Matchings behoben.",
+        "fr": "1. Correction d'une erreur de correspondance longue dans le deep matching.",
+        "es": "1. Corregido error de coincidencia prolongada en el deep matching.",
+        "ru": "1. Исправлена ошибка длительного сопоставления при глубоком сопоставлении.",
+        "pt": "1. Corrigido erro de correspondência prolongada no deep matching."
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.78",
+      "tag": "run-28355933427",
+      "published_at": "",
+      "changelog": "1. Fixed 10-bit encoding anomaly issue\n2. Optimized operation logic",
+      "changelogs": {
+        "zh": "1. 解决10bit编码异常问题\n2. 优化操作逻辑",
+        "en": "1. Fixed 10-bit encoding anomaly issue\n2. Optimized operation logic",
+        "ja": "1. 10ビットエンコードの異常問題を修正\n2. 操作ロジックを最適化",
+        "ko": "1. 10비트 인코딩 이상 문제 해결\n2. 작업 로직 최적화",
+        "de": "1. Problem mit 10-Bit-Codierung behoben\n2. Bedienlogik optimiert",
+        "fr": "1. Problème d'encodage 10 bits résolu\n2. Logique opérationnelle optimisée",
+        "es": "1. Solucionado problema de codificación de 10 bits\n2. Lógica de operación optimizada",
+        "ru": "1. Исправлена проблема с 10-битным кодированием\n2. Оптимизирована логика работы",
+        "pt": "1. Problema de codificação de 10 bits corrigido\n2. Lógica de operação otimizada"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.77",
+      "tag": "run-28149724407",
+      "published_at": "",
+      "changelog": "1. Optimize upgrade process\n2. Optimize lens groups",
+      "changelogs": {
+        "zh": "1. 优化升级流程\n2. 优化镜头组",
+        "en": "1. Optimize upgrade process\n2. Optimize lens groups",
+        "ja": "1. アップグレードプロセスを最適化\n2. レンズグループを最適化",
+        "ko": "1. 업그레이드 프로세스 최적화\n2. 렌즈 그룹 최적화",
+        "de": "1. Upgrade-Prozess optimiert\n2. Objektivgruppen optimiert",
+        "fr": "1. Optimisation du processus de mise à niveau\n2. Optimisation des groupes d'objectifs",
+        "es": "1. Optimizar el proceso de actualización\n2. Optimizar grupos de lentes",
+        "ru": "1. Оптимизирован процесс обновления\n2. Оптимизированы группы объективов",
+        "pt": "1. Otimizar o processo de atualização\n2. Otimizar grupos de lentes"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.76",
+      "tag": "run-27895760899",
+      "published_at": "",
+      "changelog": "1. Fix DNG file loading issue\n2. Fix BRAW recorder video parsing issue",
+      "changelogs": {
+        "zh": "1. 修复DNG文件加载问题\n2. 修改BRAW录机视频解析问题",
+        "en": "1. Fix DNG file loading issue\n2. Fix BRAW recorder video parsing issue",
+        "ja": "1. DNGファイルの読み込み問題を修正\n2. BRAWレコーダーのビデオ解析問題を修正",
+        "ko": "1. DNG 파일 로딩 문제 수정\n2. BRAW 레코더 비디오 파싱 문제 수정",
+        "de": "1. Behebung des DNG-Dateiladeproblems\n2. Behebung des BRAW-Recorder-Videoparsingproblems",
+        "fr": "1. Correction du problème de chargement des fichiers DNG\n2. Correction du problème d'analyse vidéo de l'enregistreur BRAW",
+        "es": "1. Solucionar problema de carga de archivos DNG\n2. Solucionar problema de análisis de video de grabadora BRAW",
+        "ru": "1. Исправление проблемы загрузки файлов DNG\n2. Исправление проблемы анализа видео рекордера BRAW",
+        "pt": "1. Corrigir problema de carregamento de arquivos DNG\n2. Corrigir problema de análise de vídeo do gravador BRAW"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.75",
+      "tag": "run-27865999462",
+      "published_at": "",
+      "changelog": "1. Added tutorial navigation\n2. Improved translations",
+      "changelogs": {
+        "zh": "1. 添加教程导航\n2. 优化翻译",
+        "en": "1. Added tutorial navigation\n2. Improved translations",
+        "ja": "1. チュートリアルナビゲーションを追加\n2. 翻訳を最適化",
+        "ko": "1. 튜토리얼 내비게이션 추가\n2. 번역 개선",
+        "de": "1. Tutorial-Navigation hinzugefügt\n2. Übersetzungen verbessert",
+        "fr": "1. Ajout de la navigation dans le tutoriel\n2. Optimisation des traductions",
+        "es": "1. Añadida navegación de tutorial\n2. Traducciones optimizadas",
+        "ru": "1. Добавлена навигация по руководству\n2. Улучшены переводы",
+        "pt": "1. Adicionada navegação do tutorial\n2. Traduções otimizadas"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.73",
+      "tag": "run-27856797563",
+      "published_at": "",
+      "changelog": "1. Added tutorial navigation\n2. Improved translations",
+      "changelogs": {
+        "zh": "1. 添加教程导航\n2. 优化翻译",
+        "en": "1. Added tutorial navigation\n2. Improved translations",
+        "ja": "1. チュートリアルナビゲーションを追加\n2. 翻訳を改善",
+        "ko": "1. 튜토리얼 탐색 추가\n2. 번역 개선",
+        "de": "1. Tutorial-Navigation hinzugefügt\n2. Übersetzungen verbessert",
+        "fr": "1. Ajout de la navigation du tutoriel\n2. Amélioration des traductions",
+        "es": "1. Añadida navegación del tutorial\n2. Traducciones mejoradas",
+        "ru": "1. Добавлена навигация по руководству\n2. Улучшены переводы",
+        "pt": "1. Adicionada navegação do tutorial\n2. Traduções aprimoradas"
+      },
+      "recommended": true
+    }
+  ]
+}
