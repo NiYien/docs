@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gyroflow (NiYien) - 相机支持列表 / Supported Cameras</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --accent: #2563eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #334155;
+      --accent: #60a5fa;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  h1 { font-size: 1.5rem; margin: 0; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 24px; }
+  select {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: .9rem;
+  }
+  .brand {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .brand-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .brand-name { font-size: 1.05rem; font-weight: 600; }
+  .brand-count { color: var(--muted); font-size: .8rem; }
+  ul.models {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 4px 16px;
+    font-size: .92rem;
+  }
+  footer { margin-top: 28px; color: var(--muted); font-size: .82rem; }
+  footer p { margin: 4px 0; }
+  .placeholder { color: var(--muted); text-align: center; padding: 48px 0; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="page-title">Gyroflow (NiYien) 相机支持列表</h1>
+      <p class="subtitle" id="page-subtitle">以下机型的视频内含陀螺仪与镜头数据，可直接用于稳定</p>
+    </div>
+    <select id="lang-select" aria-label="Language"></select>
+  </header>
+  <div id="list"><p class="placeholder" id="loading-note">Loading...</p></div>
+  <footer id="page-footer"></footer>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // UI chrome strings: Chinese when the resolved language is zh, English otherwise.
+  var CHROME = {
+    zh: {
+      title: "Gyroflow (NiYien) 相机支持列表",
+      subtitle: "以下机型的视频内含陀螺仪与镜头数据，可直接用于稳定",
+      error: "支持列表加载失败，请稍后重试",
+      note_action: "GoPro / DJI / Insta360 等运动相机为原生支持，不在此列表内。",
+      note_manual: "列表外的机型也可通过手动加载镜头配置文件使用。",
+      updated: "数据更新于 "
+    },
+    en: {
+      title: "Gyroflow (NiYien) Supported Cameras",
+      subtitle: "Videos from these models carry built-in gyro and lens data, ready for stabilization",
+      error: "Failed to load the camera list, please retry later",
+      note_action: "Action cameras (GoPro / DJI / Insta360, etc.) are natively supported and not listed here.",
+      note_manual: "Models not listed can still be used by manually loading a lens profile.",
+      updated: "Data updated "
+    }
+  };
+  var LANG_NAMES = { zh: "中文", en: "English" };
+
+  function baseLang(locale) {
+    var s = String(locale || "").trim();
+    if (!s) return "";
+    var head = s.split(/[-_]/)[0].toLowerCase();
+    return head.length >= 2 ? head : "";
+  }
+
+  // The gyroflow client opens pages with ?lang=<app UI language> (e.g. zh_CN)
+  // so the page matches the app, not the browser locale.
+  function preferredLang() {
+    var fromUrl = "";
+    try {
+      fromUrl = baseLang(new URLSearchParams(location.search).get("lang"));
+    } catch (e) { /* very old browsers: fall through */ }
+    return fromUrl || baseLang(navigator.language);
+  }
+
+  var state = { brands: [], generatedAt: "", lang: "" };
+
+  function chrome() { return CHROME[state.lang === "zh" ? "zh" : "en"]; }
+
+  function renderChrome() {
+    var c = chrome();
+    document.getElementById("page-title").textContent = c.title;
+    document.getElementById("page-subtitle").textContent = c.subtitle;
+    document.title = c.title;
+  }
+
+  function renderList() {
+    var listEl = document.getElementById("list");
+    listEl.textContent = "";
+    state.brands.forEach(function (brand) {
+      var card = document.createElement("section");
+      card.className = "brand";
+      var head = document.createElement("div");
+      head.className = "brand-head";
+      var name = document.createElement("span");
+      name.className = "brand-name";
+      name.textContent = brand.name;
+      head.appendChild(name);
+      var count = document.createElement("span");
+      count.className = "brand-count";
+      count.textContent = String(brand.models.length);
+      head.appendChild(count);
+      card.appendChild(head);
+      var ul = document.createElement("ul");
+      ul.className = "models";
+      brand.models.forEach(function (model) {
+        var li = document.createElement("li");
+        li.textContent = model;
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderFooter() {
+    var c = chrome();
+    var el = document.getElementById("page-footer");
+    el.textContent = "";
+    [c.note_action, c.note_manual].forEach(function (t) {
+      var p = document.createElement("p");
+      p.textContent = t;
+      el.appendChild(p);
+    });
+    if (state.generatedAt) {
+      var d = document.createElement("p");
+      d.textContent = c.updated + state.generatedAt;
+      el.appendChild(d);
+    }
+  }
+
+  function renderLangSelect() {
+    var sel = document.getElementById("lang-select");
+    sel.textContent = "";
+    ["zh", "en"].forEach(function (code) {
+      var opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = LANG_NAMES[code];
+      sel.appendChild(opt);
+    });
+    sel.value = state.lang === "zh" ? "zh" : "en";
+    sel.onchange = function () {
+      state.lang = sel.value;
+      renderChrome();
+      renderFooter();
+    };
+  }
+
+  function showError() {
+    var listEl = document.getElementById("list");
+    listEl.textContent = "";
+    var p = document.createElement("p");
+    p.className = "placeholder";
+    p.textContent = chrome().error;
+    listEl.appendChild(p);
+  }
+
+  state.lang = preferredLang() === "zh" ? "zh" : "en";
+  renderLangSelect();
+  renderChrome();
+
+  fetch("./cameras.json", { cache: "no-cache" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (doc) {
+      var brands = doc && Array.isArray(doc.brands) ? doc.brands : [];
+      state.brands = brands.filter(function (b) {
+        return b && typeof b === "object" && Array.isArray(b.models) && b.models.length;
+      });
+      state.generatedAt = doc && typeof doc.generated_at === "string" ? doc.generated_at : "";
+      renderList();
+      renderFooter();
+    })
+    .catch(function () {
+      showError();
+    });
+})();
+</script>
+</body>
+</html>
