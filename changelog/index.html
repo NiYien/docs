@@ -97,6 +97,16 @@
     return head.length >= 2 ? head : "";
   }
 
+  // The gyroflow client opens this page with ?lang=<app UI language>
+  // (e.g. zh_CN) so the page matches the app, not the browser locale.
+  function preferredLang() {
+    var fromUrl = "";
+    try {
+      fromUrl = baseLang(new URLSearchParams(location.search).get("lang"));
+    } catch (e) { /* very old browsers: fall through */ }
+    return fromUrl || baseLang(navigator.language);
+  }
+
   // Mirrors the gyroflow client's compare_app_versions ordering:
   // numeric (major, minor, patch); bare base older than any suffixed build
   // of the same base; ni > dev > other schemas; numeric sequence within a
@@ -243,7 +253,7 @@
     listEl.appendChild(p);
   }
 
-  state.lang = baseLang(navigator.language) || "en";
+  state.lang = preferredLang() || "en";
   renderChrome();
 
   fetch("./archive.json", { cache: "no-cache" })
@@ -261,7 +271,7 @@
       });
       state.entries = entries;
       var langs = availableLangs(entries);
-      var preferred = baseLang(navigator.language);
+      var preferred = preferredLang();
       state.lang = langs.indexOf(preferred) !== -1 ? preferred
         : langs.indexOf("en") !== -1 ? "en"
         : langs.indexOf("zh") !== -1 ? "zh"
