@@ -53,13 +53,6 @@
   .entry-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
   .version { font-size: 1.05rem; font-weight: 600; }
   .date { color: var(--muted); font-size: .85rem; }
-  .badge {
-    font-size: .7rem;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 999px;
-    padding: 1px 8px;
-  }
   .notes { white-space: pre-wrap; word-break: break-word; font-size: .95rem; }
   .placeholder { color: var(--muted); text-align: center; padding: 48px 0; }
   a { color: var(--accent); }
@@ -210,12 +203,9 @@
         d.textContent = date;
         head.appendChild(d);
       }
-      if (entry.recommended) {
-        var b = document.createElement("span");
-        b.className = "badge";
-        b.textContent = state.lang === "zh" ? "推荐" : "recommended";
-        head.appendChild(b);
-      }
+      // entry.recommended is intentionally not rendered: policy marks
+      // every published version recommended, so the badge carries no
+      // information on a history page (the data stays in archive.json).
       card.appendChild(head);
       var body = document.createElement("div");
       body.className = "notes";
