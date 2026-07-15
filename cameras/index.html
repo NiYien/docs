@@ -62,8 +62,6 @@
     gap: 4px 16px;
     font-size: .92rem;
   }
-  footer { margin-top: 28px; color: var(--muted); font-size: .82rem; }
-  footer p { margin: 4px 0; }
   .placeholder { color: var(--muted); text-align: center; padding: 48px 0; }
   a { color: var(--accent); }
 </style>
@@ -78,7 +76,6 @@
     <select id="lang-select" aria-label="Language"></select>
   </header>
   <div id="list"><p class="placeholder" id="loading-note">Loading...</p></div>
-  <footer id="page-footer"></footer>
 </div>
 <script>
 (function () {
@@ -89,18 +86,12 @@
     zh: {
       title: "Gyroflow (NiYien) 相机支持列表",
       subtitle: "以下机型的视频内含陀螺仪与镜头数据，可直接用于稳定",
-      error: "支持列表加载失败，请稍后重试",
-      note_action: "GoPro / DJI / Insta360 等运动相机为原生支持，不在此列表内。",
-      note_manual: "列表外的机型也可通过手动加载镜头配置文件使用。",
-      updated: "数据更新于 "
+      error: "支持列表加载失败，请稍后重试"
     },
     en: {
       title: "Gyroflow (NiYien) Supported Cameras",
       subtitle: "Videos from these models carry built-in gyro and lens data, ready for stabilization",
-      error: "Failed to load the camera list, please retry later",
-      note_action: "Action cameras (GoPro / DJI / Insta360, etc.) are natively supported and not listed here.",
-      note_manual: "Models not listed can still be used by manually loading a lens profile.",
-      updated: "Data updated "
+      error: "Failed to load the camera list, please retry later"
     }
   };
   var LANG_NAMES = { zh: "中文", en: "English" };
@@ -122,7 +113,7 @@
     return fromUrl || baseLang(navigator.language);
   }
 
-  var state = { brands: [], generatedAt: "", lang: "" };
+  var state = { brands: [], lang: "" };
 
   function chrome() { return CHROME[state.lang === "zh" ? "zh" : "en"]; }
 
@@ -162,22 +153,6 @@
     });
   }
 
-  function renderFooter() {
-    var c = chrome();
-    var el = document.getElementById("page-footer");
-    el.textContent = "";
-    [c.note_action, c.note_manual].forEach(function (t) {
-      var p = document.createElement("p");
-      p.textContent = t;
-      el.appendChild(p);
-    });
-    if (state.generatedAt) {
-      var d = document.createElement("p");
-      d.textContent = c.updated + state.generatedAt;
-      el.appendChild(d);
-    }
-  }
-
   function renderLangSelect() {
     var sel = document.getElementById("lang-select");
     sel.textContent = "";
@@ -191,7 +166,6 @@
     sel.onchange = function () {
       state.lang = sel.value;
       renderChrome();
-      renderFooter();
     };
   }
 
@@ -218,9 +192,7 @@
       state.brands = brands.filter(function (b) {
         return b && typeof b === "object" && Array.isArray(b.models) && b.models.length;
       });
-      state.generatedAt = doc && typeof doc.generated_at === "string" ? doc.generated_at : "";
       renderList();
-      renderFooter();
     })
     .catch(function () {
       showError();
