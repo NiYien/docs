@@ -22,6 +22,33 @@
     display: flex; align-items: center; justify-content: center;
   }
   .tut-body { padding: 16px 18px; }
+  .notice-warn {
+    background: linear-gradient(145deg, #FFFBEB, #FFF6DE);
+    border: 1px solid rgba(217,119,6,.25); border-radius: var(--radius-card);
+    padding: 26px 30px;
+  }
+  .notice-guide {
+    background: linear-gradient(145deg, #F3F7FF, #EAF1FF);
+    border: 1px solid rgba(22,93,255,.16); border-radius: var(--radius-card);
+    padding: 26px 30px; margin-top: 18px;
+  }
+  .notice-title { display: flex; align-items: center; gap: 9px; font-size: 20px; font-weight: 700; color: var(--ink); }
+  .notice-warn .notice-title { color: #B45309; }
+  .notice-title svg { width: 22px; height: 22px; flex-shrink: 0; }
+  .notice-list { margin: 12px 0 0; padding: 0; list-style: none; font-size: 16px; line-height: 2.1; color: #78350F; }
+  .notice-list li { padding-left: 20px; position: relative; }
+  .notice-list li::before { content: ''; position: absolute; left: 2px; top: .95em; width: 7px; height: 7px; border-radius: 50%; background: var(--wip); }
+  .guide-list { margin: 16px 0 0; padding: 0; list-style: none; }
+  .guide-list li { display: flex; gap: 13px; align-items: flex-start; padding: 9px 0; font-size: 16px; line-height: 1.9; }
+  .guide-badge {
+    flex-shrink: 0; width: 27px; height: 27px; border-radius: 50%; margin-top: 4px;
+    background: var(--brand); color: #fff; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chip {
+    display: inline-block; background: rgba(22,93,255,.1); color: var(--brand-deep);
+    font-weight: 600; font-size: 15px; padding: 1px 10px; border-radius: 7px; margin: 0 2px;
+  }
 </style>
 </head>
 <body data-page="tutorials">
@@ -35,24 +62,24 @@
 </div></div>
 
 <div class="container" style="margin-top:28px">
-  <div style="background:var(--wip-bg);border-left:3px solid var(--wip);border-radius:0 var(--radius-card) var(--radius-card) 0;padding:20px 26px">
-    <h2 class="h3" style="color:var(--wip)">Usage limits</h2>
-    <ul style="margin:10px 0 0 18px;font-size:15.5px;line-height:2">
+  <div class="notice-warn">
+    <h2 class="notice-title"><svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Usage limits</h2>
+    <ul class="notice-list">
       <li>Shutter speed above 1/120 recommended — the bigger the motion, the faster the shutter.</li>
       <li>Focal length under 150mm recommended.</li>
       <li>Zooming within a single clip is not supported.</li>
     </ul>
   </div>
-  <div class="card" style="padding:28px 30px;margin-top:16px">
-    <h2 class="h3">How to follow the tutorials</h2>
-    <ol style="margin:10px 0 0 18px;font-size:15.5px;line-height:2.1">
-      <li><strong>Camera setup</strong> — complete the <a class="link" href="/advanced_usage/en/Camera_Settings.html" target="_blank" rel="noopener">camera settings →</a> before shooting.</li>
-      <li><strong>Regular footage</strong> — watch <strong>1.1 Buttons &amp; Controls</strong> and <strong>2.1 Auto Mode</strong> (or <strong>2.2 Manual Mode</strong>).</li>
-      <li><strong>Plugin users</strong> — using DaVinci Resolve or Premiere Pro? Also watch <strong>3.1 NLE Plugins</strong>.</li>
-      <li><strong>Magic Lantern</strong> — Canon Magic Lantern firmware guide is <a class="link" href="/advanced_usage/en/Magic_Lantern.html" target="_blank" rel="noopener">here →</a></li>
-      <li><strong>FAQ</strong> — run into trouble? Check the <a class="link" href="faq.html">FAQ →</a></li>
-      <li><strong>Supported cameras</strong> — see which models record built-in gyro data: <a class="link" href="cameras.html">camera list →</a></li>
-    </ol>
+  <div class="notice-guide">
+    <h2 class="notice-title"><svg viewBox="0 0 24 24" fill="none" stroke="#165DFF" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v5M12 8h.01"/></svg>How to follow the tutorials</h2>
+    <ul class="guide-list">
+      <li><span class="guide-badge">a</span><div><strong>Camera setup</strong> — complete the <a class="link" href="/advanced_usage/en/Camera_Settings.html" target="_blank" rel="noopener">camera settings →</a> before shooting.</div></li>
+      <li><span class="guide-badge">b</span><div><strong>Regular footage</strong> — watch <span class="chip">1.1 Buttons &amp; Controls</span> and <span class="chip">2.1 Auto Mode</span> (or <span class="chip">2.2 Manual Mode</span>).</div></li>
+      <li><span class="guide-badge">c</span><div><strong>Plugin users</strong> — using DaVinci Resolve or Premiere Pro? Also watch <span class="chip">3.1 NLE Plugins</span>.</div></li>
+      <li><span class="guide-badge">d</span><div><strong>Magic Lantern</strong> — Canon Magic Lantern firmware guide is <a class="link" href="/advanced_usage/en/Magic_Lantern.html" target="_blank" rel="noopener">here →</a></div></li>
+      <li><span class="guide-badge">e</span><div><strong>FAQ</strong> — run into trouble? Check the <a class="link" href="faq.html">FAQ →</a></div></li>
+      <li><span class="guide-badge">f</span><div><strong>Supported cameras</strong> — see which models record built-in gyro data: <a class="link" href="cameras.html">camera list →</a></div></li>
+    </ul>
   </div>
 </div>
 
