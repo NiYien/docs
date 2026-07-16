@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#F2F3F5"/><stop offset="1" stop-color="#E6E8EB"/>
+  </linearGradient></defs>
+  <rect width="640" height="400" rx="16" fill="url(#g)"/>
+  <rect x="256" y="136" width="128" height="128" rx="24" fill="#fff" stroke="#E2E2E6"/>
+  <circle cx="320" cy="200" r="11" fill="#165DFF"/>
+  <text x="320" y="318" text-anchor="middle" font-family="system-ui" font-size="20" fill="#9CA3AF">传感器特写照 待替换</text>
+</svg>
