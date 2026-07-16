@@ -9,8 +9,7 @@
 <style>
   .tut-group { margin-top: 44px; }
   .tut-group-head { display: flex; align-items: baseline; gap: 12px; }
-  .tut-group-head::after { content: ''; flex: 1; height: 1px; margin-left: 8px;
-    background: linear-gradient(90deg, var(--line), transparent); }
+  .tut-no { color: var(--brand); font-size: 15px; font-weight: 700; letter-spacing: 2px; }
   .tut-cards { margin-top: 18px; }
   .tut-card { overflow: hidden; cursor: pointer; }
   .tut-card.wip { cursor: default; border-style: dashed; background: var(--bg-alt); }
@@ -103,7 +102,7 @@ function hasVideo(v) { return v.status === 'published' && (IS_ZH ? v.bvid : v.yo
         '<p class="small" style="margin-top:4px">' + v.desc + '</p></div></div>';
     }).join('');
     return '<section class="tut-group"><div class="tut-group-head">' +
-      '<span class="eyebrow">' + g.no + '</span><h2 class="h3" style="font-size:24px">' + g.name + '</h2>' +
+      '<span class="tut-no">' + g.no + '</span><h2 class="h3" style="font-size:24px">' + g.name + '</h2>' +
       '</div><div class="grid-2 tut-cards">' + cards + '</div></section>';
   }).join('');
   host.innerHTML = html;
