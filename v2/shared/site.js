@@ -86,8 +86,13 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLightbox(); });
   window.NY = {
     openLightbox: function (embedUrl) {
-      lb.querySelector('.lightbox-frame').innerHTML =
-        '<iframe src="' + embedUrl + '" allowfullscreen allow="autoplay; fullscreen"></iframe>';
+      var frame = lb.querySelector('.lightbox-frame');
+      frame.innerHTML = '';
+      var f = document.createElement('iframe');
+      f.src = embedUrl;
+      f.setAttribute('allowfullscreen', '');
+      f.setAttribute('allow', 'autoplay; fullscreen');
+      frame.appendChild(f);
       lb.classList.add('lightbox-open');
     },
     closeLightbox: closeLightbox

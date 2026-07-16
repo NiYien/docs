@@ -5,10 +5,10 @@
 <title>NiYien</title>
 <script>
 (function () {
-  var targets = { zh: "zh/index.html", en: "en/index.html" };
+  var targets = { zh: "/v2/zh/index.html", en: "/v2/en/index.html" };
   var params = new URLSearchParams(window.location.search);
   var forced = (params.get("lang") || "").toLowerCase();
-  if (targets[forced]) { window.location.replace(targets[forced]); return; }
+  if (Object.prototype.hasOwnProperty.call(targets, forced)) { window.location.replace(targets[forced]); return; }
   var languages = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"];
   var chosen = "en";
   for (var i = 0; i < languages.length; i++) {
@@ -21,6 +21,6 @@
 </script>
 </head>
 <body>
-<p><a href="zh/index.html">中文</a> / <a href="en/index.html">English</a></p>
+<p><a href="/v2/zh/index.html">中文</a> / <a href="/v2/en/index.html">English</a></p>
 </body>
 </html>
