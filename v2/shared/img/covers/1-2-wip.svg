@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <rect width="640" height="360" fill="#FAFAFA"/>
+  <rect x="1" y="1" width="638" height="358" rx="12" fill="none" stroke="#D1D5DB" stroke-dasharray="6 6" stroke-width="2"/>
+  <text x="48" y="88" font-family="system-ui" font-size="15" font-weight="700" letter-spacing="6" fill="#165DFF">01</text>
+  <text x="48" y="140" font-family="system-ui" font-size="30" font-weight="700" fill="#111827">设置与维护</text>
+  <text x="48" y="300" font-family="system-ui" font-size="14" fill="#D97706">● 制作中 / In production</text>
+</svg>

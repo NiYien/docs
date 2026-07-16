@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorials — NiYien A1</title>
+<link rel="icon" href="/assets/icon/logo.png">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .tut-group { margin-top: 44px; }
+  .tut-group-head { display: flex; align-items: baseline; gap: 12px; }
+  .tut-cards { margin-top: 18px; }
+  .tut-card { overflow: hidden; cursor: pointer; }
+  .tut-card.wip { cursor: default; border-style: dashed; background: var(--bg-alt); }
+  .tut-cover { position: relative; aspect-ratio: 16/9; background: var(--bg-alt); }
+  .tut-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .tut-play {
+    position: absolute; inset: 0; margin: auto; width: 52px; height: 52px;
+    border-radius: 50%; background: rgba(17,24,39,.72);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tut-body { padding: 16px 18px; }
+</style>
+</head>
+<body data-page="tutorials">
+<div class="nav-mount"></div>
+
+<div class="page-head"><div class="container">
+  <h1 class="h2">Tutorials</h1>
+  <p class="lead">From unboxing to final footage — the whole workflow in five videos.</p>
+</div></div>
+
+<div class="container" id="tutGroups" style="padding-bottom:40px"></div>
+
+<div class="footer-mount"></div>
+<script src="../shared/site.js" defer></script>
+<script>
+var GROUPS = [
+  { no: '01', name: 'Gyro Hardware' },
+  { no: '02', name: 'Software' },
+  { no: '03', name: 'NLE Plugins' }
+];
+var VIDEOS = [
+  { id: '1.1', group: 0, title: 'Buttons & Controls', desc: 'Button functions and basic operation',
+    cover: '../shared/img/covers/1-1-wip.svg', bvid: '', youtubeId: '', status: 'in_production' },
+  { id: '1.2', group: 0, title: 'Setup & Maintenance', desc: 'Time setting · firmware update · formatting · level calibration · mounting direction',
+    cover: '../shared/img/covers/1-2-wip.svg', bvid: '', youtubeId: '', status: 'in_production' },
+  { id: '2.1', group: 1, title: 'Auto Mode', desc: 'Drop in footage, auto-match, one-click stabilize',
+    cover: '../shared/img/covers/2-1-auto.jpg', bvid: 'BV1JFNi6mE3f', youtubeId: '', status: 'published' },
+  { id: '2.2', group: 1, title: 'Manual Mode', desc: 'Manual matching and fine control',
+    cover: '../shared/img/covers/2-2-manual.jpg', bvid: 'BV1mtNB6KEKk', youtubeId: '', status: 'published' },
+  { id: '3.1', group: 2, title: 'NLE Plugins', desc: 'DaVinci Resolve / Premiere Pro workflow',
+    cover: '../shared/img/covers/3-1-wip.svg', bvid: '', youtubeId: '', status: 'in_production' }
+];
+var IS_ZH = document.documentElement.lang.toLowerCase().indexOf('zh') === 0;
+function embedUrl(v) {
+  return IS_ZH
+    ? 'https://player.bilibili.com/player.html?isOutside=true&bvid=' + v.bvid + '&autoplay=1'
+    : 'https://www.youtube-nocookie.com/embed/' + v.youtubeId + '?autoplay=1';
+}
+function hasVideo(v) { return v.status === 'published' && (IS_ZH ? v.bvid : v.youtubeId); }
+(function render() {
+  var host = document.getElementById('tutGroups');
+  var html = GROUPS.map(function (g, gi) {
+    var cards = VIDEOS.filter(function (v) { return v.group === gi; }).map(function (v) {
+      var ok = hasVideo(v);
+      var cover = ok
+        ? '<div class="tut-cover"><img src="' + v.cover + '" alt="' + v.title + '" loading="lazy">' +
+          '<span class="tut-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span></div>'
+        : '<div class="tut-cover"><img src="' + v.cover + '" alt="' + v.title + '" loading="lazy"></div>';
+      var badge = ok ? '' : ' <span class="badge-wip">In production</span>';
+      return '<div class="card tut-card' + (ok ? '' : ' wip') + '"' +
+        (ok ? ' data-embed="' + embedUrl(v) + '"' : '') + '>' + cover +
+        '<div class="tut-body"><h3 class="h3">' + v.id + ' ' + v.title + badge + '</h3>' +
+        '<p class="small" style="margin-top:4px">' + v.desc + '</p></div></div>';
+    }).join('');
+    return '<section class="tut-group"><div class="tut-group-head">' +
+      '<span class="eyebrow">' + g.no + '</span><h2 class="h3" style="font-size:22px">' + g.name + '</h2>' +
+      '</div><div class="grid-2 tut-cards">' + cards + '</div></section>';
+  }).join('');
+  host.innerHTML = html;
+  host.addEventListener('click', function (e) {
+    var card = e.target.closest('.tut-card[data-embed]');
+    if (card) window.NY.openLightbox(card.getAttribute('data-embed'));
+  });
+})();
+</script>
+</body>
+</html>
