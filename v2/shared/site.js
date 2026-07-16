@@ -10,7 +10,7 @@
   var T = {
     zh: {
       nav: [['home','index.html','首页'],['tutorials','tutorials.html','教程'],['download','download.html','下载'],['specs','specs.html','技术参数'],['faq','faq.html','常见问题'],['cameras','cameras.html','相机支持列表']],
-      cta: '立即下载', langLabel: 'EN', langTarget: '../en/',
+      langLabel: 'EN', langTarget: '../en/',
       fCols: [
         ['产品', [['下载','download.html'],['技术参数','specs.html'],['更新日志','/changelog/index.html?lang=zh']]],
         ['支持', [['教程','tutorials.html'],['常见问题','faq.html'],['相机设置','/advanced_usage/zh/Camera_Settings.html']]],
@@ -20,7 +20,7 @@
     },
     en: {
       nav: [['home','index.html','Home'],['tutorials','tutorials.html','Tutorials'],['download','download.html','Download'],['specs','specs.html','Tech Specs'],['faq','faq.html','FAQ'],['cameras','cameras.html','Cameras']],
-      cta: 'Download', langLabel: '中文', langTarget: '../zh/',
+      langLabel: '中文', langTarget: '../zh/',
       fCols: [
         ['Product', [['Download','download.html'],['Tech Specs','specs.html'],['Changelog','/changelog/index.html?lang=en']]],
         ['Support', [['Tutorials','tutorials.html'],['FAQ','faq.html'],['Camera Settings','/advanced_usage/en/Camera_Settings.html']]],
@@ -45,7 +45,6 @@
       '<div class="nav-links" id="nyNavLinks">' + links + '</div>' +
       '<div class="nav-side">' +
       '<a class="lang-switch" href="' + T.langTarget + currentFile() + '">' + GLOBE_SVG + T.langLabel + '</a>' +
-      '<a class="btn-accent nav-cta" href="download.html">' + T.cta + '</a>' +
       '<button class="nav-burger" id="nyBurger" aria-label="menu">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>' +
       '</button></div></div></nav>';

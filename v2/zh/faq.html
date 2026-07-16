@@ -15,6 +15,10 @@
   .faq-a { padding: 0 0 20px; font-size: 15.5px; }
   .faq-a img { max-width: 560px; width: 100%; border: 1px solid var(--line);
                border-radius: 10px; margin: 10px 0; }
+  .contact-list { list-style: none; margin: 14px 0 0; padding: 0; }
+  .contact-list li { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 15.5px; flex-wrap: wrap; }
+  .contact-list svg { width: 19px; height: 19px; color: var(--brand); flex-shrink: 0; }
+  .contact-note { color: var(--muted); font-size: 14px; }
 </style>
 </head>
 <body data-page="faq">
@@ -32,15 +36,23 @@
     <p style="margin-top:14px;color:var(--muted)">常见问题内容正在重新整理，稍后上线。</p>
   </div>
 
-  <div class="card" id="community" style="padding:30px 34px;margin-top:48px">
+  <div class="card" id="community" style="padding:30px 34px;margin-top:48px;text-align:center">
     <h2 class="h3">加入交流群</h2>
     <p class="small" style="margin-top:8px">扫描二维码，邀请您进微信群。</p>
-    <img src="/assets/qrcode/VX.png" alt="微信群二维码" style="max-width:260px;border:1px solid var(--line);border-radius:12px;margin-top:14px">
+    <img src="/assets/qrcode/VX.png" alt="微信群二维码" style="max-width:320px;width:100%;border:1px solid var(--line);border-radius:12px;margin:18px auto 0">
   </div>
 
   <div class="card" id="contact" style="padding:30px 34px;margin-top:20px">
     <h2 class="h3">联系我们</h2>
-    <p class="small" style="margin-top:8px">如需帮助，欢迎先扫描上方二维码加入微信交流群，我们会在群内答疑。</p>
+    <p class="small" style="margin-top:8px">如需帮助，欢迎先扫描上方二维码加入微信交流群，我们会在群内答疑，也可以通过邮件联系我们。</p>
+    <ul class="contact-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><a class="link" href="mailto:sales@niyien.com">sales@niyien.com</a><span class="contact-note">商务与销售</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><a class="link" href="mailto:support@niyien.com">support@niyien.com</a><span class="contact-note">技术支持</span></li>
+    </ul>
+    <h2 class="h3" style="margin-top:26px">购买渠道</h2>
+    <ul class="contact-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l1.2 13H4.8z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg><a class="link" href="https://item.taobao.com/item.htm?abbucket=10&amp;id=788181252554&amp;ns=1&amp;priceTId=214782df17151497293887367ecfa6&amp;spm=a21n57.1.item.4.3e5e523ctzLXn2&amp;skuId=5381793540248" target="_blank" rel="noopener">淘宝官方店</a></li>
+    </ul>
   </div>
 </div>
 </main>

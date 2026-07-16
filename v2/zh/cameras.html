@@ -10,7 +10,7 @@
   .cam-brand { padding: 26px 30px; margin-bottom: 16px; }
   .cam-brand-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
   .cam-brand-name { font-size: 19px; font-weight: 700; color: var(--ink); }
-  .cam-brand-count { color: var(--muted); font-size: 14px; }
+  .cam-brand-note { margin: -4px 0 12px; font-size: 14px; color: var(--muted); }
   .cam-models {
     list-style: none; margin: 0; padding: 0;
     display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -39,6 +39,10 @@
 (function () {
   "use strict";
   var MSG = { error: "支持列表加载失败，请稍后重试" };
+  var BRAND_NOTES = {
+    "Sony": "2020 年以前发布的机型，仅对定焦镜头支持较好。",
+    "Fujifilm": "对定焦镜头支持较好。"
+  };
 
   function renderList(brands) {
     var listEl = document.getElementById("list");
@@ -52,11 +56,13 @@
       name.className = "cam-brand-name";
       name.textContent = brand.name;
       head.appendChild(name);
-      var count = document.createElement("span");
-      count.className = "cam-brand-count";
-      count.textContent = String(brand.models.length);
-      head.appendChild(count);
       card.appendChild(head);
+      if (BRAND_NOTES[brand.name]) {
+        var note = document.createElement("p");
+        note.className = "cam-brand-note";
+        note.textContent = BRAND_NOTES[brand.name];
+        card.appendChild(note);
+      }
       var ul = document.createElement("ul");
       ul.className = "cam-models";
       brand.models.forEach(function (model) {
