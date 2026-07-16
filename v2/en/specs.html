@@ -7,11 +7,13 @@
 <link rel="icon" href="/assets/icon/logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
-  .spec-table { width: 100%; border-collapse: collapse; margin: 14px 0 40px; }
+  .spec-card { padding: 30px 34px; margin-top: 28px; }
+  .spec-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
   .spec-table th { width: 38%; text-align: left; font-weight: 400; color: var(--muted); }
-  .spec-table th, .spec-table td { padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; vertical-align: top; }
-  .spec-section { font-size: 17px; font-weight: 700; color: var(--ink);
-                  padding-bottom: 10px; border-bottom: 2px solid var(--ink); margin-top: 40px; }
+  .spec-table th, .spec-table td { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 16px; vertical-align: top; }
+  .spec-table tr:last-child th, .spec-table tr:last-child td { border-bottom: none; }
+  .spec-section { font-size: 19px; font-weight: 700; color: var(--ink);
+                  padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
 </style>
 </head>
 <body data-page="specs">
@@ -21,8 +23,9 @@
   <div class="eyebrow">TECH SPECS</div>
   <h1 class="h2">Tech Specs</h1>
 </div></div>
-<div class="container" style="max-width:760px;padding-bottom:24px">
+<div class="container" style="max-width:900px;padding-bottom:24px">
 
+  <div class="card spec-card">
   <div class="spec-section">Hardware</div>
   <table class="spec-table">
     <tr><th>Dimensions</th><td>[TBD — pending]</td></tr>
@@ -33,7 +36,9 @@
     <tr><th>Storage</th><td>[TBD — pending]</td></tr>
     <tr><th>Ports &amp; connectivity</th><td>[TBD — pending]</td></tr>
   </table>
+  </div>
 
+  <div class="card spec-card">
   <div class="spec-section">Software Requirements</div>
   <table class="spec-table">
     <tr><th>Windows</th><td>[TBD — pending]</td></tr>
@@ -41,7 +46,9 @@
     <tr><th>Android</th><td>[TBD — pending]</td></tr>
     <tr><th>GPU</th><td>[TBD — pending]</td></tr>
   </table>
+  </div>
 
+  <div class="card spec-card">
   <div class="spec-section">Supported Formats</div>
   <table class="spec-table">
     <tr><th>Video formats</th><td>BRAW · R3D · N-RAW · ProRes · MP4 / MOV · DNG sequence</td></tr>
@@ -49,6 +56,7 @@
     <tr><th>NLE plugins</th><td>DaVinci Resolve (OFX) · Adobe Premiere Pro</td></tr>
     <tr><th>Supported cameras</th><td><a class="link" href="cameras.html">See the full list →</a></td></tr>
   </table>
+  </div>
 
 </div>
 </main>

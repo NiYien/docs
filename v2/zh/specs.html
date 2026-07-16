@@ -7,11 +7,13 @@
 <link rel="icon" href="/assets/icon/logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
-  .spec-table { width: 100%; border-collapse: collapse; margin: 14px 0 40px; }
+  .spec-card { padding: 30px 34px; margin-top: 28px; }
+  .spec-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
   .spec-table th { width: 38%; text-align: left; font-weight: 400; color: var(--muted); }
-  .spec-table th, .spec-table td { padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; vertical-align: top; }
-  .spec-section { font-size: 17px; font-weight: 700; color: var(--ink);
-                  padding-bottom: 10px; border-bottom: 2px solid var(--ink); margin-top: 40px; }
+  .spec-table th, .spec-table td { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 16px; vertical-align: top; }
+  .spec-table tr:last-child th, .spec-table tr:last-child td { border-bottom: none; }
+  .spec-section { font-size: 19px; font-weight: 700; color: var(--ink);
+                  padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
 </style>
 </head>
 <body data-page="specs">
@@ -21,8 +23,9 @@
   <div class="eyebrow">TECH SPECS</div>
   <h1 class="h2">技术参数</h1>
 </div></div>
-<div class="container" style="max-width:760px;padding-bottom:24px">
+<div class="container" style="max-width:900px;padding-bottom:24px">
 
+  <div class="card spec-card">
   <div class="spec-section">硬件规格</div>
   <table class="spec-table">
     <tr><th>尺寸</th><td>〔待提供〕</td></tr>
@@ -33,7 +36,9 @@
     <tr><th>存储</th><td>〔待提供〕</td></tr>
     <tr><th>接口 / 连接</th><td>〔待提供〕</td></tr>
   </table>
+  </div>
 
+  <div class="card spec-card">
   <div class="spec-section">软件系统要求</div>
   <table class="spec-table">
     <tr><th>Windows</th><td>〔版本要求待提供〕</td></tr>
@@ -41,7 +46,9 @@
     <tr><th>Android</th><td>〔版本要求待提供〕</td></tr>
     <tr><th>GPU</th><td>〔建议配置待提供〕</td></tr>
   </table>
+  </div>
 
+  <div class="card spec-card">
   <div class="spec-section">支持格式</div>
   <table class="spec-table">
     <tr><th>视频格式</th><td>BRAW · R3D · N-RAW · ProRes · MP4 / MOV · DNG 序列</td></tr>
@@ -49,6 +56,7 @@
     <tr><th>NLE 插件</th><td>DaVinci Resolve（OFX）· Adobe Premiere Pro</td></tr>
     <tr><th>支持相机</th><td><a class="link" href="cameras.html">查看完整列表 →</a></td></tr>
   </table>
+  </div>
 
 </div>
 </main>
