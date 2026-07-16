@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>支持的相机 — NiYien A1</title>
+<link rel="icon" href="/assets/icon/logo.png">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .cam-brand { padding: 20px 24px; margin-bottom: 16px; }
+  .cam-brand-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .cam-brand-name { font-size: 17px; font-weight: 700; color: var(--ink); }
+  .cam-brand-count { color: var(--muted); font-size: 13px; }
+  .cam-models {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 6px 16px; font-size: 14.5px; color: var(--body);
+  }
+  .cam-placeholder { color: var(--muted); text-align: center; padding: 48px 0; }
+</style>
+</head>
+<body data-page="cameras">
+<div class="nav-mount"></div>
+
+<div class="page-head"><div class="container">
+  <h1 class="h2">支持的相机</h1>
+  <p class="lead">以下机型的视频内含陀螺仪与镜头数据，可直接用于稳定</p>
+</div></div>
+
+<div class="container" style="padding-bottom:24px">
+  <div id="list"><p class="cam-placeholder" id="loading-note">正在加载…</p></div>
+</div>
+
+<div class="footer-mount"></div>
+<script src="../shared/site.js" defer></script>
+<script>
+(function () {
+  "use strict";
+  var MSG = { error: "支持列表加载失败，请稍后重试" };
+
+  function renderList(brands) {
+    var listEl = document.getElementById("list");
+    listEl.textContent = "";
+    brands.forEach(function (brand) {
+      var card = document.createElement("section");
+      card.className = "card cam-brand";
+      var head = document.createElement("div");
+      head.className = "cam-brand-head";
+      var name = document.createElement("span");
+      name.className = "cam-brand-name";
+      name.textContent = brand.name;
+      head.appendChild(name);
+      var count = document.createElement("span");
+      count.className = "cam-brand-count";
+      count.textContent = String(brand.models.length);
+      head.appendChild(count);
+      card.appendChild(head);
+      var ul = document.createElement("ul");
+      ul.className = "cam-models";
+      brand.models.forEach(function (model) {
+        var li = document.createElement("li");
+        li.textContent = model;
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+      listEl.appendChild(card);
+    });
+  }
+
+  function showError() {
+    var listEl = document.getElementById("list");
+    listEl.textContent = "";
+    var p = document.createElement("p");
+    p.className = "cam-placeholder";
+    p.textContent = MSG.error;
+    listEl.appendChild(p);
+  }
+
+  fetch("/cameras/cameras.json", { cache: "no-cache" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (doc) {
+      var brands = doc && Array.isArray(doc.brands) ? doc.brands : [];
+      brands = brands.filter(function (b) {
+        return b && typeof b === "object" && Array.isArray(b.models) && b.models.length;
+      });
+      renderList(brands);
+    })
+    .catch(function () {
+      showError();
+    });
+})();
+</script>
+</body>
+</html>
