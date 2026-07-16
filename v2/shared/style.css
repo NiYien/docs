@@ -1,0 +1,157 @@
+/* ============================================================
+   NiYien.com v2 — global stylesheet
+   Palette: brand blue #165DFF + neutral gray scale only.
+   No external fonts, no CDN. See spec §4.
+   ============================================================ */
+:root {
+  --brand: #165DFF;
+  --ink: #111827;
+  --body: #374151;
+  --muted: #9CA3AF;
+  --line: #ECECEF;
+  --bg: #FFFFFF;
+  --bg-alt: #FAFAFA;
+  --wip: #D97706;
+  --wip-bg: #FFFBEB;
+  --radius-btn: 9px;
+  --radius-card: 12px;
+  --radius-img: 16px;
+  --font: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  color: var(--body);
+  background: var(--bg);
+  font-size: 16px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+img, svg, video { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+
+/* ---------- layout ---------- */
+.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.section { padding: 88px 0; }
+.section-alt { background: var(--bg-alt); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* ---------- typography ---------- */
+h1, h2, h3 { color: var(--ink); font-weight: 700; }
+.h1 { font-size: 48px; letter-spacing: -1px; line-height: 1.15; }
+.h2 { font-size: 32px; letter-spacing: -0.5px; line-height: 1.3; }
+.h3 { font-size: 19px; font-weight: 600; }
+.lead { font-size: 17px; color: var(--muted); }
+.eyebrow {
+  color: var(--brand); font-size: 13px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+}
+.small { font-size: 13px; color: var(--muted); }
+
+/* ---------- buttons ---------- */
+.btn, .btn-outline, .btn-accent {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 15px; font-weight: 600; padding: 12px 28px;
+  border-radius: var(--radius-btn); cursor: pointer; border: 1px solid transparent;
+  transition: opacity .15s ease, border-color .15s ease, transform .15s ease;
+}
+.btn { background: var(--ink); color: #fff; }
+.btn:hover { opacity: .85; }
+.btn-outline { background: #fff; color: var(--ink); border-color: #D1D5DB; font-weight: 500; }
+.btn-outline:hover { border-color: var(--ink); }
+.btn-accent { background: var(--brand); color: #fff; }
+.btn-accent:hover { opacity: .88; }
+.link { color: var(--brand); font-weight: 500; }
+.link:hover { text-decoration: underline; }
+
+/* ---------- cards ---------- */
+.card {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.card:hover { border-color: #C7CBD1; transform: translateY(-2px); }
+.badge-wip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--wip-bg); color: var(--wip);
+  font-size: 12.5px; font-weight: 600; padding: 5px 14px; border-radius: 99px;
+}
+.badge-wip::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--wip); }
+
+/* ---------- page head (inner pages) ---------- */
+.page-head { padding: 72px 0 8px; }
+.page-head .h2 { font-size: 34px; }
+.page-head .lead { margin-top: 10px; }
+
+/* ---------- nav (injected by site.js) ---------- */
+.site-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,.92); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.site-nav .nav-inner {
+  max-width: 1080px; margin: 0 auto; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.nav-logo { display: flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 700; font-size: 17px; }
+.nav-logo img, .nav-logo svg { width: 22px; height: 22px; border-radius: 6px; }
+.nav-links { display: flex; gap: 26px; font-size: 14px; color: var(--body); }
+.nav-links a { padding-bottom: 3px; border-bottom: 2px solid transparent; }
+.nav-links a:hover { color: var(--ink); }
+.nav-links a.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--brand); }
+.nav-side { display: flex; align-items: center; gap: 14px; }
+.lang-switch {
+  font-size: 13px; color: var(--muted); border: 1px solid #E5E7EB;
+  padding: 4px 11px; border-radius: 6px;
+}
+.lang-switch:hover { color: var(--ink); border-color: var(--muted); }
+.nav-cta { font-size: 14px; padding: 9px 20px; }
+.nav-burger { display: none; background: none; border: none; cursor: pointer; padding: 6px; }
+.nav-burger svg { width: 22px; height: 22px; }
+
+/* ---------- footer (injected by site.js) ---------- */
+.site-footer { background: var(--ink); color: #D1D5DB; margin-top: 88px; }
+.site-footer .footer-inner {
+  max-width: 1080px; margin: 0 auto; padding: 56px 24px 40px;
+  display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap;
+}
+.footer-brand .nav-logo { color: #fff; }
+.footer-brand .small { color: #6B7280; margin-top: 12px; }
+.footer-cols { display: flex; gap: 64px; }
+.footer-col h4 { color: #9CA3AF; font-size: 12px; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; }
+.footer-col a { display: block; font-size: 13.5px; line-height: 2.2; }
+.footer-col a:hover { color: #fff; }
+
+/* ---------- lightbox (tutorials) ---------- */
+.lightbox {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(17,24,39,.8); align-items: center; justify-content: center; padding: 24px;
+}
+.lightbox.lightbox-open { display: flex; }
+.lightbox-frame {
+  width: min(960px, 100%); aspect-ratio: 16/9; background: #000;
+  border-radius: var(--radius-card); overflow: hidden;
+}
+.lightbox-frame iframe { width: 100%; height: 100%; border: 0; }
+.lightbox-close {
+  position: absolute; top: 20px; right: 24px; background: none; border: none;
+  color: #fff; font-size: 32px; line-height: 1; cursor: pointer;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 768px) {
+  .h1 { font-size: 34px; }
+  .h2 { font-size: 26px; }
+  .section { padding: 56px 0; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .nav-links.nav-links-open {
+    display: flex; flex-direction: column; gap: 0;
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border-bottom: 1px solid var(--line); padding: 8px 24px 16px;
+  }
+  .nav-links.nav-links-open a { padding: 12px 0; border-bottom: none; font-size: 15px; }
+  .nav-burger { display: block; }
+  .nav-cta { display: none; }
+  .footer-cols { gap: 36px; flex-wrap: wrap; }
+}
