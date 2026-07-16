@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FAQ — NiYien A1</title>
-<meta name="description" content="NiYien A1 FAQ: installation direction, time sync, sync failures, unsupported encoding, and other troubleshooting answers.">
+<meta name="description" content="NiYien A1 frequently asked questions.">
 <link rel="icon" href="/assets/icon/logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
@@ -23,150 +23,11 @@
 <div class="page-head"><div class="container"><h1 class="h2">FAQ</h1></div></div>
 <div class="container" style="max-width:760px;padding-bottom:24px">
 
-  <details class="faq-item"><summary>1. Installation Direction</summary>
-    <div class="faq-a">
-      <p><strong>Note</strong>: The device can be installed horizontally or vertically, with the indicator light facing forward.</p>
-      <p>📺 <a class="link" href="https://youtu.be/dmz-ChUiyMk" target="_blank" rel="noopener">Installation Guide Video</a></p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>2. macOS Processing Issues</summary>
-    <div class="faq-a">
-      <p><strong>Symptom</strong>: NiYien Tool exits quickly or prompts that the correct Gyroflow version is not installed</p>
-      <p><strong>Solution</strong>: Reinstall the Gyroflow Nightly Build version and ensure it is installed in the <strong>Applications</strong> folder</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>3. Time Sync Operation</summary>
-    <div class="faq-a">
-      <p><strong>Note</strong>: Time synchronization can be performed at the beginning of the day or after all shooting is completed</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>4. Manual Time Sync</summary>
-    <div class="faq-a">
-      <p><strong>Steps</strong>:</p>
-      <ol>
-        <li>Drag the video and gyro data into the NiYienTool, and do not click Match</li>
-        <li>Open <strong>Match List</strong> in NiYien Tool</li>
-        <li>Double-click the time sync video</li>
-        <li>Select the corresponding gyroscope file (recorded simultaneously with the sync video)</li>
-        <li>Click <strong>Match</strong></li>
-      </ol>
-      <img src="/FAQ/en/1.png" alt="" loading="lazy">
-      <img src="/FAQ/en/2.png" alt="" loading="lazy">
-      <img src="/FAQ/en/3.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>5. Forgot Time Sync</summary>
-    <div class="faq-a">
-      <p><strong>Option 1</strong>: Use time sync data from the previous/next day</p>
-      <ul>
-        <li>Copy the sync video to the current day's folder</li>
-        <li>Copy the corresponding gyroscope file to the current day's gyroscope folder</li>
-        <li>Perform manual time sync according to step 4</li>
-      </ul>
-      <p><strong>Option 2</strong>: Re-shoot the sync video and perform manual time sync according to step 4</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>6. Some Videos Cannot Be Processed</summary>
-    <div class="faq-a">
-      <p><strong>Cause</strong>: The mobile app was connected to the camera during shooting, which automatically sets the camera time and breaks the time sync</p>
-      <p><strong>Solution</strong>:</p>
-      <ul>
-        <li>Re-shoot the sync video or use the next day's time sync data</li>
-        <li>Import the problematic videos with the new time sync data into NiYien Tool</li>
-        <li>Perform manual time sync according to step 4</li>
-      </ul>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>7. Sync Failed for Some Videos</summary>
-    <div class="faq-a">
-      <p><strong>Cause</strong>: Some videos with long focal lengths or completely static shots may not be correctly synchronized</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>8. Jello Effect in Footage</summary>
-    <div class="faq-a">
-      <p><strong>Cause</strong>: Low shutter speed or excessive motion causes severe motion blur, resulting in jello effect</p>
-      <p><strong>Solution</strong>:</p>
-      <ol>
-        <li>Walk more lightly</li>
-        <li>Increase shutter speed</li>
-      </ol>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>9. Firmware Update Interrupted</summary>
-    <div class="faq-a">
-      <p><strong>Solution</strong>: Eject the memory card → Reconnect to computer → Restart the upgrade</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>10. Nikon R3D / Canon CRM Format Not Recognized</summary>
-    <div class="faq-a">
-      <p><strong>Solution</strong>: Drag both the proxy video and Raw video into NiYien Tool</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>11. First 1 Second of Video is Shaky</summary>
-    <div class="faq-a">
-      <p><strong>Cause</strong>: During time sync, the gyroscope was started about 1.5 seconds later than the camera recording, so each video has less data at the beginning</p>
-      <p><strong>Solution</strong>:</p>
-      <ol>
-        <li>Right-click any row in the Match List</li>
-        <li>Select <strong>Change Sync Offset</strong></li>
-        <li>Enter the offset time in seconds (e.g., enter 1 if the shaky part is 1 second)</li>
-      </ol>
-      <img src="/FAQ/en/4.png" alt="" loading="lazy">
-      <img src="/FAQ/en/5.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>12. Adapter Ring Cannot Recognize Focal Length</summary>
-    <div class="faq-a">
-      <p><strong>Cause</strong>: Some adapter rings cannot correctly recognize or pass lens focal length information to the camera</p>
-      <p><strong>Solution</strong>:</p>
-      <ul>
-        <li>Use semi-auto mode</li>
-        <li>Or right-click in the Match List and select <strong>Change Focal Length</strong></li>
-      </ul>
-      <img src="/FAQ/en/6.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>13. Encoding Not Supported</summary>
-    <div class="faq-a">
-      <p><strong>Cause</strong>:</p>
-      <ul>
-        <li>Windows: Most graphics cards do not support YUV422 10bit video</li>
-        <li>macOS: Does not support H.264 10bit encoding</li>
-      </ul>
-      <p><strong>Solution</strong>:</p>
-      <ol>
-        <li>Try switching to H.265 encoding</li>
-        <li>If it still doesn't work, use the DaVinci Resolve or Premiere Pro plugin workflow (recommended)</li>
-      </ol>
-      <img src="/FAQ/en/7.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>14. Processing speed is too slow or stalled.</summary>
-    <div class="faq-a">
-      <p><strong>Cause</strong>:</p>
-      <ul>
-        <li>NAS or external SSD is used; slow or stalled processing due to insufficient write permissions.</li>
-      </ul>
-      <p><strong>Solution</strong>:</p>
-      <ul>
-        <li>Do not process videos in the root directory of external SSD or NAS. Create a subfolder instead.</li>
-        <li>Check if write permissions are enabled.</li>
-      </ul>
-    </div>
-  </details>
+  <!-- FAQ content placeholder — entries will be rewritten by the site owner -->
+  <div class="card" style="padding:40px 24px;text-align:center;margin-top:24px">
+    <span class="badge-wip">In preparation</span>
+    <p style="margin-top:14px;color:var(--muted)">The FAQ is being rewritten and will be back soon.</p>
+  </div>
 
   <h2 class="h3" id="community" style="margin-top:48px">Join the community</h2>
   <p class="small" style="margin-top:8px">Scan to join our WeChat group.</p>

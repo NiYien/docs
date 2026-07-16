@@ -5,14 +5,15 @@
   var page = document.body.getAttribute('data-page') || '';
 
   var LOGO_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#111827"/><circle cx="12" cy="12" r="4.5" stroke="white" stroke-width="2"/><circle cx="12" cy="12" r="1.2" fill="#165DFF"/></svg>';
+  var GLOBE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>';
 
   var T = {
     zh: {
-      nav: [['home','index.html','首页'],['tutorials','tutorials.html','教程'],['download','download.html','下载'],['specs','specs.html','技术参数'],['faq','faq.html','常见问题'],['cameras','cameras.html','支持的相机']],
+      nav: [['home','index.html','首页'],['tutorials','tutorials.html','教程'],['download','download.html','下载'],['specs','specs.html','技术参数'],['faq','faq.html','常见问题'],['cameras','cameras.html','相机支持列表']],
       cta: '立即下载', langLabel: 'EN', langTarget: '../en/',
       fCols: [
         ['产品', [['下载','download.html'],['技术参数','specs.html'],['更新日志','/changelog/index.html?lang=zh']]],
-        ['支持', [['教程','tutorials.html'],['常见问题','faq.html'],['高级用法','/advanced_usage/zh/Camera_Settings.html']]],
+        ['支持', [['教程','tutorials.html'],['常见问题','faq.html'],['相机设置','/advanced_usage/zh/Camera_Settings.html']]],
         ['社区', [['微信交流群','faq.html#community'],['联系我们','faq.html#contact']]]
       ],
       copyright: '© 2026 NiYien · 每一帧，都稳定'
@@ -22,7 +23,7 @@
       cta: 'Download', langLabel: '中文', langTarget: '../zh/',
       fCols: [
         ['Product', [['Download','download.html'],['Tech Specs','specs.html'],['Changelog','/changelog/index.html?lang=en']]],
-        ['Support', [['Tutorials','tutorials.html'],['FAQ','faq.html'],['Advanced Usage','/advanced_usage/en/Camera_Settings.html']]],
+        ['Support', [['Tutorials','tutorials.html'],['FAQ','faq.html'],['Camera Settings','/advanced_usage/en/Camera_Settings.html']]],
         ['Community', [['WeChat Group','faq.html#community'],['Contact','faq.html#contact']]]
       ],
       copyright: '© 2026 NiYien · Every frame, stable.'
@@ -43,7 +44,7 @@
       '<a class="nav-logo" href="index.html">' + LOGO_SVG + '<span>NiYien</span></a>' +
       '<div class="nav-links" id="nyNavLinks">' + links + '</div>' +
       '<div class="nav-side">' +
-      '<a class="lang-switch" href="' + T.langTarget + currentFile() + '">' + T.langLabel + '</a>' +
+      '<a class="lang-switch" href="' + T.langTarget + currentFile() + '">' + GLOBE_SVG + T.langLabel + '</a>' +
       '<a class="btn-accent nav-cta" href="download.html">' + T.cta + '</a>' +
       '<button class="nav-burger" id="nyBurger" aria-label="menu">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>' +

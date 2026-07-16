@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>常见问题 — NiYien A1</title>
-<meta name="description" content="NiYien A1 常见问题：安装方向、对时、同步失败、编码不支持等使用问题解答。">
+<meta name="description" content="NiYien A1 常见问题解答。">
 <link rel="icon" href="/assets/icon/logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
@@ -23,150 +23,11 @@
 <div class="page-head"><div class="container"><h1 class="h2">常见问题</h1></div></div>
 <div class="container" style="max-width:760px;padding-bottom:24px">
 
-  <details class="faq-item"><summary>1. 安装方向</summary>
-    <div class="faq-a">
-      <p><strong>说明</strong>：设备可水平或垂直安装，指示灯朝前即可，无需对准光轴。</p>
-      <p>📺 <a class="link" href="https://www.bilibili.com/video/BV1rNuxz7E3L/?share_source=copy_web&amp;vd_source=9039f2a1a91b9a9564adfa3b14e29c78" target="_blank" rel="noopener">安装位置说明视频</a></p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>2. macOS 处理异常</summary>
-    <div class="faq-a">
-      <p><strong>现象</strong>：NiYien Tool 处理时快速结束，或提示 Gyroflow 版本不正确</p>
-      <p><strong>解决</strong>：重新安装 Gyroflow Nightly Build 版本，并确保安装至 <strong>Applications</strong> 文件夹</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>3. 对时时机</summary>
-    <div class="faq-a">
-      <p><strong>说明</strong>：对时可在拍摄当天开始时进行，也可在全部拍摄完成后进行</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>4. 手动对时</summary>
-    <div class="faq-a">
-      <p><strong>操作步骤</strong>：</p>
-      <ol>
-        <li>将视频和陀螺仪数据拖到尼影工具中，先<strong>不</strong>点击匹配。</li>
-        <li>打开尼影工具的 <strong>匹配列表</strong></li>
-        <li>双击需要对时的视频</li>
-        <li>选择对应的陀螺仪文件（与对时视频同步录制）</li>
-        <li>点击 <strong>匹配</strong></li>
-      </ol>
-      <img src="/FAQ/zh/1.png" alt="" loading="lazy">
-      <img src="/FAQ/zh/2.png" alt="" loading="lazy">
-      <img src="/FAQ/zh/3.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>5. 忘记对时</summary>
-    <div class="faq-a">
-      <p><strong>方案一</strong>：借用前一天/后一天的对时数据</p>
-      <ul>
-        <li>将对时视频拷贝至当天文件夹</li>
-        <li>将对应的陀螺仪文件拷贝至当天陀螺仪文件夹</li>
-        <li>按第 4 条进行手动对时</li>
-      </ul>
-      <p><strong>方案二</strong>：补拍对时视频后，按第 4 条进行手动对时</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>6. 部分视频无法处理</summary>
-    <div class="faq-a">
-      <p><strong>原因</strong>：拍摄过程中使用手机 App 连接相机，App 会自动校准相机时间，导致对时失效</p>
-      <p><strong>解决</strong>：</p>
-      <ul>
-        <li>补拍对时视频，或使用后一天的对时数据</li>
-        <li>将异常视频与新对时数据一起导入 NiYien Tool</li>
-        <li>按第 4 条进行手动对时</li>
-      </ul>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>7. 少数视频同步失败</summary>
-    <div class="faq-a">
-      <p><strong>原因</strong>：长焦拍摄或完全静止的画面，可能导致同步算法无法识别特征点</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>8. 画面出现果冻效应</summary>
-    <div class="faq-a">
-      <p><strong>原因</strong>：快门速度过低或运动幅度过大，导致动态模糊严重</p>
-      <p><strong>解决</strong>：</p>
-      <ol>
-        <li>行走时放轻脚步</li>
-        <li>提高快门速度</li>
-      </ol>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>9. 固件更新中断</summary>
-    <div class="faq-a">
-      <p><strong>解决</strong>：弹出存储卡 → 重新连接电脑 → 重新开始升级</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>10. Nikon R3D / Canon CRM 格式无法识别</summary>
-    <div class="faq-a">
-      <p><strong>解决</strong>：将代理视频（Proxy）与 Raw 视频一起拖入 NiYien Tool</p>
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>11. 视频前 1 秒晃动</summary>
-    <div class="faq-a">
-      <p><strong>原因</strong>：对时时陀螺仪比相机晚启动约 1.5 秒，导致视频开头数据缺失</p>
-      <p><strong>解决</strong>：</p>
-      <ol>
-        <li>在 Match List 中右键任意一行</li>
-        <li>选择 <strong>修改同步偏移</strong></li>
-        <li>填写偏移秒数（如晃动 1 秒则填 1）</li>
-      </ol>
-      <img src="/FAQ/zh/4.png" alt="" loading="lazy">
-      <img src="/FAQ/zh/5.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>12. 转接环无法识别焦距</summary>
-    <div class="faq-a">
-      <p><strong>原因</strong>：部分转接环无法正确识别或传递镜头焦距信息</p>
-      <p><strong>解决</strong>：</p>
-      <ul>
-        <li>使用半自动模式</li>
-        <li>或在 Match List 中右键选择 <strong>修改焦距</strong></li>
-      </ul>
-      <img src="/FAQ/zh/6.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>13. 编码不支持提示</summary>
-    <div class="faq-a">
-      <p><strong>原因</strong>：</p>
-      <ul>
-        <li>Windows：多数显卡不支持 YUV422 10bit 视频</li>
-        <li>macOS：不支持 H.264 10bit 编码</li>
-      </ul>
-      <p><strong>解决</strong>：</p>
-      <ol>
-        <li>尝试切换为 H.265 编码</li>
-        <li>如仍失败，建议使用达芬奇或 Pr 插件流程（推荐）</li>
-      </ol>
-      <img src="/FAQ/zh/7.png" alt="" loading="lazy">
-    </div>
-  </details>
-
-  <details class="faq-item"><summary>14. 处理速度太慢，或者停滞</summary>
-    <div class="faq-a">
-      <p><strong>原因</strong>：</p>
-      <ul>
-        <li>使用了NAS或者外置SSD，因为缺少写入权限导致处理速度缓慢或停滞</li>
-      </ul>
-      <p><strong>解决</strong>：</p>
-      <ul>
-        <li>请勿在外置SSD或者NAS的根目录处理，可以新建子文件夹，将视频挪过去。</li>
-        <li>检查是否开启了写入权限</li>
-      </ul>
-    </div>
-  </details>
+  <!-- FAQ content placeholder — entries will be rewritten by the site owner -->
+  <div class="card" style="padding:40px 24px;text-align:center;margin-top:24px">
+    <span class="badge-wip">整理中</span>
+    <p style="margin-top:14px;color:var(--muted)">常见问题内容正在重新整理，稍后上线。</p>
+  </div>
 
   <h2 class="h3" id="community" style="margin-top:48px">加入交流群</h2>
   <p class="small" style="margin-top:8px">扫描二维码，邀请您进微信群。</p>

@@ -95,15 +95,17 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
 }
 .nav-logo { display: flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 700; font-size: 17px; }
 .nav-logo img, .nav-logo svg { width: 22px; height: 22px; border-radius: 6px; }
-.nav-links { display: flex; gap: 26px; font-size: 14px; color: var(--body); }
+.nav-links { display: flex; gap: 26px; font-size: 16px; color: var(--body); }
 .nav-links a { padding-bottom: 3px; border-bottom: 2px solid transparent; }
 .nav-links a:hover { color: var(--ink); }
 .nav-links a.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--brand); }
 .nav-side { display: flex; align-items: center; gap: 14px; }
 .lang-switch {
-  font-size: 13px; color: var(--muted); border: 1px solid #E5E7EB;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 14px; color: var(--muted); border: 1px solid #E5E7EB;
   padding: 4px 11px; border-radius: 6px;
 }
+.lang-switch svg { width: 14px; height: 14px; }
 .lang-switch:hover { color: var(--ink); border-color: var(--muted); }
 .nav-cta { font-size: 14px; padding: 9px 20px; }
 .nav-burger { display: none; background: none; border: none; cursor: pointer; padding: 6px; }
