@@ -24,7 +24,7 @@
       fCols: [
         ['Product', [['Download','download.html'],['Tech Specs','specs.html'],['Changelog','/changelog/index.html?lang=en']]],
         ['Support', [['Tutorials','tutorials.html'],['FAQ','faq.html'],['Camera Settings','/advanced_usage/en/Camera_Settings.html']]],
-        ['Community', [['WeChat Group','faq.html#community'],['Contact','faq.html#contact']]]
+        ['Community', [['Discord','https://discord.com/invite/dyna2DtqEA'],['Contact','faq.html#contact']]]
       ],
       copyright: '© 2026 NiYien · Every frame, stable.'
     }
