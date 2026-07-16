@@ -57,7 +57,7 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
   background: linear-gradient(90deg, transparent, var(--brand));
 }
 .eyebrow::after { background: linear-gradient(90deg, var(--brand), transparent); }
-.small { font-size: 13px; color: var(--muted); }
+.small { font-size: 14px; color: var(--muted); }
 
 /* ---------- buttons ---------- */
 .btn, .btn-outline, .btn-accent {
@@ -109,9 +109,13 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
 .badge-wip::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--wip); }
 
 /* ---------- page head (inner pages) ---------- */
-.page-head { padding: 72px 0 8px; }
-.page-head .h2 { font-size: 34px; }
-.page-head .lead { margin-top: 10px; }
+.page-head {
+  padding: 78px 0 20px;
+  background: radial-gradient(680px 280px at 24% -70px, rgba(22,93,255,.08), transparent 70%);
+}
+.page-head .eyebrow { margin-bottom: 16px; }
+.page-head .h2 { font-size: 42px; letter-spacing: -1px; }
+.page-head .lead { margin-top: 12px; }
 
 /* ---------- nav (injected by site.js) ---------- */
 .site-nav {
@@ -186,8 +190,8 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
 .footer-brand .nav-logo { color: #fff; }
 .footer-brand .small { color: #6B7280; margin-top: 12px; }
 .footer-cols { display: flex; gap: 64px; }
-.footer-col h4 { color: #9CA3AF; font-size: 12px; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; }
-.footer-col a { display: block; font-size: 13.5px; line-height: 2.2; }
+.footer-col h4 { color: #9CA3AF; font-size: 12.5px; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; }
+.footer-col a { display: block; font-size: 14.5px; line-height: 2.2; }
 .footer-col a:hover { color: #fff; }
 
 /* ---------- lightbox (tutorials) ---------- */

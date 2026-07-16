@@ -9,6 +9,8 @@
 <style>
   .tut-group { margin-top: 44px; }
   .tut-group-head { display: flex; align-items: baseline; gap: 12px; }
+  .tut-group-head::after { content: ''; flex: 1; height: 1px; margin-left: 8px;
+    background: linear-gradient(90deg, var(--line), transparent); }
   .tut-cards { margin-top: 18px; }
   .tut-card { overflow: hidden; cursor: pointer; }
   .tut-card.wip { cursor: default; border-style: dashed; background: var(--bg-alt); }
@@ -28,6 +30,7 @@
 
 <main>
 <div class="page-head"><div class="container">
+  <div class="eyebrow">TUTORIALS</div>
   <h1 class="h2">教程</h1>
   <p class="lead">从开箱到成片，5 个视频看懂全部流程。</p>
 </div></div>
