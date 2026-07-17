@@ -275,34 +275,47 @@
         <div class="py-4 flex justify-center">
           <div class="flex flex-col md:flex-row gap-8 w-full max-w-5xl items-center">
             <div class="w-full">
-              <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-6">
-                <!-- Mac软件下载 -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Mac download -->
                 <div class="download-card flex flex-col items-center h-full p-4">
                   <div class="flex items-center mb-3 justify-center w-full">
                     <i class="fab fa-apple text-gray-600 text-4xl mr-3"></i>
                     <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">NiYien A1 for Mac</h3>
                   </div>
-                  <p class="version-text text-sm text-gray-500 text-center w-full"></p> <!-- 版本号居中 -->
-                  <p class="download-desc compact-desc text-center w-full">兼容 macOS11 及以上版本</p> <!-- 兼容提示居中 -->
-                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadMac)">
+                  <p id="macVersionText" class="text-sm text-gray-500 text-center w-full"></p>
+                  <p class="download-desc compact-desc text-center w-full">兼容 macOS11 及以上版本</p>
+                  <button class="download-button compact-button w-full md:w-auto" onclick="startAppDownload('macos')">
                     <i class="fa fa-download mr-2"></i> 下载
                   </button>
                 </div>
 
-                <!-- Windows软件下载 -->
+                <!-- Windows download -->
                 <div class="download-card flex flex-col items-center h-full p-4">
                   <div class="flex items-center mb-3 justify-center w-full">
                     <i class="fab fa-windows text-gray-600 text-4xl mr-3"></i>
                     <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">NiYien A1 for Win</h3>
                   </div>
-                  <p class="version-text text-sm text-gray-500 text-center w-full"></p> <!-- 版本号居中 -->
-                  <p class="download-desc compact-desc text-center w-full">兼容 Win10 及以上版本</p> <!-- 兼容提示居中 -->
-                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadWindows)">
+                  <p id="windowsVersionText" class="text-sm text-gray-500 text-center w-full"></p>
+                  <p class="download-desc compact-desc text-center w-full">兼容 Win10 及以上版本</p>
+                  <button class="download-button compact-button w-full md:w-auto" onclick="startAppDownload('windows')">
                     <i class="fa fa-download mr-2"></i> 下载
                   </button>
                 </div>
 
-                <!-- 更新日志卡片 -->
+                <!-- Android download -->
+                <div class="download-card flex flex-col items-center h-full p-4">
+                  <div class="flex items-center mb-3 justify-center w-full">
+                    <i class="fab fa-android text-gray-600 text-4xl mr-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">NiYien A1 for Android</h3>
+                  </div>
+                  <p id="androidVersionText" class="text-sm text-gray-500 text-center w-full"></p>
+                  <p class="download-desc compact-desc text-center w-full">兼容 Android 8 及以上版本</p>
+                  <button class="download-button compact-button w-full md:w-auto" onclick="startAppDownload('android')">
+                    <i class="fa fa-download mr-2"></i> 下载
+                  </button>
+                </div>
+
+                <!-- Changelog card -->
                 <div class="download-card flex flex-col items-center h-full p-4">
                   <div class="flex items-center mb-3 justify-center w-full">
                     <i class="fa fa-history text-gray-600 text-4xl mr-3"></i>
@@ -313,49 +326,9 @@
                     <i class="fa fa-microchip mr-2"></i> 设备固件日志
                     </button>
                     <button class="download-button compact-button w-full" onclick="window.open(config.urls.softwareChangelog, '_blank')">
-                    <i class="fa fa-wrench mr-2"></i> 尼影工具日志
+                    <i class="fa fa-wrench mr-2"></i> 软件更新日志
                     </button>
                   </div>
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-6">
-                <!-- Mac Beta软件下载 -->
-                <div class="download-card flex flex-col items-center h-full p-4">
-                  <div class="flex items-center mb-3 justify-center w-full">
-                    <i class="fab fa-apple text-gray-600 text-4xl mr-3"></i>
-                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">Beta测试版 for Mac</h3>
-                  </div>
-                  <p id="betaMacVersionText" class="text-sm text-gray-500 text-center w-full"></p>
-                  <p class="download-desc compact-desc text-center w-full">正在测试中</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="startBetaDownload('macos')">
-                    <i class="fa fa-flask mr-2"></i> Beta下载
-                  </button>
-                </div>
-
-                <!-- Windows Beta软件下载 -->
-                <div class="download-card flex flex-col items-center h-full p-4">
-                  <div class="flex items-center mb-3 justify-center w-full">
-                    <i class="fab fa-windows text-gray-600 text-4xl mr-3"></i>
-                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">Beta测试版 for Win</h3>
-                  </div>
-                  <p id="betaWindowsVersionText" class="text-sm text-gray-500 text-center w-full"></p>
-                  <p class="download-desc compact-desc text-center w-full">正在测试中</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="startBetaDownload('windows')">
-                    <i class="fa fa-flask mr-2"></i> Beta下载
-                  </button>
-                </div>
-
-                <!-- Android beta software download -->
-                <div class="download-card flex flex-col items-center h-full p-4">
-                  <div class="flex items-center mb-3 justify-center w-full">
-                    <i class="fab fa-android text-gray-600 text-4xl mr-3"></i>
-                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">Beta测试版 for Android</h3>
-                  </div>
-                  <p id="betaAndroidVersionText" class="text-sm text-gray-500 text-center w-full"></p>
-                  <p class="download-desc compact-desc text-center w-full">正在测试中</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="startBetaDownload('android')">
-                    <i class="fa fa-flask mr-2"></i> Beta下载
-                  </button>
                 </div>
               </div>
             </div>
@@ -391,26 +364,6 @@
 
 <section class="bg-white border-b border-gray-100 mt-4 compact-section">
     <div class="container mx-auto px-4 py-6">
-      <div class="bg-amber-50 rounded-xl p-6 border border-amber-200 mb-6">
-        <h3 class="text-lg font-semibold text-amber-800 mb-4 flex items-center">
-          <i class="fa fa-exclamation-triangle text-amber-600 mr-2"></i>
-          使用限制说明
-        </h3>
-        <ul class="space-y-2 text-amber-900">
-          <li class="flex items-start">
-            <span class="inline-block w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-            <span>推荐快门高于1/120。运动幅度越大快门速度越高。</span>
-          </li>
-          <li class="flex items-start">
-            <span class="inline-block w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-            <span>推荐焦段小于150mm。</span>
-          </li>
-          <li class="flex items-start">
-            <span class="inline-block w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-            <span>同一视频不支持变焦。</span>
-          </li>
-        </ul>
-      </div>
       <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
         <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center">
           <i class="fa fa-info-circle text-blue-600 mr-2"></i>
@@ -432,21 +385,12 @@
               <span><strong>常规视频</strong></span>
             </div>
             <div class="pl-9">
-              请看<a href="#video-1.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">1.2 - 软件下载与安装</a>、<a href="#video-2.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">2.1 - 陀螺仪按键操作</a>、<a href="#video-3.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">3.1 - 自动模式</a>或者<a href="#video-3.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">3.2 - 半自动与手动模式</a>。如果在达芬奇或者Pr中使用插件，那需要再看<a href="#video-4.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">4.1 - 视频编辑器插件</a>。
+              请看<a href="#video-1.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">1.1 - 按键操作</a>、<a href="#video-1.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">1.2 - 设置与维护</a>、<a href="#video-2.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">2.1 - 自动模式</a>或者<a href="#video-2.2" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">2.2 - 手动模式</a>。如果在达芬奇或者Pr中使用插件，那需要再看<a href="#video-3.1" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">3.1 - 视频编辑器插件</a>。
             </div>
           </li>
           <li>
             <div class="flex mb-1">
               <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">c</span>
-              <span><strong>RAW视频</strong></span>
-            </div>
-            <div class="pl-9">
-              佳能CRAW、尼康NRAW、RED、BRAW、DNG格式需要再观看<a href="#video-4.5" class="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-semibold mx-0.5 my-0.5 hover:bg-yellow-300 transition-colors cursor-pointer">4.5 - RAW,Log,10-bit,12-bit视频</a>。
-            </div>
-          </li>
-          <li>
-            <div class="flex mb-1">
-              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">d</span>
               <span><strong>魔灯</strong></span>
             </div>
             <div class="pl-9">
@@ -455,16 +399,7 @@
           </li>
           <li>
             <div class="flex mb-1">
-              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">e</span>
-              <span><strong>常见问题</strong></span>
-            </div>
-            <div class="pl-9">
-              常见问题解答，请<a href="./FAQ/FAQ_zh.html" target="_blank" class="text-primary hover:underline">点击这里</a>。
-            </div>
-          </li>
-          <li>
-            <div class="flex mb-1">
-              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">f</span>
+              <span class="inline-block w-6 h-6 bg-blue-200 text-blue-800 rounded-full text-center font-bold mr-3 flex-shrink-0">d</span>
               <span><strong>相机支持列表</strong></span>
             </div>
             <div class="pl-9">
@@ -485,10 +420,8 @@
       urls: {
         textTutorial: "NiYien_txt_manual_ZH.html",
         firmwareChangelog: "https://www.niyien.com/update_A1_zh.html",
-        softwareChangelog: "https://www.niyien.com/update_Niyien_tool_zh.html",
-        downloadMac: "https://vip.123pan.cn/1846941948/NiYien%E8%BD%AF%E4%BB%B6/niyien_for_macos.zip",
-        downloadWindows: "https://vip.123pan.cn/1846941948/NiYien%E8%BD%AF%E4%BB%B6/niyien_for_windows.zip",
-        betaManifest: "/api/manifest",
+        softwareChangelog: "https://www.niyien.com/changelog/index.html?lang=zh",
+        manifest: "/api/manifest",
         englishManual: "NiYien_manual_EN.html" // 添加英文手册URL
       },
       images: {
@@ -500,122 +433,52 @@
     const videoData = [
       {
         id: "1.1",
-        title: "简介",
-        description: "了解产品的功能和特色",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860797070572&bvid=BV1Aruxz9Eqi&cid=31070749208&p=1&autoplay=0 scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" ></iframe>',
-        isRequired: false,
-        category: "software",
-        showConditions: ""
-      },
-      {
-        id: "1.2",
-        title: "软件下载与安装",
-        description: "详细介绍软件下载和安装过程",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860813844613&bvid=BV1w2uxznEWj&cid=31070818075&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: true,
-        category: "software",
-        showConditions: ""
-      },
-      {
-        id: "2.1",
-        title: "陀螺仪按键操作",
+        title: "按键操作",
         description: "陀螺仪的按键功能和操作方法",
         date: "2025-07-15",
         embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860914378117&bvid=BV16Kuxz2EXG&cid=31071732436&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
         isRequired: true,
-        category: "gyroscope",
+        category: "hardware",
+        showConditions: ""
+      },
+      {
+        id: "1.2",
+        title: "安装方向、固件升级、时间设置、格式化存储卡、水平校准、语言设置",
+        description: "了解陀螺仪的各项设置与维护操作",
+        date: "2026-07-17",
+        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&bvid=BV1zLNd6MEKZ&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
+        isRequired: false,
+        category: "hardware",
+        showConditions: ""
+      },
+      {
+        id: "2.1",
+        title: "自动模式",
+        description: "适用于索尼（2020年以后机型）、佳能、尼康、松下、适马、理光、Z CAM 相机，并使用自动对焦镜头",
+        date: "2026-07-17",
+        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&bvid=BV1JFNi6mE3f&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
+        isRequired: true,
+        category: "software",
         showConditions: ""
       },
       {
         id: "2.2",
-        title: "固件升级、时间设置、格式化存储卡、水平校准",
-        description: "了解陀螺仪的各项设置",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860914380241&bvid=BV16Kuxz2E54&cid=31071734750&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: false,
-        category: "gyroscope",
+        title: "手动模式",
+        description: "适用于索尼（2020年以前机型）、富士相机，或使用手动对焦镜头、变形镜头的相机",
+        date: "2026-07-17",
+        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&bvid=BV1mtNB6KEKk&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
+        isRequired: true,
+        category: "software",
         showConditions: ""
       },
       {
         id: "3.1",
-        title: "自动模式",
-        description: "掌握自动模式的使用方法",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860931219509&bvid=BV1wNuxzEEnh&cid=31071798626&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: true,
-        category: "tools",
-        showConditions: ""
-      },
-      {
-        id: "3.2",
-        title: "半自动与手动模式",
-        description: "掌握半自动和手动模式的使用方法",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860931222737&bvid=BV1cNuxzEEHq&cid=31071863199&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: true,
-        category: "tools",
-        showConditions: ""
-      },
-      {
-        id: "3.3",
-        title: "输出设置(安装方向、锁定地平线、同步速度、高级选项)",
-        description: "详细了解各项输出设置的功能和应用场景",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860931156190&bvid=BV1rNuxz7E3L&cid=31071866745&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: false,
-        category: "tools",
-        showConditions: ""
-      },
-      {
-        id: "4.1",
         title: "视频编辑器插件",
         description: "学习如何在主流视频编辑器中使用插件",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860947933789&bvid=BV1zuuxzyEVn&cid=31071930528&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
+        date: "2026-07-17",
+        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&bvid=BV1HgNd6rEV4&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
         isRequired: false,
-        category: "advanced",
-        showConditions: "editor"
-      },
-      {
-        id: "4.2",
-        title: "竖拍",
-        description: "了解竖拍视频的增稳",
-        date: "2025-09-24",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=115263986993823&bvid=BV1dhn4zBEAp&cid=32622315213&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: false,
-        category: "advanced",
-        showConditions: ""
-      },
-      {
-        id: "4.3",
-        title: "变宽",
-        description: "了解电影宽荧幕镜头增稳",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860948062369&bvid=BV1Juuxz1EBb&cid=31071995688&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: false,
-        category: "advanced",
-        showConditions: ""
-      },
-      {
-        id: "4.4",
-        title: "升格",
-        description: "了解升格拍摄的增稳",
-        date: "2025-07-15",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=114860947933910&bvid=BV1zuuxzyE3L&cid=31072059544&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: false,
-        category: "advanced",
-        showConditions: ""
-      },
-      {
-        id: "4.5",
-        title: "RAW,Log,10-bit,12-bit视频",
-        description: "了解特殊视频格式的增稳",
-        date: "2025-09-25",
-        embedCode: '<iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=115262091166938&bvid=BV1KMn4zsEoX&cid=32612747010&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
-        isRequired: false,
-        category: "advanced",
+        category: "plugin",
         showConditions: ""
       }
     ];
@@ -714,22 +577,7 @@
         };
       }
 
-      // 动态加载版本号
-      fetch('Update/update.json')
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        })
-        .then(data => {
-          const version = data.NiYien_tool.version;
-          // 更新版本号显示
-          document.querySelectorAll('.version-text').forEach(el => {
-            el.textContent = `版本: ${version}`;
-          });
-        })
-        .catch(error => console.error('Error loading version:', error));
-
-      loadBetaVersions();
+      loadAppVersions();
     });
 
     // 章节折叠/展开功能
@@ -782,21 +630,17 @@
         let sectionTitle = '';
 
         switch (category) {
+          case 'hardware':
+            iconClass = 'fa-compass';
+            sectionTitle = '1. 陀螺仪硬件';
+            break;
           case 'software':
             iconClass = 'fa-laptop';
-            sectionTitle = '1. 软件';
+            sectionTitle = '2. 软件使用';
             break;
-          case 'gyroscope':
-            iconClass = 'fa-compass';
-            sectionTitle = '2. 陀螺仪操作';
-            break;
-          case 'tools':
-            iconClass = 'fa-wrench';
-            sectionTitle = '3. 尼影工具操作';
-            break;
-          case 'advanced':
-            iconClass = 'fa-rocket';
-            sectionTitle = '4. 进阶应用';
+          case 'plugin':
+            iconClass = 'fa-plug';
+            sectionTitle = '3. 插件工作流';
             break;
         }
 
@@ -826,17 +670,12 @@
               card.setAttribute('data-show', video.showConditions);
             }
 
-            // 检查是否需要显示"二选一"标记
+            // Badge: 2.1/2.2 are either-or alternatives; other required videos are must-watch
             let badgeHtml = '';
-            if (video.isRequired) {
-              const bothVisible = videos.some(v => v.id === "3.1" && v.isRequired) &&
-                videos.some(v => v.id === "3.2" && v.isRequired);
-
-              if (bothVisible && (video.id === "3.1" || video.id === "3.2")) {
-                badgeHtml = '<span class="required-badge">二选一</span>';
-              } else {
-                badgeHtml = '<span class="required-badge">必看</span>';
-              }
+            if (video.id === "2.1" || video.id === "2.2") {
+              badgeHtml = '<span class="required-badge">二选一</span>';
+            } else if (video.isRequired) {
+              badgeHtml = '<span class="required-badge">必看</span>';
             }
 
             card.innerHTML = `
@@ -957,48 +796,48 @@
       return app.url || packageInfo.installer_url || packageInfo.package_url || '';
     }
 
-    function fetchBetaManifest(platform) {
-      const url = `${config.urls.betaManifest}?platform=${encodeURIComponent(platform)}`;
+    function fetchAppManifest(platform) {
+      const url = `${config.urls.manifest}?platform=${encodeURIComponent(platform)}`;
       return fetch(url).then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
         return response.json();
       });
     }
 
-    function startBetaDownload(platform) {
-      fetchBetaManifest(platform)
+    function startAppDownload(platform) {
+      fetchAppManifest(platform)
         .then(data => {
           const url = getManifestAppUrl(data, platform);
-          if (!url) throw new Error('Missing beta download URL');
+          if (!url) throw new Error('Missing download URL');
           showDownloadModal(url);
         })
         .catch(error => {
-          console.error('Error loading beta download:', error);
-          alert('暂时无法获取 Beta 下载链接，请稍后重试。');
+          console.error('Error loading download:', error);
+          alert('暂时无法获取下载链接，请稍后重试。');
         });
     }
 
-    function loadBetaVersion(platform, elementId) {
+    function loadAppVersion(platform, elementId) {
       const target = document.getElementById(elementId);
-      fetchBetaManifest(platform)
+      fetchAppManifest(platform)
         .then(data => {
           const version = data?.app?.version || '';
           if (target) {
-            target.textContent = version ? `Beta版本: ${version}` : '';
+            target.textContent = version ? `版本: ${version}` : '';
           }
         })
         .catch(error => {
-          console.error('Error loading beta version:', error);
+          console.error('Error loading version:', error);
           if (target) {
             target.textContent = '';
           }
         });
     }
 
-    function loadBetaVersions() {
-      loadBetaVersion('macos', 'betaMacVersionText');
-      loadBetaVersion('windows', 'betaWindowsVersionText');
-      loadBetaVersion('android', 'betaAndroidVersionText');
+    function loadAppVersions() {
+      loadAppVersion('macos', 'macVersionText');
+      loadAppVersion('windows', 'windowsVersionText');
+      loadAppVersion('android', 'androidVersionText');
     }
 
     // 增强renderVideos函数，添加ID属性支持锚点跳转
