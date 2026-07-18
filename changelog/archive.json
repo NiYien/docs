@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.90",
+      "tag": "run-29643783637",
+      "published_at": "2026-07-18T14:08:32Z",
+      "changelog": "1. Fix left/right mounting direction error\n2. Fix some minor bugs",
+      "changelogs": {
+        "zh": "1. 修复 左右 安装方向错误\n2. 修复一些小bug",
+        "en": "1. Fix left/right mounting direction error\n2. Fix some minor bugs",
+        "ja": "1. 左右の取り付け方向の誤りを修正\n2. いくつかの小さなバグを修正",
+        "ko": "1. 좌우 설치 방향 오류 수정\n2. 몇 가지 사소한 버그 수정",
+        "de": "1. Fehler bei der linken/rechten Montagerichtung behoben\n2. Einige kleinere Fehler behoben",
+        "fr": "1. Correction de l'erreur de direction de montage gauche/droite\n2. Correction de quelques bugs mineurs",
+        "es": "1. Corregido error de dirección de montaje izquierda/derecha\n2. Corregidos algunos errores menores",
+        "ru": "1. Исправлена ошибка направления установки влево/вправо\n2. Исправлены некоторые мелкие ошибки",
+        "pt": "1. Corrigido erro de direção de montagem esquerda/direita\n2. Corrigidos alguns bugs menores"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.87",
       "tag": "run-29396559038",
       "published_at": "2026-07-15T08:33:11Z",
