@@ -55,10 +55,52 @@
 </div>
 </main>
 
+<div id="downloadModal" class="download-modal" role="dialog" aria-modal="true" aria-labelledby="downloadModalTitle" hidden>
+  <div class="download-modal-content">
+    <h2 class="download-modal-title" id="downloadModalTitle">Confirm Download</h2>
+    <p class="download-modal-copy">Download NiYien A1 software?</p>
+    <div class="download-modal-buttons">
+      <button class="btn-outline" type="button" id="downloadCancelBtn">Cancel</button>
+      <button class="btn" type="button" id="downloadConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="footer-mount"></div>
 <script src="../shared/site.js" defer></script>
 <script>
 var MSG = { loading: 'Fetching version…', fail: 'Version unavailable', ver: 'Version ' , failAlert: 'Download link unavailable, please retry later.' };
+var downloadModal = document.getElementById('downloadModal');
+var downloadCancelBtn = document.getElementById('downloadCancelBtn');
+var downloadConfirmBtn = document.getElementById('downloadConfirmBtn');
+var pendingDownloadUrl = '';
+var downloadTrigger = null;
+function closeDownloadModal() {
+  downloadModal.hidden = true;
+  pendingDownloadUrl = '';
+  document.body.style.overflow = '';
+  if (downloadTrigger) downloadTrigger.focus();
+  downloadTrigger = null;
+}
+function showDownloadModal(url) {
+  pendingDownloadUrl = url;
+  downloadTrigger = document.activeElement;
+  downloadModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  downloadCancelBtn.focus();
+}
+downloadCancelBtn.addEventListener('click', closeDownloadModal);
+downloadConfirmBtn.addEventListener('click', function () {
+  var url = pendingDownloadUrl;
+  closeDownloadModal();
+  if (url) window.location.href = url;
+});
+downloadModal.addEventListener('click', function (event) {
+  if (event.target === downloadModal) closeDownloadModal();
+});
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape' && !downloadModal.hidden) closeDownloadModal();
+});
 /* Mirrors legacy getManifestAppUrl (NiYien_manual_ZH.html:951) — do not reorder fallbacks. */
 function manifestAppUrl(data, platform) {
   var app = (data && data.app) || {};
@@ -82,7 +124,7 @@ function fetchManifest(platform) {
     fetchManifest(p).then(function (data) {
       var url = manifestAppUrl(data, p);
       if (!url) throw new Error('no url');
-      window.location.href = url;
+      showDownloadModal(url);
     }).catch(function () { alert(MSG.failAlert); });
   });
 });

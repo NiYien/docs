@@ -83,6 +83,26 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
 .link { color: var(--brand); font-weight: 500; }
 .link:hover { text-decoration: underline; }
 
+/* ---------- download confirmation ---------- */
+.download-modal[hidden] { display: none; }
+.download-modal {
+  position: fixed; inset: 0; z-index: 220;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(17,24,39,.62);
+}
+.download-modal-content {
+  width: min(420px, 100%); padding: 28px; background: #fff;
+  border: 1px solid var(--line); border-radius: var(--radius-card);
+  box-shadow: 0 24px 64px rgba(17,24,39,.24);
+}
+.download-modal-title { margin: 0; color: var(--ink); font-size: 21px; font-weight: 700; }
+.download-modal-copy { margin-top: 10px; color: var(--body); font-size: 16px; line-height: 1.7; }
+.download-modal-buttons {
+  display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;
+}
+.download-modal-buttons .btn,
+.download-modal-buttons .btn-outline { min-width: 92px; padding: 10px 20px; }
+
 /* ---------- cards ---------- */
 .card {
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card);
