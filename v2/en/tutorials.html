@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tutorials — NiYien A1</title>
-<meta name="description" content="NiYien A1 tutorials: gyro hardware, software workflow, and NLE plugins — five videos covering the whole process from unboxing to final footage.">
+<meta name="description" content="NiYien A1 tutorials: gyro hardware, software workflow, and NLE plugins — six videos covering the whole process from unboxing to final footage.">
 <link rel="icon" href="/assets/icon/logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
@@ -76,7 +76,7 @@
     <ul class="guide-list">
       <li><span class="guide-badge">a</span><div><strong>Camera setup</strong> — complete the <a class="link" href="/advanced_usage/en/Camera_Settings.html" target="_blank" rel="noopener">camera settings</a> before shooting.</div></li>
       <li><span class="guide-badge">b</span><div><strong>Regular footage</strong> — watch <a class="chip" href="#v-1-1">1.1 Buttons &amp; Controls</a>, then pick one for your camera: <a class="chip" href="#v-2-1">2.1 Auto Mode</a> or <a class="chip" href="#v-2-2">2.2 Manual Mode</a>.</div></li>
-      <li><span class="guide-badge">c</span><div><strong>Plugin users</strong> — using DaVinci Resolve or Premiere Pro? Also watch <a class="chip" href="#v-3-1">3.1 NLE Plugins</a>.</div></li>
+      <li><span class="guide-badge">c</span><div><strong>Plugin users</strong> — watch <a class="chip" href="#v-3-1">3.1 DaVinci Resolve Plugin</a> or <a class="chip" href="#v-3-2">3.2 Adobe Premiere Pro Plugin</a> for your editor.</div></li>
       <li><span class="guide-badge">d</span><div><strong>Magic Lantern</strong> — Canon Magic Lantern firmware guide is <a class="link" href="/advanced_usage/en/Magic_Lantern.html" target="_blank" rel="noopener">here</a></div></li>
       <li><span class="guide-badge">e</span><div><strong>FAQ</strong> — run into trouble? Check the <a class="link" href="faq.html">FAQ</a></div></li>
       <li><span class="guide-badge">f</span><div><strong>Supported cameras</strong> — see which models record built-in gyro data: <a class="link" href="cameras.html">camera list</a></div></li>
@@ -97,15 +97,17 @@ var GROUPS = [
 ];
 var VIDEOS = [
   { id: '1.1', group: 0, title: 'Buttons & Controls', desc: 'Button functions and basic operation',
-    cover: '../shared/img/covers/1-1-wip-en.svg', bvid: '', youtubeId: '', status: 'in_production' },
+    cover: '../shared/img/covers/1-1-keys-en.jpg', bvid: '', youtubeId: 'R1Frha_7ZQk', status: 'published' },
   { id: '1.2', group: 0, title: 'Setup & Maintenance', desc: 'Time setting · firmware update · formatting · level calibration · mounting direction',
-    cover: '../shared/img/covers/1-2-wip-en.svg', bvid: '', youtubeId: '', status: 'in_production' },
+    cover: '../shared/img/covers/1-2-settings-en.jpg', bvid: '', youtubeId: '69_OcpPVk70', status: 'published' },
   { id: '2.1', group: 1, title: 'Auto Mode', desc: 'For Sony (2020 and later), Canon, Nikon, Panasonic, Sigma, Ricoh, and Z CAM cameras with autofocus lenses',
-    cover: '../shared/img/covers/2-1-auto.jpg', bvid: 'BV1JFNi6mE3f', youtubeId: '', status: 'published' },
+    cover: '../shared/img/covers/2-1-auto-en.jpg', bvid: '', youtubeId: 'ROKDDfI0y2Y', status: 'published' },
   { id: '2.2', group: 1, title: 'Manual Mode', desc: 'For Sony (before 2020) and Fujifilm cameras, or any camera with a manual-focus or anamorphic lens',
-    cover: '../shared/img/covers/2-2-manual.jpg', bvid: 'BV1mtNB6KEKk', youtubeId: '', status: 'published' },
-  { id: '3.1', group: 2, title: 'NLE Plugins', desc: 'DaVinci Resolve / Premiere Pro workflow',
-    cover: '../shared/img/covers/3-1-wip-en.svg', bvid: '', youtubeId: '', status: 'in_production' }
+    cover: '../shared/img/covers/2-2-manual-en.jpg', bvid: '', youtubeId: 'hWWxyV6HuBE', status: 'published' },
+  { id: '3.1', group: 2, title: 'DaVinci Resolve Plugin', desc: 'DaVinci Resolve plugin workflow',
+    cover: '../shared/img/covers/3-1-davinci-en.jpg', bvid: '', youtubeId: 'yjEwNyE2hiM', status: 'published' },
+  { id: '3.2', group: 2, title: 'Adobe Premiere Pro Plugin', desc: 'Adobe Premiere Pro plugin workflow',
+    cover: '../shared/img/covers/3-2-adobe-en.jpg', bvid: '', youtubeId: 'G4TvaorhCOg', status: 'published' }
 ];
 var IS_ZH = document.documentElement.lang.toLowerCase().indexOf('zh') === 0;
 function embedUrl(v) {
