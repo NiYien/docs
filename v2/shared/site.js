@@ -4,7 +4,7 @@
   var lang = (document.documentElement.lang || 'zh-CN').toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en';
   var page = document.body.getAttribute('data-page') || '';
 
-  var LOGO_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#111827"/><circle cx="12" cy="12" r="4.5" stroke="white" stroke-width="2"/><circle cx="12" cy="12" r="1.2" fill="#165DFF"/></svg>';
+  var LOGO_HTML = '<img src="../shared/img/niyien-logo.png" alt="" aria-hidden="true">';
   var GLOBE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>';
 
   var T = {
@@ -41,7 +41,7 @@
       return '<a href="' + n[1] + '"' + active + '>' + n[2] + '</a>';
     }).join('');
     return '<nav class="site-nav"><div class="nav-inner">' +
-      '<a class="nav-logo" href="index.html">' + LOGO_SVG + '<span>NiYien</span></a>' +
+      '<a class="nav-logo" href="index.html">' + LOGO_HTML + '<span>NiYien</span></a>' +
       '<div class="nav-links" id="nyNavLinks">' + links + '</div>' +
       '<div class="nav-side">' +
       '<a class="lang-switch" href="' + T.langTarget + currentFile() + '">' + GLOBE_SVG + T.langLabel + '</a>' +
@@ -56,7 +56,7 @@
       return '<div class="footer-col"><h4>' + c[0] + '</h4>' + links + '</div>';
     }).join('');
     return '<footer class="site-footer"><div class="footer-inner">' +
-      '<div class="footer-brand"><span class="nav-logo">' + LOGO_SVG.replace('#111827', '#FFFFFF').replace('white', '#111827') + '<span style="color:#fff">NiYien</span></span>' +
+      '<div class="footer-brand"><span class="nav-logo">' + LOGO_HTML + '<span style="color:#fff">NiYien</span></span>' +
       '<div class="small">' + T.copyright + '</div></div>' +
       '<div class="footer-cols">' + cols + '</div></div></footer>';
   }

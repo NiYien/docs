@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NiYien A1 — Every Frame, Stable</title>
-<meta name="description" content="Gyro-based stabilization for cameras: rebuild every motion from real sensor data. Drop in footage, stabilize in one click, zero quality loss.">
-<link rel="icon" href="/assets/icon/logo.png">
+<meta name="description" content="Gyro-based stabilization for cameras: rebuild every motion from real sensor data. Drop in footage and stabilize in one click.">
+<link rel="icon" href="../shared/img/niyien-logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 </head>
 <body data-page="home">
@@ -16,7 +16,7 @@
   <div class="container">
     <div class="eyebrow">NIYIEN A1</div>
     <h1 class="h1" style="margin-top:18px">Every frame, stable.</h1>
-    <p class="lead" style="margin-top:18px">Gyro-based stabilization that rebuilds camera motion from real sensor data.<br>Drop in footage. One click. Zero quality loss.</p>
+    <p class="lead" style="margin-top:18px">Gyro-based stabilization that rebuilds camera motion from real sensor data.<br>Drop in footage. One click.</p>
     <p style="margin-top:30px;display:flex;gap:12px;justify-content:center">
       <a class="btn" href="download.html">Download</a>
       <a class="btn-outline" href="tutorials.html">Watch tutorials</a>
@@ -34,13 +34,13 @@
       <circle cx="864" cy="45" r="4.5" fill="#165DFF"/>
       <circle cx="864" cy="45" r="10" fill="#165DFF" opacity=".14"/>
     </svg>
-    <img src="../shared/img/hero-product-placeholder.svg" alt="NiYien A1 product photo"
+    <img src="../shared/img/hero-product.webp" alt="NiYien A1 product photo"
          style="margin:0 auto;border-radius:16px 16px 0 0;max-width:880px;width:100%">
   </div>
 </header>
 
 <!-- ================= Feature 1 ================= -->
-<section class="section" style="border-top:1px solid var(--line)">
+<section class="section" id="feature-sensor-data" style="border-top:1px solid var(--line)">
   <div class="container" style="display:flex;gap:56px;align-items:center;flex-wrap:wrap">
     <div style="flex:1;min-width:300px">
       <img src="../shared/img/feature-sensor-placeholder.svg" alt="Gyro sensor mounted on a camera hot shoe"
@@ -54,12 +54,29 @@
   </div>
 </section>
 
-<!-- ================= Feature 2 ================= -->
-<section class="section section-alt">
+<section class="section section-alt" id="feature-rolling-shutter">
   <div class="container" style="display:flex;gap:56px;align-items:center;flex-wrap:wrap;flex-direction:row-reverse">
     <div style="flex:1;min-width:300px">
-      <img src="../shared/img/feature-workflow-placeholder.svg" alt="Drag in footage, auto-match, stabilize in one click"
-           style="border-radius:var(--radius-img);width:100%">
+      <video autoplay loop muted playsinline preload="metadata"
+             poster="../shared/img/feature-rolling-shutter-poster.webp"
+             aria-label="Rolling-shutter correction comparison"
+             style="border-radius:var(--radius-img);width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:#111">
+        <source src="../shared/videos/feature-rolling-shutter.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div style="flex:1;min-width:300px">
+      <div class="eyebrow" style="font-size:17px">ROLLING SHUTTER CORRECTION</div>
+      <h2 class="h2" style="margin-top:12px">Correct rolling-shutter distortion.<br>Remove the jello effect.</h2>
+      <p style="margin-top:14px">Real sensor data and precise camera readout timing correct skew, warping, and jello caused by fast motion, producing more natural, stable footage.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="feature-minimal-workflow">
+  <div class="container" style="display:flex;gap:56px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:300px">
+      <img src="../shared/img/feature-workflow-en.webp" alt="Drag in footage, auto-match, stabilize in one click"
+           style="border-radius:var(--radius-img);width:100%;display:block;aspect-ratio:8/5;object-fit:cover">
     </div>
     <div style="flex:1;min-width:300px">
       <div class="eyebrow" style="font-size:17px">MINIMAL WORKFLOW</div>
@@ -91,8 +108,8 @@
       </div>
       <div class="card" style="padding:32px 30px">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.8-3.4 7.9-8 9-4.6-1.1-8-4.2-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>
-        <h3 class="h3">Quality-preserving stabilization</h3>
-        <p class="small" style="margin-top:8px;font-size:15px">Compared to in-camera electronic stabilization: less cropping, no jello effect, no loss of sharpness.</p>
+        <h3 class="h3">Post-production stabilization advantages</h3>
+        <p class="small" style="margin-top:8px;font-size:15px">Compared with in-camera electronic stabilization and other post-production stabilizers: less cropping, no jello effect, and no loss of sharpness.</p>
       </div>
       <div class="card" style="padding:32px 30px">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><circle cx="12" cy="12" r="2"/></svg></div>

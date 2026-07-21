@@ -128,7 +128,7 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .nav-logo { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 700; font-size: 21px; }
-.nav-logo img, .nav-logo svg { width: 28px; height: 28px; border-radius: 7px; }
+.nav-logo img, .nav-logo svg { width: 30px; height: 30px; object-fit: contain; }
 .nav-links { display: flex; gap: 28px; font-size: 18px; color: var(--body); }
 .nav-links a {
   position: relative; padding-bottom: 4px;

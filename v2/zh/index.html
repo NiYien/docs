@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NiYien A1 — 每一帧，都稳定</title>
-<meta name="description" content="NiYien A1 陀螺仪稳定系统：以真实传感器数据重建相机运动，拖入素材一键稳定，画质无损。">
-<link rel="icon" href="/assets/icon/logo.png">
+<meta name="description" content="NiYien A1 陀螺仪稳定系统：以真实传感器数据重建相机运动，拖入素材一键稳定。">
+<link rel="icon" href="../shared/img/niyien-logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 </head>
 <body data-page="home">
@@ -16,7 +16,7 @@
   <div class="container">
     <div class="eyebrow">NIYIEN A1</div>
     <h1 class="h1" style="margin-top:18px">每一帧，都稳定</h1>
-    <p class="lead" style="margin-top:18px">陀螺仪稳定系统，以真实传感器数据重建每一次运动。<br>拖入素材，一键稳定，画质无损。</p>
+    <p class="lead" style="margin-top:18px">陀螺仪稳定系统，以真实传感器数据重建每一次运动。<br>拖入素材，一键稳定。</p>
     <p style="margin-top:30px;display:flex;gap:12px;justify-content:center">
       <a class="btn" href="download.html">立即下载</a>
       <a class="btn-outline" href="tutorials.html">观看教程</a>
@@ -34,13 +34,13 @@
       <circle cx="864" cy="45" r="4.5" fill="#165DFF"/>
       <circle cx="864" cy="45" r="10" fill="#165DFF" opacity=".14"/>
     </svg>
-    <img src="../shared/img/hero-product-placeholder.svg" alt="NiYien A1 产品图"
+    <img src="../shared/img/hero-product.webp" alt="NiYien A1 产品图"
          style="margin:0 auto;border-radius:16px 16px 0 0;max-width:880px;width:100%">
   </div>
 </header>
 
 <!-- ================= 主打卖点 1 ================= -->
-<section class="section" style="border-top:1px solid var(--line)">
+<section class="section" id="feature-sensor-data" style="border-top:1px solid var(--line)">
   <div class="container" style="display:flex;gap:56px;align-items:center;flex-wrap:wrap">
     <div style="flex:1;min-width:300px">
       <img src="../shared/img/feature-sensor-placeholder.svg" alt="陀螺仪安装在相机热靴上"
@@ -54,12 +54,29 @@
   </div>
 </section>
 
-<!-- ================= 主打卖点 2 ================= -->
-<section class="section section-alt">
+<section class="section section-alt" id="feature-rolling-shutter">
   <div class="container" style="display:flex;gap:56px;align-items:center;flex-wrap:wrap;flex-direction:row-reverse">
     <div style="flex:1;min-width:300px">
-      <img src="../shared/img/feature-workflow-placeholder.svg" alt="拖入素材自动匹配一键稳定"
-           style="border-radius:var(--radius-img);width:100%">
+      <video autoplay loop muted playsinline preload="metadata"
+             poster="../shared/img/feature-rolling-shutter-poster.webp"
+             aria-label="卷帘快门矫正前后效果对比"
+             style="border-radius:var(--radius-img);width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:#111">
+        <source src="../shared/videos/feature-rolling-shutter.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div style="flex:1;min-width:300px">
+      <div class="eyebrow" style="font-size:17px">卷帘快门矫正</div>
+      <h2 class="h2" style="margin-top:12px">校正卷帘畸变，<br>去除果冻效应</h2>
+      <p style="margin-top:14px">结合真实传感器数据与相机卷帘快门读出时间，校正快速运动产生的倾斜、扭曲与果冻效应，让画面更自然稳定。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="feature-minimal-workflow">
+  <div class="container" style="display:flex;gap:56px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:300px">
+      <img src="../shared/img/feature-workflow-zh.webp" alt="拖入素材自动匹配一键稳定"
+           style="border-radius:var(--radius-img);width:100%;display:block;aspect-ratio:8/5;object-fit:cover">
     </div>
     <div style="flex:1;min-width:300px">
       <div class="eyebrow" style="font-size:17px">极简工作流</div>
@@ -91,8 +108,8 @@
       </div>
       <div class="card" style="padding:32px 30px">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.8-3.4 7.9-8 9-4.6-1.1-8-4.2-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>
-        <h3 class="h3">画质无损稳定</h3>
-        <p class="small" style="margin-top:8px;font-size:15px">对比机内电子防抖：裁切更少、无果冻效应、锐度不受损。</p>
+        <h3 class="h3">后期稳定优势</h3>
+        <p class="small" style="margin-top:8px;font-size:15px">对比机内电子防抖和其他后期防抖：裁切更少、无果冻效应、锐度不受损。</p>
       </div>
       <div class="card" style="padding:32px 30px">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><circle cx="12" cy="12" r="2"/></svg></div>
