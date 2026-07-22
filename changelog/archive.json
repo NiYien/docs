@@ -3,6 +3,42 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.92",
+      "tag": "run-29924856914",
+      "published_at": "2026-07-22T14:27:50Z",
+      "changelog": "1. Fix a bug where auto rotation occasionally did not work.\n2. Fix a bug where stabilization failed when shooting vertically with a special mounting position.",
+      "changelogs": {
+        "zh": "1. 修复自动旋转偶尔无效的bug.\n2. 修复竖拍+特殊安装位置无法增稳的bug.",
+        "en": "1. Fix a bug where auto rotation occasionally did not work.\n2. Fix a bug where stabilization failed when shooting vertically with a special mounting position.",
+        "ja": "1. 自動回転がたまに機能しないバグを修正しました。\n2. 縦撮り＋特殊な取り付け位置でスタビライズができないバグを修正しました。",
+        "ko": "1. 자동 회전이 가끔 작동하지 않는 버그를 수정했습니다.\n2. 세로 촬영 + 특수 장착 위치에서 스태빌라이즈가 되지 않는 버그를 수정했습니다.",
+        "de": "1. Fehler behoben, bei dem die automatische Drehung gelegentlich nicht funktionierte.\n2. Fehler behoben, bei dem die Stabilisierung bei vertikaler Aufnahme mit einer speziellen Montageposition fehlschlug.",
+        "fr": "1. Correction d’un bug où la rotation automatique ne fonctionnait parfois pas.\n2. Correction d’un bug où la stabilisation échouait lors d’un tournage vertical avec une position de montage spéciale.",
+        "es": "1. Se corrigió un error por el cual la rotación automática a veces no funcionaba.\n2. Se corrigió un error por el cual la estabilización fallaba al grabar en vertical con una posición de montaje especial.",
+        "ru": "1. Исправлен баг, из-за которого автоматическое вращение иногда не работало.\n2. Исправлен баг, из-за которого не работала стабилизация при вертикальной съёмке с особым положением крепления.",
+        "pt": "1. Corrigido um bug em que a rotação automática ocasionalmente não funcionava.\n2. Corrigido um bug em que a estabilização falhava ao gravar na vertical com uma posição de montagem especial."
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.91",
+      "tag": "run-29914099967",
+      "published_at": "",
+      "changelog": "1. Fixed bug where auto-rotate sometimes didn't work.\n2. Fixed bug where stabilization failed when shooting vertically with special mounting position.",
+      "changelogs": {
+        "zh": "1. 修复自动旋转偶尔无效的bug.\n2. 修复竖拍+特殊安装位置无法增稳的bug.",
+        "en": "1. Fixed bug where auto-rotate sometimes didn't work.\n2. Fixed bug where stabilization failed when shooting vertically with special mounting position.",
+        "ja": "1. 自動回転が時々機能しなかったバグを修正しました。\n2. 縦撮り＋特殊な取り付け位置で安定化できないバグを修正しました。",
+        "ko": "1. 자동 회전이 가끔 작동하지 않는 버그를 수정했습니다.\n2. 세로 촬영 + 특수 장착 위치에서 안정화할 수 없는 버그를 수정했습니다.",
+        "de": "1. Fehler behoben, bei dem die Auto-Rotation manchmal nicht funktionierte.\n2. Fehler behoben, bei dem die Stabilisierung bei vertikaler Aufnahme mit besonderer Montageposition fehlschlug.",
+        "fr": "1. Correction d'un bug où la rotation automatique ne fonctionnait parfois pas.\n2. Correction d'un bug où la stabilisation échouait en prise de vue verticale avec une position de montage spéciale.",
+        "es": "1. Corregido un error por el que la rotación automática a veces no funcionaba.\n2. Corregido un error por el que la estabilización fallaba al grabar en vertical con una posición de montaje especial.",
+        "ru": "1. Исправлена ошибка, из-за которой автоматический поворот иногда не работал.\n2. Исправлена ошибка, из-за которой не удавалась стабилизация при вертикальной съемке со специальным положением крепления.",
+        "pt": "1. Corrigido bug em que a rotação automática às vezes não funcionava.\n2. Corrigido bug em que a estabilização falhava ao gravar na vertical com posição de montagem especial."
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.90",
       "tag": "run-29643783637",
       "published_at": "2026-07-18T14:08:32Z",
