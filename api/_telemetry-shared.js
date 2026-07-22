@@ -9,6 +9,23 @@ export { safeJsonParse };
 
 export const DEFAULT_TELEMETRY_EVENT = "open";
 
+// Every event the clients have ever emitted, across both NiYien Tool and
+// gyroflow. Used to seed a product-level first-seen record for users who
+// predate that key: without it, introducing the key would mark the entire
+// existing population as new on their next event.
+export const KNOWN_TELEMETRY_EVENTS = [
+  DEFAULT_TELEMETRY_EVENT,
+  "manifest_fetch",
+  "download_result",
+  "sdk_download_result",
+  "plugin_download_result",
+];
+
+// Identity origin reported by the client: whether its anon_id was generated
+// fresh or adopted from an existing NiYien Tool installation.
+export const IDENTITY_ORIGIN_GENERATED = "generated";
+export const IDENTITY_ORIGIN_ADOPTED = "adopted_from_tool";
+
 const SOURCE_ALIASES = new Map([
   ["niyien_tool", LEGACY_SOURCE_APP_ID],
   ["niyientool", LEGACY_SOURCE_APP_ID],
@@ -61,6 +78,12 @@ export function extractEventFields(payload, fallbacks = {}) {
   const eventTs = normalizeEventTimestamp(merged.ts);
   const durationMs = normalizeInteger(merged.duration_ms);
   const bytes = normalizeInteger(merged.bytes);
+  // Diagnostic fields. `identityAgeDays` is null when the client cannot know it
+  // (an identifier that predates age recording); `identityOrigin` is absent
+  // entirely for clients predating this capability, which is what distinguishes
+  // "old client" from "new client, unknown age".
+  const identityAgeDays = normalizeInteger(merged.identity_age_days);
+  const identityOrigin = normalizeToken(merged.identity_origin, "", 32);
   const eventId = buildEventId(payload || {}, {
     event,
     anonId,
@@ -98,6 +121,8 @@ export function extractEventFields(payload, fallbacks = {}) {
     status,
     durationMs,
     bytes,
+    identityAgeDays,
+    identityOrigin,
   };
 }
 
@@ -155,6 +180,9 @@ export function buildEventAggregationPlan(fields, context) {
     countKeys: buildCountKeys(keyParts),
     uniqueKeys: buildUniqueKeys(keyParts),
     dayNewUserContexts: buildDayNewUserContexts(keyParts, fields.anonId),
+    productNewUserContexts: buildProductNewUserContexts(keyParts, fields.anonId),
+    migratedUserKeys:
+      fields.identityOrigin === IDENTITY_ORIGIN_ADOPTED ? buildMigratedUserKeys(keyParts) : [],
     weekUserKeys: buildWeekUserKeys(weekKey, keyParts, fields.anonId),
     rawEvent: {
       event_id: fields.eventId,
@@ -174,6 +202,8 @@ export function buildEventAggregationPlan(fields, context) {
       status: fields.status,
       duration_ms: fields.durationMs,
       bytes: fields.bytes,
+      identity_age_days: fields.identityAgeDays,
+      identity_origin: fields.identityOrigin,
       city: String(context?.city || "Unknown").trim() || "Unknown",
       country: String(context?.country || "Unknown").trim() || "Unknown",
       ts: fields.eventTs,
@@ -203,6 +233,44 @@ export function buildScopedUniqueKey(day, productId, event, scope, name, sourceA
 
 export function buildDayNewUsersKey(day, productId, event, sourceAppId = "") {
   return `${buildStatsBasePrefix(day, productId, event, sourceAppId)}:new:all`;
+}
+
+// Product-level prefix: deliberately omits the event segment. First-seen keys
+// derived from it answer "has this user ever been seen under this product",
+// which is what "new user" should mean — the per-event keys judge a
+// long-standing user as new the first time they emit a newly-introduced event.
+export function buildProductScopePrefix(day, productId, sourceAppId = "") {
+  if (sourceAppId) {
+    return `telemetry:day:${day}:product:${productId}:source:${sourceAppId}`;
+  }
+  return `telemetry:day:${day}:product:${productId}`;
+}
+
+export function buildProductDayNewUsersKey(day, productId, sourceAppId = "") {
+  return `${buildProductScopePrefix(day, productId, sourceAppId)}:new:all`;
+}
+
+// Users whose identity was adopted from NiYien Tool. A sibling set of
+// `new:all`, not a breakdown dimension — dimensions multiply the key cartesian
+// product, a sibling adds one key per day.
+export function buildProductDayMigratedUsersKey(day, productId, sourceAppId = "") {
+  return `${buildProductScopePrefix(day, productId, sourceAppId)}:migrated:all`;
+}
+
+export function buildProductFirstSeenKey(productId, anonId, sourceAppId = "") {
+  const normalizedAnonId = encodeIdentifier(anonId);
+  if (sourceAppId) {
+    return `telemetry:user:first_seen:product:${productId}:source:${sourceAppId}:${normalizedAnonId}`;
+  }
+  return `telemetry:user:first_seen:product:${productId}:${normalizedAnonId}`;
+}
+
+// Per-event first-seen keys for one user across every known event, used to
+// backfill the product-level key for users who predate it.
+export function buildKnownEventFirstSeenKeys(productId, anonId, sourceAppId = "") {
+  return KNOWN_TELEMETRY_EVENTS.map((event) =>
+    buildFirstSeenKey(productId, event, anonId, sourceAppId)
+  );
 }
 
 export function buildWeeklyUsagePattern(weekKey, productId, event, sourceAppId = "") {
@@ -585,6 +653,33 @@ function buildDimensionUniqueKeys(prefix, parts) {
   }
 
   return keys;
+}
+
+// Product-level newness: one context for the all-sources view, one per source.
+// `seedFirstSeenKeys` lets the writer backfill a user who predates the
+// product-level key from their earliest per-event sighting.
+function buildProductNewUserContexts(parts, anonId) {
+  return [
+    {
+      firstSeenKey: buildProductFirstSeenKey(parts.productId, anonId),
+      dayNewUsersKey: buildProductDayNewUsersKey(parts.day, parts.productId),
+      seedFirstSeenKeys: buildKnownEventFirstSeenKeys(parts.productId, anonId),
+      anonId,
+    },
+    {
+      firstSeenKey: buildProductFirstSeenKey(parts.productId, anonId, parts.sourceAppId),
+      dayNewUsersKey: buildProductDayNewUsersKey(parts.day, parts.productId, parts.sourceAppId),
+      seedFirstSeenKeys: buildKnownEventFirstSeenKeys(parts.productId, anonId, parts.sourceAppId),
+      anonId,
+    },
+  ];
+}
+
+function buildMigratedUserKeys(parts) {
+  return [
+    buildProductDayMigratedUsersKey(parts.day, parts.productId),
+    buildProductDayMigratedUsersKey(parts.day, parts.productId, parts.sourceAppId),
+  ];
 }
 
 function buildDayNewUserContexts(parts, anonId) {

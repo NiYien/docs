@@ -2,6 +2,8 @@ import { DEFAULT_PRODUCT_ID, LEGACY_SOURCE_APP_ID } from "./_control-plane";
 import {
   DEFAULT_TELEMETRY_EVENT,
   buildDayNewUsersKey,
+  buildProductDayMigratedUsersKey,
+  buildProductDayNewUsersKey,
   buildScopedUniqueKey,
   buildStatsBasePrefix,
   buildUniqueAllKey,
@@ -280,6 +282,8 @@ async function collectStats(dayList, weekQuery, filters) {
     unique_observed_only: true,
     global_new_total: newTotals.globalNewTotal,
     new_source: newTotals.source,
+    new_scope: newTotals.newScope,
+    migrated_total: newTotals.migratedTotal,
     missing_new_data: newTotals.missingNewData,
     weekly_usage: weeklyUsage,
     legacy_fallback_used: legacyDaysUsed.length > 0,
@@ -453,8 +457,26 @@ async function collectNewTotals(dayList, filters, uniqueTotals) {
   if (shouldUseLegacyFallback(filters)) {
     keys.push(...dayList.map((day) => `telemetry:day:${day}:new:all`));
   }
-  const globalNewTotal = await getUnionCardinality(keys);
-  const hasStoredNewData = await hasAnyExistingKeys(keys);
+
+  // Product-level sets judge newness across all events and across both product
+  // sources, so neither a long-standing user emitting a newly-introduced event
+  // nor a NiYien Tool user migrating over is miscounted as a new customer.
+  // Prefer them when populated; fall back to the per-event sets for windows
+  // predating the product-level keys.
+  const productKeys = dayList.map((day) =>
+    buildProductDayNewUsersKey(day, filters.productId, filters.sourceAppId)
+  );
+  const hasProductData = await hasAnyExistingKeys(productKeys);
+  const effectiveKeys = hasProductData ? productKeys : keys;
+
+  const globalNewTotal = await getUnionCardinality(effectiveKeys);
+  const hasStoredNewData = hasProductData || (await hasAnyExistingKeys(keys));
+
+  const migratedKeys = dayList.map((day) =>
+    buildProductDayMigratedUsersKey(day, filters.productId, filters.sourceAppId)
+  );
+  const migratedTotal = await getUnionCardinality(migratedKeys);
+
   const missingNewData =
     !uniqueTotals.missingUniqueData &&
     uniqueTotals.globalUniqueTotal > 0 &&
@@ -463,7 +485,19 @@ async function collectNewTotals(dayList, filters, uniqueTotals) {
 
   return {
     globalNewTotal,
+    // Users who arrived carrying an identity adopted from NiYien Tool: existing
+    // customers, not new ones. A floor, since only same-machine migrations are
+    // detectable.
+    //
+    // Deliberately NOT subtracted from globalNewTotal. In the all-sources view
+    // these users are already excluded from it (their earlier sighting under the
+    // legacy source seeds the product-level record), so subtracting would double
+    // count the exclusion. When a single source is queried they DO count as new
+    // to that source, and only there would a subtraction be meaningful — so the
+    // relationship is left to the caller, which knows which view it asked for.
+    migratedTotal,
     source: missingNewData ? "day-first-seen-missing" : "day-first-seen",
+    newScope: hasProductData ? "product" : "event",
     missingNewData,
   };
 }
@@ -543,7 +577,6 @@ async function collectWeeklyUsage(weekQuery, filters) {
   if (shouldUseLegacyFallback(filters)) {
     patterns.push(`telemetry:week:${weekKey}:user:*`);
   }
-
   const keyLists = await Promise.all(patterns.map((item) => scanKeys(item)));
   const userCounts = new Map();
   for (const keys of keyLists) {
@@ -603,6 +636,7 @@ function shouldUseLegacyFallback(filters) {
     (!filters.sourceAppId || filters.sourceAppId === LEGACY_SOURCE_APP_ID)
   );
 }
+
 
 async function accumulateLegacyDayTotals(day, totals) {
   const [

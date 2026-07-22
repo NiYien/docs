@@ -4,6 +4,7 @@ import {
   buildRawStreamKey,
   createBatchFallbacks,
   extractEventFields,
+  getValues,
   normalizeDay,
   safeJsonParse,
   upstashCommand,
@@ -193,6 +194,17 @@ async function processEvent(fields, options) {
     pipeline.push(["EXPIRE", weekUserKey, options.weekTtlSeconds]);
   }
 
+  for (const context of plan.productNewUserContexts) {
+    await applyProductNewUserContext(context, plan, fields, pipeline, options);
+  }
+
+  for (const key of plan.migratedUserKeys) {
+    pipeline.push(["SADD", key, fields.anonId]);
+    if (options.uniqueTtlSeconds > 0) {
+      pipeline.push(["EXPIRE", key, options.uniqueTtlSeconds]);
+    }
+  }
+
   for (const context of plan.dayNewUserContexts) {
     const firstSeenResponse = await upstashCommand(["SET", context.firstSeenKey, plan.day, "NX"]);
     const isNewUser = firstSeenResponse && firstSeenResponse.result === "OK";
@@ -245,6 +257,70 @@ async function processEvent(fields, options) {
 
   await upstashPipeline(pipeline);
   return { processed: true };
+}
+
+// Product-level newness. Unlike the per-event contexts, a user is "new" only if
+// they have never been seen under this product under ANY event — otherwise a
+// long-standing user emitting a newly-introduced event (every user upgrading
+// into the `open` event) would be counted as a new customer.
+//
+// Cold start: nobody has this key when it first ships, so an absent key alone
+// cannot mean "new". Before claiming newness we seed from the user's earliest
+// existing per-event first-seen record. Genuinely new users have none, so they
+// still register correctly.
+async function applyProductNewUserContext(context, plan, fields, pipeline, options) {
+  const firstSeenResponse = await upstashCommand(["SET", context.firstSeenKey, plan.day, "NX"]);
+  const claimedFirstSeen = firstSeenResponse && firstSeenResponse.result === "OK";
+
+  let firstSeenDay = plan.day;
+
+  if (claimedFirstSeen) {
+    const seededDay = await earliestKnownFirstSeenDay(context.seedFirstSeenKeys);
+    if (seededDay && seededDay < plan.day) {
+      // The user predates this key. Correct the record and do not count them.
+      pipeline.push(["SET", context.firstSeenKey, seededDay]);
+      return;
+    }
+  } else {
+    const existing = await upstashCommand(["GET", context.firstSeenKey]);
+    firstSeenDay = normalizeDay(
+      existing && typeof existing.result === "string" ? existing.result : ""
+    );
+
+    if (firstSeenDay && plan.day < firstSeenDay) {
+      // Late-arriving event predating the recorded first sighting.
+      pipeline.push(["SET", context.firstSeenKey, plan.day]);
+      pipeline.push([
+        "SREM",
+        replaceDayInTelemetryKey(context.dayNewUsersKey, firstSeenDay),
+        fields.anonId,
+      ]);
+    } else if (firstSeenDay !== plan.day) {
+      return;
+    }
+  }
+
+  pipeline.push(["SADD", context.dayNewUsersKey, fields.anonId]);
+  if (options.uniqueTtlSeconds > 0) {
+    pipeline.push(["EXPIRE", context.dayNewUsersKey, options.uniqueTtlSeconds]);
+  }
+}
+
+async function earliestKnownFirstSeenDay(keys) {
+  if (!keys || !keys.length) {
+    return "";
+  }
+
+  const values = await getValues(keys);
+  let earliest = "";
+  for (const value of values) {
+    const day = normalizeDay(typeof value === "string" ? value : "");
+    if (day && (!earliest || day < earliest)) {
+      earliest = day;
+    }
+  }
+
+  return earliest;
 }
 
 function replaceDayInTelemetryKey(key, day) {

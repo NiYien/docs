@@ -819,6 +819,11 @@
       const totalOpens = Object.values(cityTotals).reduce((sum, val) => sum + (val || 0), 0);
       const uniquePeople = data.missing_unique_data ? "—" : (data.global_unique_total || 0);
       const newPeople = data.missing_new_data ? "—" : (data.global_new_total || 0);
+      // Users migrating from NiYien Tool are existing customers, not new ones.
+      // In the all-sources view they are already excluded from the new-user
+      // figure, so this is shown alongside it rather than as a subset of it —
+      // hence "另计". Lower bound: only same-machine migrations leave a trace.
+      const migratedPeople = data.migrated_total || 0;
       const activeCities = Object.keys(cityTotals).length;
       const activeBrands = Object.keys(brandTotals).length;
       const activeSources = Object.keys(data.source_totals || {}).length;
@@ -829,6 +834,7 @@
       kpiEl.innerHTML = [
         buildKpi("独立人数", uniquePeople),
         buildKpi("新用户人数", newPeople),
+        buildKpi("Tool 迁移（另计）", migratedPeople),
         buildKpi("总打开次数", totalOpens),
         buildKpi("活跃城市", activeCities),
         buildKpi("活跃品牌", activeBrands),

@@ -5,3 +5,7 @@ scripts/telemetry_simulator.py
 scripts/telemetry_debug_once.py
 update_Niyien_tool_en.md
 /telemetry
+api/_control-plane.contract.test.mjs
+*.pyc
+/output
+api/_telemetry-newusers.contract.test.mjs
