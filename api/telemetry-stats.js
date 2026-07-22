@@ -4,6 +4,7 @@ import {
   buildDayNewUsersKey,
   buildProductDayMigratedUsersKey,
   buildProductDayNewUsersKey,
+  buildProductDayUniqueKey,
   buildScopedUniqueKey,
   buildStatsBasePrefix,
   buildUniqueAllKey,
@@ -243,13 +244,21 @@ async function collectStats(dayList, weekQuery, filters) {
     }
   }
 
+  // Product-level tracking is considered live for this window if any day in it
+  // recorded a product-level active user. That set is written on every event,
+  // so its presence is unambiguous — unlike the new-user set, which is also
+  // empty on days that simply had no new users.
+  const productTrackingLive = await hasAnyExistingKeys(
+    dayList.map((day) => buildProductDayUniqueKey(day, filters.productId, filters.sourceAppId))
+  );
+
   const uniqueTotals = await collectUniqueTotals(dayList, filters, {
     cityTotals,
     brandTotals,
     modelTotals,
     countryTotals,
-  });
-  const newTotals = await collectNewTotals(dayList, filters, uniqueTotals);
+  }, productTrackingLive);
+  const newTotals = await collectNewTotals(dayList, filters, uniqueTotals, productTrackingLive);
   const weeklyUsage = await collectWeeklyUsage(weekQuery, filters);
   const sourceUniqueTotals = await collectSourceUniqueTotals(dayList, filters, sourceTotals);
   const availableSources = Array.from(new Set(Object.keys(sourceTotals))).sort();
@@ -426,7 +435,7 @@ async function accumulateHours(keys, hourTotals) {
   }
 }
 
-async function collectUniqueTotals(dayList, filters, totals) {
+async function collectUniqueTotals(dayList, filters, totals, productTrackingLive) {
   const cityNames = Object.keys(totals.cityTotals || {});
   const brandNames = Object.keys(totals.brandTotals || {});
   const modelNames = Object.keys(totals.modelTotals || {});
@@ -436,7 +445,7 @@ async function collectUniqueTotals(dayList, filters, totals) {
   const brandUniqueTotals = await getScopedUniqueTotals(dayList, brandNames, "brand", filters);
   const modelUniqueTotals = await getScopedUniqueTotals(dayList, modelNames, "model", filters);
   const countryUniqueTotals = await getScopedUniqueTotals(dayList, countryNames, "country", filters);
-  const globalUniqueTotal = await getGlobalUniqueTotal(dayList, filters);
+  const globalUniqueTotal = await getGlobalUniqueTotal(dayList, filters, productTrackingLive);
   const missingUniqueData = hasAnyTotals(totals) && globalUniqueTotal === 0;
 
   return {
@@ -445,12 +454,14 @@ async function collectUniqueTotals(dayList, filters, totals) {
     modelUniqueTotals,
     countryUniqueTotals,
     globalUniqueTotal,
-    source: missingUniqueData ? "day-observed-missing" : "day-observed",
+    source: productTrackingLive
+      ? (missingUniqueData ? "product-observed-missing" : "product-observed")
+      : (missingUniqueData ? "day-observed-missing" : "day-observed"),
     missingUniqueData,
   };
 }
 
-async function collectNewTotals(dayList, filters, uniqueTotals) {
+async function collectNewTotals(dayList, filters, uniqueTotals, productTrackingLive) {
   const keys = dayList.map((day) =>
     buildDayNewUsersKey(day, filters.productId, filters.event, filters.sourceAppId)
   );
@@ -458,19 +469,23 @@ async function collectNewTotals(dayList, filters, uniqueTotals) {
     keys.push(...dayList.map((day) => `telemetry:day:${day}:new:all`));
   }
 
-  // Product-level sets judge newness across all events and across both product
+  // Product-level sets judge newness across all events and both product
   // sources, so neither a long-standing user emitting a newly-introduced event
   // nor a NiYien Tool user migrating over is miscounted as a new customer.
-  // Prefer them when populated; fall back to the per-event sets for windows
-  // predating the product-level keys.
   const productKeys = dayList.map((day) =>
     buildProductDayNewUsersKey(day, filters.productId, filters.sourceAppId)
   );
-  const hasProductData = await hasAnyExistingKeys(productKeys);
-  const effectiveKeys = hasProductData ? productKeys : keys;
+
+  // Whether to trust the product-level answer is decided by the product-level
+  // ACTIVE set, not by the new-user set. The new-user set is empty both when
+  // tracking is not yet live and when there simply were no new users that day,
+  // and reading emptiness as "not live" would silently fall back to the
+  // per-event count — the very number this change exists to stop reporting,
+  // since it counts existing users as new.
+  const effectiveKeys = productTrackingLive ? productKeys : keys;
 
   const globalNewTotal = await getUnionCardinality(effectiveKeys);
-  const hasStoredNewData = hasProductData || (await hasAnyExistingKeys(keys));
+  const hasStoredNewData = productTrackingLive || (await hasAnyExistingKeys(keys));
 
   const migratedKeys = dayList.map((day) =>
     buildProductDayMigratedUsersKey(day, filters.productId, filters.sourceAppId)
@@ -497,7 +512,7 @@ async function collectNewTotals(dayList, filters, uniqueTotals) {
     // relationship is left to the caller, which knows which view it asked for.
     migratedTotal,
     source: missingNewData ? "day-first-seen-missing" : "day-first-seen",
-    newScope: hasProductData ? "product" : "event",
+    newScope: productTrackingLive ? "product" : "event",
     missingNewData,
   };
 }
@@ -539,7 +554,18 @@ function hasAnyTotals(totals) {
   );
 }
 
-async function getGlobalUniqueTotal(dayList, filters) {
+async function getGlobalUniqueTotal(dayList, filters, productTrackingLive) {
+  // Once product-level tracking is live, active users are counted across all
+  // events. Any single event undercounts: `open` only covers users who loaded
+  // media, `manifest_fetch` only those who reached a manifest check.
+  if (productTrackingLive) {
+    return getUnionCardinality(
+      dayList.map((day) =>
+        buildProductDayUniqueKey(day, filters.productId, filters.sourceAppId)
+      )
+    );
+  }
+
   const keys = dayList.map((day) =>
     buildUniqueAllKey(day, filters.productId, filters.event, filters.sourceAppId)
   );

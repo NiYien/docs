@@ -1495,6 +1495,13 @@
           return "按天实测去重";
         case "day-observed-missing":
           return "按天实测去重（UV缺失）";
+        // Product-scoped counting spans every event, so the figure no longer
+        // depends on the selected 事件 filter — worth saying, since the filter
+        // is still visible above the number.
+        case "product-observed":
+          return "按天实测去重（全事件合并，不受事件筛选影响）";
+        case "product-observed-missing":
+          return "按天实测去重（全事件合并 · UV缺失）";
         default:
           return cleanLabel(source || "未知");
       }

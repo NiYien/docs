@@ -179,6 +179,10 @@ export function buildEventAggregationPlan(fields, context) {
     weekKey,
     countKeys: buildCountKeys(keyParts),
     uniqueKeys: buildUniqueKeys(keyParts),
+    productUniqueKeys: [
+      buildProductDayUniqueKey(day, keyParts.productId),
+      buildProductDayUniqueKey(day, keyParts.productId, keyParts.sourceAppId),
+    ],
     dayNewUserContexts: buildDayNewUserContexts(keyParts, fields.anonId),
     productNewUserContexts: buildProductNewUserContexts(keyParts, fields.anonId),
     migratedUserKeys:
@@ -248,6 +252,16 @@ export function buildProductScopePrefix(day, productId, sourceAppId = "") {
 
 export function buildProductDayNewUsersKey(day, productId, sourceAppId = "") {
   return `${buildProductScopePrefix(day, productId, sourceAppId)}:new:all`;
+}
+
+// Everyone seen under the product on a day, regardless of which event carried
+// the sighting. Serves two purposes: it is the true active-user figure (an
+// event-scoped set undercounts, since no single event covers every user), and
+// its existence is the reliable signal that product-level tracking was live on
+// that day — "no new users today" and "product-level tracking not yet
+// deployed" are otherwise indistinguishable.
+export function buildProductDayUniqueKey(day, productId, sourceAppId = "") {
+  return `${buildProductScopePrefix(day, productId, sourceAppId)}:unique:all`;
 }
 
 // Users whose identity was adopted from NiYien Tool. A sibling set of

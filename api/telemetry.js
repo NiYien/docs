@@ -189,6 +189,13 @@ async function processEvent(fields, options) {
     }
   }
 
+  for (const key of plan.productUniqueKeys) {
+    pipeline.push(["SADD", key, fields.anonId]);
+    if (options.uniqueTtlSeconds > 0) {
+      pipeline.push(["EXPIRE", key, options.uniqueTtlSeconds]);
+    }
+  }
+
   for (const weekUserKey of plan.weekUserKeys) {
     pipeline.push(["INCR", weekUserKey]);
     pipeline.push(["EXPIRE", weekUserKey, options.weekTtlSeconds]);
