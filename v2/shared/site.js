@@ -91,7 +91,7 @@
       var f = document.createElement('iframe');
       f.src = embedUrl;
       f.setAttribute('allowfullscreen', '');
-      f.setAttribute('allow', 'autoplay; fullscreen');
+      f.setAttribute('allow', 'autoplay; fullscreen *');
       frame.appendChild(f);
       lb.classList.add('lightbox-open');
     },
