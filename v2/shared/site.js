@@ -90,8 +90,10 @@
       frame.innerHTML = '';
       var f = document.createElement('iframe');
       f.src = embedUrl;
-      f.setAttribute('allowfullscreen', '');
-      f.setAttribute('allow', 'autoplay; fullscreen *');
+      f.setAttribute('allowfullscreen', 'true');
+      if (new URL(embedUrl).hostname !== 'player.bilibili.com') {
+        f.setAttribute('allow', 'autoplay; fullscreen');
+      }
       frame.appendChild(f);
       lb.classList.add('lightbox-open');
     },
