@@ -9,3 +9,6 @@ api/_control-plane.contract.test.mjs
 *.pyc
 /output
 api/_telemetry-newusers.contract.test.mjs
+api/_telemetry-test-harness.mjs
+api/_telemetry-raw-ingestion.contract.test.mjs
+api/_telemetry-cron.contract.test.mjs

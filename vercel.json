@@ -249,10 +249,6 @@
   ],
   "crons": [
     {
-      "path": "/api/telemetry-rebuild-cron?scope=today",
-      "schedule": "30 2 * * *"
-    },
-    {
       "path": "/api/telemetry-rebuild-cron?scope=yesterday",
       "schedule": "15 0 * * *"
     }

@@ -1,13 +1,9 @@
 import {
   buildEventAggregationPlan,
-  buildEventDedupeKey,
   buildRawStreamKey,
   createBatchFallbacks,
   extractEventFields,
-  getValues,
-  normalizeDay,
   safeJsonParse,
-  upstashCommand,
   upstashPipeline,
   validateEventFields,
 } from "./_telemetry-shared";
@@ -39,19 +35,6 @@ export default async function handler(req, res) {
   const geo = await getGeo(req, { fallbackCountry: "Unknown" });
   const city = geo.city || "Unknown";
   const country = geo.country || "Unknown";
-  const ttlDays = parseInt(process.env.TELEMETRY_TTL_DAYS || "90", 10);
-  const ttlSeconds = Math.max(ttlDays, 1) * 86400;
-  const uniqueTtlDays = parseInt(process.env.TELEMETRY_UNIQUE_TTL_DAYS || "120", 10);
-  const uniqueTtlSeconds = uniqueTtlDays > 0 ? uniqueTtlDays * 86400 : 0;
-  const weekTtlDays = parseInt(process.env.TELEMETRY_USER_TTL_DAYS || "120", 10);
-  const weekTtlSeconds = Math.max(weekTtlDays, 1) * 86400;
-  const dedupeTtlDays = parseInt(process.env.TELEMETRY_EVENT_ID_TTL_DAYS || "120", 10);
-  const dedupeTtlSeconds = Math.max(dedupeTtlDays, 1) * 86400;
-  const rawStreamEnabled =
-    String(process.env.TELEMETRY_RAW_STREAM_ENABLED || "true").toLowerCase() !== "false";
-  const rawTtlDays = parseInt(process.env.TELEMETRY_RAW_TTL_DAYS || "365", 10);
-  const rawTtlSeconds = rawTtlDays > 0 ? rawTtlDays * 86400 : 0;
-
   if (Array.isArray(body.events)) {
     if (!body.events.length) {
       return res.status(400).json({ error: "Empty events" });
@@ -69,33 +52,18 @@ export default async function handler(req, res) {
     }
 
     try {
-      let processed = 0;
-      let deduped = 0;
-
-      for (const item of items) {
-        const result = await processEvent(item.fields, {
-          city,
-          country,
-          ttlSeconds,
-          uniqueTtlSeconds,
-          weekTtlSeconds,
-          dedupeTtlSeconds,
-          rawStreamEnabled,
-          rawTtlSeconds,
-        });
-
-        if (result.processed) {
-          processed += 1;
-        } else {
-          deduped += 1;
-        }
-      }
+      // One pipeline, one XADD per event: N valid events cost exactly N
+      // billable Redis commands.
+      await appendRawEvents(
+        items.map((item) => item.fields),
+        { city, country }
+      );
 
       return res.status(200).json({
         ok: true,
         batch: true,
-        processed,
-        deduped,
+        processed: items.length,
+        deduped: 0,
         received: items.length,
         city,
         country,
@@ -118,16 +86,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const result = await processEvent(fields, {
-      city,
-      country,
-      ttlSeconds,
-      uniqueTtlSeconds,
-      weekTtlSeconds,
-      dedupeTtlSeconds,
-      rawStreamEnabled,
-      rawTtlSeconds,
-    });
+    await appendRawEvents([fields], { city, country });
 
     const eventDate = new Date(fields.eventTs * 1000);
     const iso = eventDate.toISOString();
@@ -139,7 +98,9 @@ export default async function handler(req, res) {
       city,
       country,
       country_source: geo.source || "",
-      deduped: !result.processed,
+      // Retained for response compatibility. Ingestion performs no Redis
+      // dedupe, so an accepted event is never reported as deduplicated.
+      deduped: false,
       event: fields.event,
       product_id: fields.productId,
       source_app_id: fields.sourceAppId,
@@ -156,180 +117,32 @@ export default async function handler(req, res) {
   }
 }
 
-async function processEvent(fields, options) {
-  const plan = buildEventAggregationPlan(fields, {
-    city: options.city,
-    country: options.country,
-  });
-  const dedupeKey = buildEventDedupeKey(plan.day, fields.eventId);
-
-  const dedupeResponse = await upstashCommand([
-    "SET",
-    dedupeKey,
-    "1",
-    "EX",
-    options.dedupeTtlSeconds,
-    "NX",
-  ]);
-  const dedupeApplied = dedupeResponse && dedupeResponse.result === "OK";
-  if (!dedupeApplied) {
-    return { processed: false };
-  }
-
-  const pipeline = [];
-  for (const key of plan.countKeys) {
-    pipeline.push(["INCR", key]);
-    pipeline.push(["EXPIRE", key, options.ttlSeconds]);
-  }
-
-  for (const key of plan.uniqueKeys) {
-    pipeline.push(["SADD", key, fields.anonId]);
-    if (options.uniqueTtlSeconds > 0) {
-      pipeline.push(["EXPIRE", key, options.uniqueTtlSeconds]);
-    }
-  }
-
-  for (const key of plan.productUniqueKeys) {
-    pipeline.push(["SADD", key, fields.anonId]);
-    if (options.uniqueTtlSeconds > 0) {
-      pipeline.push(["EXPIRE", key, options.uniqueTtlSeconds]);
-    }
-  }
-
-  for (const weekUserKey of plan.weekUserKeys) {
-    pipeline.push(["INCR", weekUserKey]);
-    pipeline.push(["EXPIRE", weekUserKey, options.weekTtlSeconds]);
-  }
-
-  for (const context of plan.productNewUserContexts) {
-    await applyProductNewUserContext(context, plan, fields, pipeline, options);
-  }
-
-  for (const key of plan.migratedUserKeys) {
-    pipeline.push(["SADD", key, fields.anonId]);
-    if (options.uniqueTtlSeconds > 0) {
-      pipeline.push(["EXPIRE", key, options.uniqueTtlSeconds]);
-    }
-  }
-
-  for (const context of plan.dayNewUserContexts) {
-    const firstSeenResponse = await upstashCommand(["SET", context.firstSeenKey, plan.day, "NX"]);
-    const isNewUser = firstSeenResponse && firstSeenResponse.result === "OK";
-
-    if (isNewUser) {
-      pipeline.push(["SADD", context.dayNewUsersKey, fields.anonId]);
-      if (options.uniqueTtlSeconds > 0) {
-        pipeline.push(["EXPIRE", context.dayNewUsersKey, options.uniqueTtlSeconds]);
-      }
-      continue;
-    }
-
-    const firstSeenValue = await upstashCommand(["GET", context.firstSeenKey]);
-    const existingFirstSeenDay = normalizeDay(
-      firstSeenValue && typeof firstSeenValue.result === "string" ? firstSeenValue.result : ""
-    );
-
-    if (existingFirstSeenDay && plan.day < existingFirstSeenDay) {
-      pipeline.push(["SET", context.firstSeenKey, plan.day]);
-      pipeline.push([
-        "SREM",
-        replaceDayInTelemetryKey(context.dayNewUsersKey, existingFirstSeenDay),
-        fields.anonId,
-      ]);
-      pipeline.push(["SADD", context.dayNewUsersKey, fields.anonId]);
-      if (options.uniqueTtlSeconds > 0) {
-        pipeline.push(["EXPIRE", context.dayNewUsersKey, options.uniqueTtlSeconds]);
-      }
-      continue;
-    }
-
-    if (existingFirstSeenDay === plan.day) {
-      pipeline.push(["SADD", context.dayNewUsersKey, fields.anonId]);
-      if (options.uniqueTtlSeconds > 0) {
-        pipeline.push(["EXPIRE", context.dayNewUsersKey, options.uniqueTtlSeconds]);
-      }
-    }
-  }
-
-  if (options.rawStreamEnabled) {
-    const rawFieldPairs = [];
-    for (const [field, value] of Object.entries(plan.rawEvent)) {
-      rawFieldPairs.push(field, value === undefined || value === null ? "" : String(value));
-    }
-    pipeline.push(["XADD", buildRawStreamKey(plan.day), "*", ...rawFieldPairs]);
-    if (options.rawTtlSeconds > 0) {
-      pipeline.push(["EXPIRE", buildRawStreamKey(plan.day), options.rawTtlSeconds]);
-    }
-  }
-
-  await upstashPipeline(pipeline);
-  return { processed: true };
-}
-
-// Product-level newness. Unlike the per-event contexts, a user is "new" only if
-// they have never been seen under this product under ANY event — otherwise a
-// long-standing user emitting a newly-introduced event (every user upgrading
-// into the `open` event) would be counted as a new customer.
+// Ingestion appends the raw event and nothing else. Every derived metric --
+// counts, unique sets, first-seen records, weekly counters -- is reconstructed
+// downstream from these streams, so a valid event costs exactly one billable
+// Redis command.
 //
-// Cold start: nobody has this key when it first ships, so an absent key alone
-// cannot mean "new". Before claiming newness we seed from the user's earliest
-// existing per-event first-seen record. Genuinely new users have none, so they
-// still register correctly.
-async function applyProductNewUserContext(context, plan, fields, pipeline, options) {
-  const firstSeenResponse = await upstashCommand(["SET", context.firstSeenKey, plan.day, "NX"]);
-  const claimedFirstSeen = firstSeenResponse && firstSeenResponse.result === "OK";
+// `buildEventAggregationPlan` is still the source of the raw record and the UTC
+// day. It also computes aggregate key names that ingestion no longer writes;
+// that is pure CPU with no I/O, and it keeps the written schema identical to
+// what the downstream readers expect.
+async function appendRawEvents(fieldsList, context) {
+  if (!fieldsList.length) {
+    return;
+  }
 
-  let firstSeenDay = plan.day;
+  const commands = fieldsList.map((fields) => {
+    const plan = buildEventAggregationPlan(fields, {
+      city: context.city,
+      country: context.country,
+    });
 
-  if (claimedFirstSeen) {
-    const seededDay = await earliestKnownFirstSeenDay(context.seedFirstSeenKeys);
-    if (seededDay && seededDay < plan.day) {
-      // The user predates this key. Correct the record and do not count them.
-      pipeline.push(["SET", context.firstSeenKey, seededDay]);
-      return;
+    const pairs = [];
+    for (const [field, value] of Object.entries(plan.rawEvent)) {
+      pairs.push(field, value === undefined || value === null ? "" : String(value));
     }
-  } else {
-    const existing = await upstashCommand(["GET", context.firstSeenKey]);
-    firstSeenDay = normalizeDay(
-      existing && typeof existing.result === "string" ? existing.result : ""
-    );
+    return ["XADD", buildRawStreamKey(plan.day), "*", ...pairs];
+  });
 
-    if (firstSeenDay && plan.day < firstSeenDay) {
-      // Late-arriving event predating the recorded first sighting.
-      pipeline.push(["SET", context.firstSeenKey, plan.day]);
-      pipeline.push([
-        "SREM",
-        replaceDayInTelemetryKey(context.dayNewUsersKey, firstSeenDay),
-        fields.anonId,
-      ]);
-    } else if (firstSeenDay !== plan.day) {
-      return;
-    }
-  }
-
-  pipeline.push(["SADD", context.dayNewUsersKey, fields.anonId]);
-  if (options.uniqueTtlSeconds > 0) {
-    pipeline.push(["EXPIRE", context.dayNewUsersKey, options.uniqueTtlSeconds]);
-  }
-}
-
-async function earliestKnownFirstSeenDay(keys) {
-  if (!keys || !keys.length) {
-    return "";
-  }
-
-  const values = await getValues(keys);
-  let earliest = "";
-  for (const value of values) {
-    const day = normalizeDay(typeof value === "string" ? value : "");
-    if (day && (!earliest || day < earliest)) {
-      earliest = day;
-    }
-  }
-
-  return earliest;
-}
-
-function replaceDayInTelemetryKey(key, day) {
-  return String(key || "").replace(/telemetry:day:\d{4}-\d{2}-\d{2}:/, `telemetry:day:${day}:`);
+  await upstashPipeline(commands);
 }

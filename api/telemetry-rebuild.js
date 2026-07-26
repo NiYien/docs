@@ -91,12 +91,17 @@ export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }
       count_keys: Object.keys(aggregates.counts).length,
       unique_keys: Object.keys(aggregates.unique).length,
       new_user_candidates: aggregates.newUserEntries.length,
+      product_new_user_candidates: aggregates.productNewUserEntries.length,
       applied: false,
       deleted_day_keys: 0,
       writes: 0,
       new_user_writes: 0,
       new_users_created: 0,
       new_users_corrected: 0,
+      product_new_user_writes: 0,
+      product_new_users_created: 0,
+      product_new_users_corrected: 0,
+      product_first_seen_seeded: 0,
     };
 
     if (apply) {
@@ -111,6 +116,16 @@ export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }
       summary.new_user_writes = newUserResult.writes;
       summary.new_users_created = newUserResult.created;
       summary.new_users_corrected = newUserResult.corrected;
+
+      const productResult = await writeProductNewUsers(
+        aggregates.productNewUserEntries,
+        uniqueTtlSeconds
+      );
+      summary.product_new_user_writes = productResult.writes;
+      summary.product_new_users_created = productResult.created;
+      summary.product_new_users_corrected = productResult.corrected;
+      summary.product_first_seen_seeded = productResult.seeded;
+
       summary.applied = true;
     }
 
@@ -118,6 +133,35 @@ export async function rebuildDays({ days, apply, resetDayKeys, pageCount = 500 }
   }
 
   return { days, summaries };
+}
+
+// Raw retention used to be re-applied by ingestion on every single event. It
+// belongs on a schedule: one command per stream, independent of traffic.
+//
+// `TELEMETRY_RAW_TTL_DAYS=0` is a supported "retain forever" setting and must
+// leave the streams alone rather than expiring them.
+export async function applyRawRetention(days) {
+  const rawTtlDays = parseInt(process.env.TELEMETRY_RAW_TTL_DAYS || "365", 10);
+  const rawTtlSeconds = rawTtlDays > 0 ? rawTtlDays * 86400 : 0;
+
+  if (!rawTtlSeconds || !days.length) {
+    return { applied: 0, ttl_seconds: rawTtlSeconds };
+  }
+
+  // EXPIRE returns 0 for a key that does not exist, so days with no events
+  // cost a command but change nothing.
+  const responses = await upstashPipeline(
+    days.map((day) => ["EXPIRE", buildRawStreamKey(day), rawTtlSeconds])
+  );
+
+  let applied = 0;
+  for (const response of responses) {
+    if (response && Number(response.result) === 1) {
+      applied += 1;
+    }
+  }
+
+  return { applied, ttl_seconds: rawTtlSeconds };
 }
 
 export function getUtcDay(offsetDays = 0) {
@@ -176,6 +220,12 @@ function buildDayAggregates(events, targetDay) {
   const counts = {};
   const uniqueSets = {};
   const newUserEntries = new Map();
+  // Product-scoped newness is judged separately from event-scoped newness: a
+  // long-standing user emitting a newly-introduced event is new to the event
+  // but not to the product. Ingestion used to make this call inline; with
+  // ingestion reduced to a raw append, the rebuild is the only place left that
+  // can make it.
+  const productNewUserEntries = new Map();
 
   for (const row of events) {
     const fields = extractEventFields(row, {});
@@ -196,7 +246,11 @@ function buildDayAggregates(events, targetDay) {
       counts[key] = (counts[key] || 0) + 1;
     }
 
-    for (const key of plan.uniqueKeys) {
+    // The product-level ACTIVE set is what tells the stats API that
+    // product-level tracking was live on a day. It is written for every event,
+    // new user or not; without it the API silently falls back to a per-event
+    // count that reports existing users as new.
+    for (const key of [...plan.uniqueKeys, ...plan.productUniqueKeys, ...plan.migratedUserKeys]) {
       if (!uniqueSets[key]) {
         uniqueSets[key] = new Set();
       }
@@ -206,6 +260,12 @@ function buildDayAggregates(events, targetDay) {
     for (const context of plan.dayNewUserContexts) {
       if (!newUserEntries.has(context.firstSeenKey)) {
         newUserEntries.set(context.firstSeenKey, context);
+      }
+    }
+
+    for (const context of plan.productNewUserContexts) {
+      if (!productNewUserEntries.has(context.firstSeenKey)) {
+        productNewUserEntries.set(context.firstSeenKey, context);
       }
     }
   }
@@ -219,6 +279,7 @@ function buildDayAggregates(events, targetDay) {
     counts,
     unique,
     newUserEntries: Array.from(newUserEntries.values()),
+    productNewUserEntries: Array.from(productNewUserEntries.values()),
   };
 }
 
@@ -306,6 +367,106 @@ async function writeDayNewUsers(entries, uniqueTtlSeconds) {
   }
 
   return { writes, created, corrected };
+}
+
+// Product-level newness, mirroring what ingestion used to do inline but batched:
+// one MGET for the product records, one more for the seed records of whoever
+// has none.
+//
+// Cold start is the hazard. An absent product record cannot by itself mean
+// "new", because the key family is younger than the user base. Before claiming
+// newness the user's earliest per-event sighting is consulted; a genuinely new
+// user has none, so they still register correctly.
+async function writeProductNewUsers(entries, uniqueTtlSeconds) {
+  if (!entries.length) {
+    return { writes: 0, created: 0, corrected: 0, seeded: 0 };
+  }
+
+  const existingValues = await getValues(entries.map((entry) => entry.firstSeenKey));
+
+  const unseen = [];
+  for (let i = 0; i < entries.length; i += 1) {
+    if (!normalizeDay(String(existingValues[i] || "").trim())) {
+      unseen.push(entries[i]);
+    }
+  }
+
+  const seedKeys = [...new Set(unseen.flatMap((entry) => entry.seedFirstSeenKeys || []))];
+  const seedValues = seedKeys.length ? await getValues(seedKeys) : [];
+  const seedByKey = new Map(seedKeys.map((key, index) => [key, seedValues[index]]));
+
+  const commands = [];
+  let created = 0;
+  let corrected = 0;
+  let seeded = 0;
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i];
+    const day = extractDayFromTelemetryKey(entry.dayNewUsersKey);
+    if (!day) {
+      continue;
+    }
+
+    const existingDay = normalizeDay(String(existingValues[i] || "").trim());
+
+    if (!existingDay) {
+      let earliest = "";
+      for (const key of entry.seedFirstSeenKeys || []) {
+        const candidate = normalizeDay(String(seedByKey.get(key) || "").trim());
+        if (candidate && (!earliest || candidate < earliest)) {
+          earliest = candidate;
+        }
+      }
+
+      if (earliest && earliest < day) {
+        // The user predates this key family. Record the truth and do not count
+        // them as newly acquired.
+        commands.push(["SET", entry.firstSeenKey, earliest]);
+        seeded += 1;
+        continue;
+      }
+
+      commands.push(["SET", entry.firstSeenKey, day]);
+      commands.push(["SADD", entry.dayNewUsersKey, entry.anonId]);
+      if (uniqueTtlSeconds > 0) {
+        commands.push(["EXPIRE", entry.dayNewUsersKey, uniqueTtlSeconds]);
+      }
+      created += 1;
+      continue;
+    }
+
+    if (day < existingDay) {
+      commands.push(["SET", entry.firstSeenKey, day]);
+      commands.push([
+        "SREM",
+        replaceDayInTelemetryKey(entry.dayNewUsersKey, existingDay),
+        entry.anonId,
+      ]);
+      commands.push(["SADD", entry.dayNewUsersKey, entry.anonId]);
+      if (uniqueTtlSeconds > 0) {
+        commands.push(["EXPIRE", entry.dayNewUsersKey, uniqueTtlSeconds]);
+      }
+      corrected += 1;
+      continue;
+    }
+
+    if (existingDay === day) {
+      commands.push(["SADD", entry.dayNewUsersKey, entry.anonId]);
+      if (uniqueTtlSeconds > 0) {
+        commands.push(["EXPIRE", entry.dayNewUsersKey, uniqueTtlSeconds]);
+      }
+      corrected += 1;
+    }
+  }
+
+  let writes = 0;
+  for (let i = 0; i < commands.length; i += 200) {
+    const chunk = commands.slice(i, i + 200);
+    await upstashPipeline(chunk);
+    writes += chunk.length;
+  }
+
+  return { writes, created, corrected, seeded };
 }
 
 function extractDayFromTelemetryKey(key) {

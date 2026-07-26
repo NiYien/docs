@@ -1,4 +1,4 @@
-import { rebuildDays, getUtcDay } from "./telemetry-rebuild";
+import { rebuildDays, getUtcDay, applyRawRetention } from "./telemetry-rebuild";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
@@ -20,9 +20,20 @@ export default async function handler(req, res) {
 
   const scope = String(req.query.scope || "today").trim().toLowerCase();
   const apply = true;
-  const resetDayKeys = String(process.env.TELEMETRY_REBUILD_RESET_DAY_KEYS || "true").toLowerCase() !== "false";
+  // The automatic run never resets. Reset scans and deletes every
+  // `telemetry:day:<day>:*` key, and any family the rebuild does not rewrite is
+  // simply destroyed -- which is what happened nightly to the product active,
+  // new-user, and migrated sets. Repairing stale keys stays available through
+  // the authenticated manual endpoint, where it is a deliberate act.
+  const resetDayKeys = false;
 
   const days = scope === "yesterday" ? [getUtcDay(-1)] : [getUtcDay(0)];
+
+  const retentionLookback = Math.max(
+    parseInt(process.env.TELEMETRY_RAW_RETENTION_LOOKBACK_DAYS || "3", 10) || 3,
+    1
+  );
+  const retentionDays = Array.from({ length: retentionLookback }, (_, index) => getUtcDay(-index));
 
   try {
     const result = await rebuildDays({
@@ -32,11 +43,16 @@ export default async function handler(req, res) {
       pageCount: 500,
     });
 
+    // Ingestion no longer sets raw retention per event; it is applied here, at
+    // one command per stream.
+    const retention = await applyRawRetention(retentionDays);
+
     return res.status(200).json({
       ok: true,
       scope,
       dry_run: false,
       reset_day_keys: resetDayKeys,
+      raw_retention: retention,
       ...result,
     });
   } catch (error) {
