@@ -227,6 +227,28 @@ export function buildUniqueAllKey(day, productId, event, sourceAppId = "") {
   return `${buildStatsBasePrefix(day, productId, event, sourceAppId)}:unique:all`;
 }
 
+// Self-monitoring. Upstash exposes no usage counter through Redis, and its
+// console alerts are spend-based, so a free plan with a hard command cap cannot
+// be alerted on at all. This system therefore counts its own recurring cost.
+export const TELEMETRY_LAST_REBUILD_KEY = "telemetry:rebuild:last_success";
+export const TELEMETRY_USAGE_TTL_SECONDS = 70 * 86400;
+
+export function buildUsageCounterKey(period) {
+  return `telemetry:usage:${period}`;
+}
+
+// Usage is attributed to the month the events belong to, not the month the
+// rebuild ran in: ingestion is the dominant term and it was spent on the day
+// itself. On the first of a month the previous period therefore gains one more
+// night's worth, which is where it belongs.
+export function usagePeriodForDay(day) {
+  return String(day || "").slice(0, 7);
+}
+
+export function currentUsagePeriod() {
+  return new Date().toISOString().slice(0, 7);
+}
+
 export function buildScopedUniqueKey(day, productId, event, scope, name, sourceAppId = "") {
   return `${buildStatsBasePrefix(day, productId, event, sourceAppId)}:unique:${scope}:${encodeDimensionPart(
     name,

@@ -12,3 +12,4 @@ api/_telemetry-newusers.contract.test.mjs
 api/_telemetry-test-harness.mjs
 api/_telemetry-raw-ingestion.contract.test.mjs
 api/_telemetry-cron.contract.test.mjs
+api/_telemetry-health.contract.test.mjs

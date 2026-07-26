@@ -64,6 +64,43 @@
       color: var(--ink-2);
     }
 
+    .health-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+      align-items: baseline;
+      margin: 12px 0 4px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-2);
+      border-radius: 8px;
+      background: var(--card);
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+
+    .health-strip strong {
+      color: var(--ink-1);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .health-strip .note {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+
+    .health-strip.warn {
+      border-left-color: #d98324;
+    }
+
+    .health-strip.alert {
+      border-left-color: #c0392b;
+    }
+
+    .health-strip.alert strong {
+      color: #c0392b;
+    }
+
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -439,6 +476,11 @@
     <header>
       <h1>统计面板</h1>
       <p>人数、打开次数、品牌分布与小时使用情况（UTC）。</p>
+      <!-- Always rendered, not only past a threshold. Nothing else watches this
+           system's own cost -- the last overrun was noticed only when feedback,
+           sharing the same database, began failing -- so a routine glance at the
+           dashboard is the whole mechanism. -->
+      <div id="healthStrip" class="health-strip" hidden></div>
       <div class="controls">
         <label>
           Token
@@ -761,6 +803,7 @@
         const data = await response.json();
         lastPayload = data;
         syncSourceOptions(data.available_sources || []);
+        renderHealthStrip(data.health);
         renderKpis(data);
         renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {}, cityRankMetricEl.value);
         renderTable("brands", data.brand_totals || {}, data.brand_unique_totals || {}, "品牌", cityRankMetricEl.value);
@@ -811,6 +854,60 @@
       } finally {
         document.body.classList.remove("loading");
       }
+    }
+
+    // The usage figure counts this system's own recurring cost: one Redis
+    // command per ingested event plus the nightly rebuild's writes. It excludes
+    // dashboard reads and the current day, both of which are stated inline
+    // rather than left for someone to rediscover.
+    function renderHealthStrip(health) {
+      const el = document.getElementById("healthStrip");
+      if (!el) return;
+
+      if (!health) {
+        el.hidden = true;
+        return;
+      }
+
+      const allowance = Number(health.usage_allowance) || 0;
+      const used = health.usage_estimate;
+      const parts = [];
+      let level = "";
+
+      if (used === null || used === undefined) {
+        parts.push(`<span>本月用量 <strong>尚无记录</strong>${allowance ? ` / ${formatCompact(allowance)}` : ""}</span>`);
+      } else {
+        const pct = allowance ? Math.round((used / allowance) * 100) : 0;
+        if (allowance && used >= allowance * 0.75) level = "alert";
+        else if (allowance && used >= allowance * 0.5) level = "warn";
+        parts.push(
+          `<span>本月约 <strong>${formatCompact(used)}</strong>${allowance ? ` / ${formatCompact(allowance)}（${pct}%）` : ""}</span>`
+        );
+      }
+
+      const last = health.last_rebuild_at ? new Date(health.last_rebuild_at) : null;
+      if (last && !Number.isNaN(last.getTime())) {
+        const hours = (Date.now() - last.getTime()) / 3600000;
+        // 30h rather than 24h: a merely late run should not read as a failure.
+        if (hours > 30) level = "alert";
+        const age = hours < 1 ? "不到 1 小时前" : `${Math.floor(hours)} 小时前`;
+        parts.push(`<span>上次重建 <strong>${age}</strong></span>`);
+      } else {
+        level = "alert";
+        parts.push(`<span>上次重建 <strong>无记录</strong></span>`);
+      }
+
+      parts.push(`<span class="note">估算值，不含看板自身读取；当天数据要到次日重建后才计入</span>`);
+
+      el.className = `health-strip${level ? ` ${level}` : ""}`;
+      el.innerHTML = parts.join("");
+      el.hidden = false;
+    }
+
+    function formatCompact(value) {
+      const n = Number(value) || 0;
+      if (n >= 1000) return `${Math.round(n / 100) / 10}K`;
+      return String(n);
     }
 
     function renderKpis(data) {

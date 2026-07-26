@@ -8,7 +8,9 @@ import {
   buildScopedUniqueKey,
   buildStatsBasePrefix,
   buildUniqueAllKey,
+  buildUsageCounterKey,
   buildWeeklyUsagePattern,
+  currentUsagePeriod,
   decodeKeyPart,
   getIsoWeekKey,
   getUnionCardinality,
@@ -16,6 +18,7 @@ import {
   hasAnyExistingKeys,
   normalizeTelemetryQueryToken,
   scanKeys,
+  TELEMETRY_LAST_REBUILD_KEY,
 } from "./_telemetry-shared";
 
 export default async function handler(req, res) {
@@ -262,6 +265,7 @@ async function collectStats(dayList, weekQuery, filters) {
   const weeklyUsage = await collectWeeklyUsage(weekQuery, filters);
   const sourceUniqueTotals = await collectSourceUniqueTotals(dayList, filters, sourceTotals);
   const availableSources = Array.from(new Set(Object.keys(sourceTotals))).sort();
+  const health = await collectHealth();
 
   return {
     city_totals: cityTotals,
@@ -297,6 +301,7 @@ async function collectStats(dayList, weekQuery, filters) {
     weekly_usage: weeklyUsage,
     legacy_fallback_used: legacyDaysUsed.length > 0,
     legacy_days_used: legacyDaysUsed,
+    health,
   };
 }
 
@@ -765,4 +770,32 @@ function mergeWeeklyUserCounts(keys, values, totals) {
 function encodeLegacyKeyPart(value) {
   const text = String(value || "").trim().slice(0, 96);
   return encodeURIComponent(text || "Unknown");
+}
+
+// One MGET regardless of the queried range. The figure is an estimate of this
+// system's own recurring cost -- ingestion plus the nightly rebuild -- and
+// deliberately excludes dashboard reads, because counting those would mean a
+// write on every stats request, which is the pattern this whole line of work
+// exists to remove.
+async function collectHealth() {
+  const period = currentUsagePeriod();
+  const allowance =
+    parseInt(process.env.TELEMETRY_MONTHLY_COMMAND_ALLOWANCE || "500000", 10) || 500000;
+
+  const [usageValue, lastRebuildValue] = await getValues([
+    buildUsageCounterKey(period),
+    TELEMETRY_LAST_REBUILD_KEY,
+  ]);
+
+  const parsed = parseInt(String(usageValue ?? ""), 10);
+
+  return {
+    usage_period: period,
+    // Null rather than 0: "not recorded yet" and "nothing used" look identical
+    // as a number and mean very different things.
+    usage_estimate: Number.isFinite(parsed) ? parsed : null,
+    usage_allowance: allowance,
+    last_rebuild_at: typeof lastRebuildValue === "string" && lastRebuildValue ? lastRebuildValue : null,
+    estimate_excludes: ["dashboard reads", "manual rebuilds", "the current day"],
+  };
 }

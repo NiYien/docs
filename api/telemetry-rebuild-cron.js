@@ -1,4 +1,11 @@
 import { rebuildDays, getUtcDay, applyRawRetention } from "./telemetry-rebuild";
+import {
+  buildUsageCounterKey,
+  upstashPipeline,
+  usagePeriodForDay,
+  TELEMETRY_LAST_REBUILD_KEY,
+  TELEMETRY_USAGE_TTL_SECONDS,
+} from "./_telemetry-shared";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
@@ -47,15 +54,58 @@ export default async function handler(req, res) {
     // one command per stream.
     const retention = await applyRawRetention(retentionDays);
 
+    // Nothing watches this system's own cost, which is how the last overrun
+    // reached 513K of a 500K allowance before anyone noticed -- and noticed
+    // only because feedback, sharing the database, started failing. Upstash
+    // cannot alert on it: its notifications are spend-based and a free plan
+    // with a hard cap never accrues spend.
+    const health = await recordRunHealth(result.summaries || []);
+
     return res.status(200).json({
       ok: true,
       scope,
       dry_run: false,
       reset_day_keys: resetDayKeys,
       raw_retention: retention,
+      health,
       ...result,
     });
   } catch (error) {
     return res.status(500).json({ error: "Cron rebuild failed", detail: error.message || String(error) });
   }
+}
+
+// Ingestion costs exactly one command per accepted event, so the day's event
+// count IS its ingestion command count -- no separate measurement is needed.
+// Adding the rebuild's own writes gives the recurring cost of the whole
+// telemetry system for that day, accumulated into one counter per billing
+// period so the dashboard can read it in a single command.
+async function recordRunHealth(summaries) {
+  const summary = summaries[0];
+  if (!summary || !summary.day) {
+    return { recorded: false };
+  }
+
+  const events = Number(summary.raw_events) || 0;
+  const writes =
+    (Number(summary.writes) || 0) +
+    (Number(summary.new_user_writes) || 0) +
+    (Number(summary.product_new_user_writes) || 0);
+  const estimated = events + writes;
+  const period = usagePeriodForDay(summary.day);
+  const counterKey = buildUsageCounterKey(period);
+
+  await upstashPipeline([
+    ["INCRBY", counterKey, estimated],
+    ["EXPIRE", counterKey, TELEMETRY_USAGE_TTL_SECONDS],
+    [
+      "SET",
+      TELEMETRY_LAST_REBUILD_KEY,
+      new Date().toISOString(),
+      "EX",
+      TELEMETRY_USAGE_TTL_SECONDS,
+    ],
+  ]);
+
+  return { recorded: true, period, estimated_commands: estimated, events, writes };
 }
