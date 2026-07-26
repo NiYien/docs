@@ -19,20 +19,20 @@
         "update": false,
         "info_zh": "https://www.niyien.com/update_Niyien_tool_zh.html",
         "info_en": "https://www.niyien.com/update_Niyien_tool_en.html",
-        "mac_en": "https://www.niyien.com/NiYien_manual_EN.html",
-        "mac_zh": "https://www.niyien.com/NiYien_manual_ZH.html",
-        "win_en": "https://www.niyien.com/NiYien_manual_EN.html",
-        "win_zh": "https://www.niyien.com/NiYien_manual_ZH.html"
+        "mac_en": "https://www.niyien.com/v1/en/index.html",
+        "mac_zh": "https://www.niyien.com/v1/zh/index.html",
+        "win_en": "https://www.niyien.com/v1/en/index.html",
+        "win_zh": "https://www.niyien.com/v1/zh/index.html"
     },
     "Gyroflow": {
         "name": "Gyroflow",
         "major": "1.6.3",
         "version": 2494,
         "update": true,
-        "mac_en": "https://www.niyien.com/NiYien_manual_EN.html",
-        "mac_zh": "https://www.niyien.com/NiYien_manual_ZH.html",
-        "win_en": "https://www.niyien.com/NiYien_manual_EN.html",
-        "win_zh": "https://www.niyien.com/NiYien_manual_ZH.html",
+        "mac_en": "https://www.niyien.com/v1/en/index.html",
+        "mac_zh": "https://www.niyien.com/v1/zh/index.html",
+        "win_en": "https://www.niyien.com/v1/en/index.html",
+        "win_zh": "https://www.niyien.com/v1/zh/index.html",
         "sdk": "https://1846941948.cdn.123clouddisk.com/1846941948/Gyroflow_SDK/",
         "plugins": "https://1846941948.cdn.123clouddisk.com/1846941948/Gyroflow_Plugins/"
     }

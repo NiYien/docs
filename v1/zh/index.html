@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NiYien A1 视频教程</title>
-  <link rel="icon" href="assets/icon/logo.png" type="image/png">
+  <link rel="icon" href="/assets/icon/logo.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
   <script>
@@ -284,7 +284,7 @@
                   </div>
                   <p id="macVersionText" class="text-sm text-gray-500 text-center w-full"></p>
                   <p class="download-desc compact-desc text-center w-full">兼容 macOS11 及以上版本</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="startAppDownload('macos')">
+                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadMac)">
                     <i class="fa fa-download mr-2"></i> 下载
                   </button>
                 </div>
@@ -297,20 +297,7 @@
                   </div>
                   <p id="windowsVersionText" class="text-sm text-gray-500 text-center w-full"></p>
                   <p class="download-desc compact-desc text-center w-full">兼容 Win10 及以上版本</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="startAppDownload('windows')">
-                    <i class="fa fa-download mr-2"></i> 下载
-                  </button>
-                </div>
-
-                <!-- Android download -->
-                <div class="download-card flex flex-col items-center h-full p-4">
-                  <div class="flex items-center mb-3 justify-center w-full">
-                    <i class="fab fa-android text-gray-600 text-4xl mr-3"></i>
-                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">NiYien A1 for Android</h3>
-                  </div>
-                  <p id="androidVersionText" class="text-sm text-gray-500 text-center w-full"></p>
-                  <p class="download-desc compact-desc text-center w-full">兼容 Android 8 及以上版本</p>
-                  <button class="download-button compact-button w-full md:w-auto" onclick="startAppDownload('android')">
+                  <button class="download-button compact-button w-full md:w-auto" onclick="showDownloadModal(config.urls.downloadWindows)">
                     <i class="fa fa-download mr-2"></i> 下载
                   </button>
                 </div>
@@ -376,7 +363,7 @@
               <span><strong>相机设置</strong></span>
             </div>
             <div class="pl-9">
-              请看<a href="./advanced_usage/zh/Camera_Settings.html" target="_blank" class="text-primary hover:underline">点击这里</a>。
+              请看<a href="/advanced_usage/zh/Camera_Settings.html" target="_blank" class="text-primary hover:underline">点击这里</a>。
             </div>
           </li>
           <li>
@@ -394,7 +381,7 @@
               <span><strong>魔灯</strong></span>
             </div>
             <div class="pl-9">
-              佳能魔灯固件的使用方法，请<a href="./advanced_usage/zh/Magic_Lantern.html" target="_blank" class="text-primary hover:underline">点击这里</a>。
+              佳能魔灯固件的使用方法，请<a href="/advanced_usage/zh/Magic_Lantern.html" target="_blank" class="text-primary hover:underline">点击这里</a>。
             </div>
           </li>
           <li>
@@ -403,7 +390,7 @@
               <span><strong>相机支持列表</strong></span>
             </div>
             <div class="pl-9">
-              查看内录陀螺仪数据的相机机型，请<a href="./cameras/?lang=zh" target="_blank" class="text-primary hover:underline">点击这里</a>。
+              查看内录陀螺仪数据的相机机型，请<a href="/cameras/?lang=zh" target="_blank" class="text-primary hover:underline">点击这里</a>。
             </div>
           </li>
         </ul>
@@ -418,14 +405,15 @@
     // 集中管理所有URL和图片路径，方便后续修改
     const config = {
       urls: {
-        textTutorial: "NiYien_txt_manual_ZH.html",
+        textTutorial: "/NiYien_txt_manual_ZH.html",
         firmwareChangelog: "https://www.niyien.com/update_A1_zh.html",
-        softwareChangelog: "https://www.niyien.com/changelog/index.html?lang=zh",
-        manifest: "/api/manifest",
-        englishManual: "NiYien_manual_EN.html" // 添加英文手册URL
+        softwareChangelog: "https://www.niyien.com/update_Niyien_tool_zh.html",
+        downloadMac: "https://vip.123pan.cn/1846941948/NiYien%E8%BD%AF%E4%BB%B6/niyien_for_macos.zip",
+        downloadWindows: "https://vip.123pan.cn/1846941948/NiYien%E8%BD%AF%E4%BB%B6/niyien_for_windows.zip",
+        englishManual: "/v1/en/index.html" // 添加英文手册URL
       },
       images: {
-        wechatQrCode: "assets/qrcode/VX.png"
+        wechatQrCode: "/assets/qrcode/VX.png"
       }
     };
 
@@ -577,7 +565,7 @@
         };
       }
 
-      loadAppVersions();
+      loadToolVersions();
     });
 
     // 章节折叠/展开功能
@@ -680,7 +668,7 @@
 
             card.innerHTML = `
                 <div class="relative video-ratio bg-gray-200">
-                    <img src="assets/tn/zh/${video.id.replace('.', '_')}.jpg" alt="${video.title}" class="absolute inset-0 w-full h-full object-cover">
+                    <img src="/assets/tn/zh/${video.id.replace('.', '_')}.jpg" alt="${video.title}" class="absolute inset-0 w-full h-full object-cover">
                     <span class="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded">${video.id}</span>
                 </div>
                 <div class="p-4">
@@ -787,57 +775,28 @@
       }
     }
 
-    function getManifestAppUrl(data, platform) {
-      const app = data && data.app ? data.app : {};
-      const packageInfo = app.packages && app.packages[platform] ? app.packages[platform] : {};
-      if (platform === 'windows') {
-        return packageInfo.installer_url || app.url || packageInfo.package_url || '';
-      }
-      return app.url || packageInfo.installer_url || packageInfo.package_url || '';
-    }
-
-    function fetchAppManifest(platform) {
-      const url = `${config.urls.manifest}?platform=${encodeURIComponent(platform)}`;
-      return fetch(url).then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
-      });
-    }
-
-    function startAppDownload(platform) {
-      fetchAppManifest(platform)
-        .then(data => {
-          const url = getManifestAppUrl(data, platform);
-          if (!url) throw new Error('Missing download URL');
-          showDownloadModal(url);
+    // NiYien Tool ships a single version for every platform, so one request fills both cards.
+    function loadToolVersions() {
+      const targets = ['macVersionText', 'windowsVersionText']
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+      fetch('/Update/update.json')
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
         })
-        .catch(error => {
-          console.error('Error loading download:', error);
-          alert('暂时无法获取下载链接，请稍后重试。');
-        });
-    }
-
-    function loadAppVersion(platform, elementId) {
-      const target = document.getElementById(elementId);
-      fetchAppManifest(platform)
         .then(data => {
-          const version = data?.app?.version || '';
-          if (target) {
-            target.textContent = version ? `版本: ${version}` : '';
-          }
+          const version = data?.NiYien_tool?.version || '';
+          targets.forEach(el => {
+            el.textContent = version ? `版本: ${version}` : '';
+          });
         })
         .catch(error => {
           console.error('Error loading version:', error);
-          if (target) {
-            target.textContent = '';
-          }
+          targets.forEach(el => {
+            el.textContent = '';
+          });
         });
-    }
-
-    function loadAppVersions() {
-      loadAppVersion('macos', 'macVersionText');
-      loadAppVersion('windows', 'windowsVersionText');
-      loadAppVersion('android', 'androidVersionText');
     }
 
     // 增强renderVideos函数，添加ID属性支持锚点跳转

@@ -253,6 +253,18 @@
       "schedule": "15 0 * * *"
     }
   ],
+  "redirects": [
+    {
+      "source": "/NiYien_manual_ZH.html",
+      "destination": "/v2/zh/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/NiYien_manual_EN.html",
+      "destination": "/v2/en/index.html",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/download/app/([^/]+)/(.+)",

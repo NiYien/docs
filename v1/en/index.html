@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NiYien A1 Video Tutorial</title>
-  <link rel="icon" href="assets/icon/logo.png" type="image/png">
+  <link rel="icon" href="/assets/icon/logo.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
   <script>
@@ -431,7 +431,7 @@
               <span><strong>Camera Settings</strong></span>
             </div>
             <div class="pl-9">
-              <a href="./advanced_usage/en/Camera_Settings.html" target="_blank" class="text-primary hover:underline">Click here</a>.
+              <a href="/advanced_usage/en/Camera_Settings.html" target="_blank" class="text-primary hover:underline">Click here</a>.
             </div>
           </li>
           <li>
@@ -458,7 +458,7 @@
               <span><strong>Magic Lantern</strong></span>
             </div>
             <div class="pl-9">
-              For Canon cameras with Magic Lantern firmware, <a href="./advanced_usage/en/Magic_Lantern.html" target="_blank" class="text-primary hover:underline">Click here</a>.
+              For Canon cameras with Magic Lantern firmware, <a href="/advanced_usage/en/Magic_Lantern.html" target="_blank" class="text-primary hover:underline">Click here</a>.
             </div>
           </li>
           <li>
@@ -467,7 +467,7 @@
               <span><strong>FAQ</strong></span>
             </div>
             <div class="pl-9">
-              Frequently Asked Questions, <a href="./FAQ/FAQ_en.html" target="_blank" class="text-primary hover:underline">Click here</a>.
+              Frequently Asked Questions, <a href="/FAQ/FAQ_en.html" target="_blank" class="text-primary hover:underline">Click here</a>.
             </div>
           </li>
           <li>
@@ -476,7 +476,7 @@
               <span><strong>Supported Cameras</strong></span>
             </div>
             <div class="pl-9">
-              To see camera models with built-in gyro data, <a href="./cameras/?lang=en" target="_blank" class="text-primary hover:underline">Click here</a>.
+              To see camera models with built-in gyro data, <a href="/cameras/?lang=en" target="_blank" class="text-primary hover:underline">Click here</a>.
             </div>
           </li>
         </ul>
@@ -491,7 +491,7 @@
     // Centralized management of all URLs and image paths for easy modification
     const config = {
       urls: {
-        textTutorial: "NiYien_txt_manual_EN.html",
+        textTutorial: "/NiYien_txt_manual_EN.html",
         firmwareChangelog: "https://www.niyien.com/update_A1_en.html",
         softwareChangelog: "https://www.niyien.com/update_Niyien_tool_en.html",
         downloadMac: "https://dl.niyien.com/niyien_gyroflow_macos.zip",
@@ -499,10 +499,10 @@
         downloadMacBackup: "https://drive.google.com/drive/folders/14lVHH6HA2oLJyfxAodWUDE8_jFBOleJf?usp=sharing",
         downloadWindowsBackup: "https://drive.google.com/drive/folders/1JcgBvcy9HCDQzrZVCUgb1-XcJmI7s8ma?usp=sharing",
         betaManifest: "/api/manifest",
-        chineseManual: "NiYien_manual_ZH.html"
+        chineseManual: "/v1/zh/index.html"
       },
       images: {
-        wechatQrCode: "assets/qrcode/VX.png"
+        wechatQrCode: "/assets/qrcode/VX.png"
       }
     };
 
@@ -740,7 +740,7 @@
       }
 
       // Dynamically load the version number
-      fetch('Update/update.json')
+      fetch('/Update/update.json')
        .then(response => {
           if (!response.ok) throw new Error('Network response was not ok');
           return response.json();
@@ -866,7 +866,7 @@
 
           card.innerHTML = `
             <div class="relative video-ratio bg-gray-200">
-              <img src="assets/tn/en/${video.id.replace('.', '_')}.jpg" alt="${video.title}" class="absolute inset-0 w-full h-full object-cover">
+              <img src="/assets/tn/en/${video.id.replace('.', '_')}.jpg" alt="${video.title}" class="absolute inset-0 w-full h-full object-cover">
               <span class="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded">${video.id}</span>
             </div>
             <div class="p-4">
