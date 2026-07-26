@@ -19,7 +19,13 @@ const MAX_SIZE_BYTES = 50_000_000;
 const SHA256_HEX_RE = /^[a-f0-9]{64}$/i;
 const SUMMARY_MAX_LEN = 200;
 const EMAIL_MAX_LEN = 200;
-const PENDING_TTL_SECONDS = 300;
+// Must outlive UPLOAD_TTL_SECONDS. The client receives upload credentials valid
+// for 30 minutes, so an upload can legitimately finish 30 minutes after submit,
+// but this record used to expire after 5. At the 50MB ceiling that is ~167 KB/s:
+// anyone slower uploaded the entire file and then had confirm reject it as
+// expired, losing the report and orphaning the file in storage. The margin over
+// 1800 covers confirm arriving just after the last valid upload moment.
+const PENDING_TTL_SECONDS = 2400;
 const RATE_LIMIT_TTL_SECONDS = 86400;
 const RATE_LIMIT_PER_DAY = 10;
 const UPLOAD_TTL_SECONDS = 1800;
