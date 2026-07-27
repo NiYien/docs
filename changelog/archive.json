@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.93",
+      "tag": "run-30259796644",
+      "published_at": "2026-07-27T11:34:33Z",
+      "changelog": "1. Fix slow motion matching errors\n2. Optimize multi-day data assignment\n3. Fix inability to detect Canon Powershot series\n4. Fix some bugs",
+      "changelogs": {
+        "zh": "1. 修复升格匹配错误问题\n2. 优化多天数据分配功能\n3. 修复佳能 powershot 系列无法检测问题\n4. 解决一些bug",
+        "en": "1. Fix slow motion matching errors\n2. Optimize multi-day data assignment\n3. Fix inability to detect Canon Powershot series\n4. Fix some bugs",
+        "ja": "1. スローモーションのマッチングエラーを修正\n2. 複数日のデータ割り当てを最適化\n3. Canon Powershotシリーズを検出できない問題を修正\n4. いくつかのバグを修正",
+        "ko": "1. 슬로우 모션 매칭 오류 수정\n2. 여러 날 데이터 할당 최적화\n3. Canon Powershot 시리즈 감지 불가 문제 수정\n4. 일부 버그 수정",
+        "de": "1. Korrektur von Slow-Motion-Matching-Fehlern\n2. Optimierung der Zuordnung von Daten über mehrere Tage\n3. Fehler bei der Erkennung der Canon Powershot-Serie behoben\n4. Einige Fehler behoben",
+        "fr": "1. Correction des erreurs de correspondance en slow motion\n2. Optimisation de l'attribution des données multi-jours\n3. Correction de l'impossibilité de détecter la série Canon Powershot\n4. Correction de quelques bugs",
+        "es": "1. Corrección de errores de coincidencia en cámara lenta\n2. Optimización de la asignación de datos de varios días\n3. Corrección de la imposibilidad de detectar la serie Canon Powershot\n4. Corrección de algunos errores",
+        "ru": "1. Исправление ошибок сопоставления замедленной съемки\n2. Оптимизация распределения данных за несколько дней\n3. Исправление невозможности обнаружения серии Canon Powershot\n4. Исправление некоторых ошибок",
+        "pt": "1. Correção de erros de correspondência em câmera lenta\n2. Otimização da atribuição de dados de vários dias\n3. Correção da impossibilidade de detectar a série Canon Powershot\n4. Correção de alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.92",
       "tag": "run-29924856914",
       "published_at": "2026-07-22T14:27:50Z",
