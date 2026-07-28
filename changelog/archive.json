@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.94",
+      "tag": "run-30343592573",
+      "published_at": "2026-07-28T09:59:36Z",
+      "changelog": "Fixed abnormal parameter source issues for some cases.",
+      "changelogs": {
+        "zh": "1. 解决部分参数异常来源问题",
+        "en": "Fixed abnormal parameter source issues for some cases.",
+        "ja": "一部のパラメータ異常の原因を修正しました。",
+        "ko": "일부 매개변수 이상 소스 문제를 해결했습니다.",
+        "de": "Behobene Probleme mit abnormalen Parametern aus bestimmten Quellen.",
+        "fr": "Correction des problèmes de paramètres anormaux provenant de certaines sources.",
+        "es": "Se corrigieron problemas de parámetros anormales de algunas fuentes.",
+        "ru": "Исправлены проблемы с аномальными параметрами из некоторых источников.",
+        "pt": "Corrigidos problemas de parâmetros anormais de algumas fontes."
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.93",
       "tag": "run-30259796644",
       "published_at": "2026-07-27T11:34:33Z",
