@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.95",
+      "tag": "run-30423471802",
+      "published_at": "2026-07-29T05:41:49Z",
+      "changelog": "1. Fix R50 V not able to stabilize bug\n2. Fix installation position reloading back to 0 bug\n3. Fix Canon DSLR not recognized bug",
+      "changelogs": {
+        "zh": "1. 修复R50 V无法增稳bug\n2. 修复安装位置重新加载回到0 bug\n3. 修复佳能单反无法识别的bug",
+        "en": "1. Fix R50 V not able to stabilize bug\n2. Fix installation position reloading back to 0 bug\n3. Fix Canon DSLR not recognized bug",
+        "ja": "1. R50 V が手ぶれ補正できないバグを修正\n2. 取り付け位置の再読み込みが0に戻るバグを修正\n3. キヤノン一眼レフが認識されないバグを修正",
+        "ko": "1. R50 V 안정화 불가 버그 수정\n2. 설치 위치 다시 로드 시 0으로 돌아가는 버그 수정\n3. 캐논 DSLR 인식 불가 버그 수정",
+        "de": "1. Fehler behoben, dass R50 V nicht stabilisieren konnte\n2. Fehler behoben, dass die Einbauposition beim Neuladen auf 0 zurückgesetzt wurde\n3. Fehler behoben, dass Canon DSLR nicht erkannt wurde",
+        "fr": "1. Correction du bug où le R50 V ne pouvait pas stabiliser\n2. Correction du bug où la position d'installation revenait à 0 lors du rechargement\n3. Correction du bug où les reflex Canon n'étaient pas reconnus",
+        "es": "1. Corregido error de que R50 V no podía estabilizar\n2. Corregido error de que la posición de montaje se reiniciaba a 0 al recargar\n3. Corregido error de que la cámara réflex Canon no era reconocida",
+        "ru": "1. Исправлена ошибка, из-за которой R50 V не мог стабилизировать\n2. Исправлена ошибка, из-за которой положение установки сбрасывалось на 0 при перезагрузке\n3. Исправлена ошибка, из-за которой Canon DSLR не распознавался",
+        "pt": "1. Corrigido bug do R50 V não conseguir estabilizar\n2. Corrigido bug da posição de instalação voltar a 0 ao recarregar\n3. Corrigido bug da Canon DSLR não ser reconhecida"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.94",
       "tag": "run-30343592573",
       "published_at": "2026-07-28T09:59:36Z",
