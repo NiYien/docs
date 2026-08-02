@@ -3,6 +3,16 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.98",
+      "tag": "run-30749555105",
+      "published_at": "2026-08-02T13:43:44Z",
+      "changelog": "1. 优化手动镜头配置\n2. 修复部分佳能相机无法深度搜索的bug\n3. 修复一些小问题",
+      "changelogs": {
+        "zh": "1. 优化手动镜头配置\n2. 修复部分佳能相机无法深度搜索的bug\n3. 修复一些小问题"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.95",
       "tag": "run-30423471802",
       "published_at": "2026-07-29T05:41:49Z",
