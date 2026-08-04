@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.100",
+      "tag": "run-30890788910",
+      "published_at": "2026-08-04T10:12:25Z",
+      "changelog": "1. Improved manual lens control experience",
+      "changelogs": {
+        "zh": "1. 优化手动镜头操作体验",
+        "en": "1. Improved manual lens control experience",
+        "ja": "1. 手動レンズ操作の使い心地を改善",
+        "ko": "1. 수동 렌즈 조작 경험 개선",
+        "de": "1. Optimierte Bedienung manueller Objektive",
+        "fr": "1. Amélioration de l'expérience de contrôle manuel de l'objectif",
+        "es": "1. Mejora de la experiencia de control manual del objetivo",
+        "ru": "1. Улучшен опыт ручного управления объективом",
+        "pt": "1. Melhoria na experiência de controle manual da lente"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.98",
       "tag": "run-30749555105",
       "published_at": "2026-08-02T13:43:44Z",
