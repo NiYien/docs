@@ -282,8 +282,17 @@ export async function buildManifestPayload(req) {
   const resolvedLensSha = String(
     resolvedEntry?.lens_sha256 || process.env.NIYIEN_LENS_SHA256 || ""
   ).trim();
+  // Only versions strictly ABOVE the auto version belong here: the client
+  // renders this list as the "manual test build" row next to the stable
+  // one, and anything at or below the auto version would either restate
+  // the stable row or offer a downgrade. Their notes are not lost — they
+  // are pre-joined into app.changelog/app.changelogs below.
   const manualVersions = releasePolicy.versions
-    .filter((item) => item.channels.includes("manual"))
+    .filter(
+      (item) =>
+        item.channels.includes("manual") &&
+        (!autoEntry || compareAppVersions(item.version, autoEntry.version) > 0)
+    )
     .map((item) => {
       const manualPackage = withAbsolutePackageUrls(
         req,
@@ -356,6 +365,11 @@ export async function buildManifestPayload(req) {
     )}/`;
   }
 
+  // The stable row's aggregation window is empty now that manual_versions
+  // starts above the auto version, so its sections are joined here and the
+  // client's fallback path renders them as-is.
+  const stableChangelogs = buildStableChangelogs(releasePolicy.versions, autoEntry);
+
   appUrl = toAbsoluteManifestUrl(req, appUrl);
   lensUrl = toAbsoluteManifestUrl(req, lensUrl);
   sdkBase = toAbsoluteManifestUrl(req, sdkBase);
@@ -371,10 +385,10 @@ export async function buildManifestPayload(req) {
     app: {
       version: autoEntry?.version || "",
       url: appUrl,
-      changelog: autoEntry?.changelog || "",
+      changelog: stableChangelogs.changelog,
       // release-notes-i18n: same fallback semantics as the manual versions —
       // clients pick by locale, fall back to `changelog` when empty.
-      changelogs: autoEntry?.changelogs || {},
+      changelogs: stableChangelogs.changelogs,
       manual_versions: manualVersions,
       packages: appPackages,
     },
@@ -464,6 +478,211 @@ function normalizeChangelogs(value) {
     result[code] = text;
   }
   return result;
+}
+
+// ---- Update-dialog release notes (mirrors the gyroflow client) ----
+//
+// The client's update dialog shows at most two rows: the auto ("stable")
+// channel and the newest manual one. It builds each row's notes by
+// aggregating entries of `app.manual_versions[]` inside a window that
+// starts at the RUNNING build and ends at that row's target. Both windows
+// therefore start at the same place, and the manual one contains the
+// stable one — so every section the stable row shows was repeated under
+// the manual heading, including versions older than the stable target.
+//
+// Two coupled decisions keep the rows disjoint here, on the server, so
+// already-installed clients get the fix without an app update:
+//
+//   1. `manual_versions[]` carries only versions strictly ABOVE the auto
+//      version, leaving the manual row with exactly what the stable row
+//      does not already cover.
+//   2. That empties the stable row's own aggregation window, so its
+//      sections are pre-joined into `app.changelog` / `app.changelogs`
+//      here. The client finds no entries, takes its single-entry
+//      fallback path, and renders the pre-joined text verbatim.
+//
+// Accepted consequence of (2): the stable row no longer trims to "the
+// versions YOU skipped" — every client sees the same last-N sections
+// regardless of which build it upgrades from.
+
+// Mirrors AGGREGATED_CHANGELOG_MAX_VERSIONS in src/distribution.rs.
+const AGGREGATED_CHANGELOG_MAX_VERSIONS = 5;
+
+// Higher = newer at the same base. Mirrors `schema_priority` in the client.
+const VERSION_SCHEMA_PRIORITY = { ni: 2, dev: 1 };
+
+// Mirrors `parse_app_version`: strict `major.minor.patch` triple plus an
+// optional `-<schema>.<sequence>` suffix. Returns null when unparseable.
+function parseAppVersion(version) {
+  const trimmed = String(version || "").trim().replace(/^v+/, "");
+  if (!trimmed) {
+    return null;
+  }
+  const dash = trimmed.indexOf("-");
+  const baseStr = dash === -1 ? trimmed : trimmed.slice(0, dash);
+  const suffixRaw = dash === -1 ? null : trimmed.slice(dash + 1);
+  const parts = baseStr.split(".");
+  if (parts.length !== 3 || parts.some((part) => !/^\d+$/.test(part))) {
+    return null;
+  }
+  let suffix = null;
+  if (suffixRaw !== null) {
+    const dot = suffixRaw.indexOf(".");
+    const schema = dot === -1 ? suffixRaw : suffixRaw.slice(0, dot);
+    const seqStr = dot === -1 ? "" : suffixRaw.slice(dot + 1);
+    suffix = {
+      schema,
+      sequence: /^\d+$/.test(seqStr) ? Number(seqStr) : null,
+      raw: suffixRaw,
+    };
+  }
+  return { base: parts.map(Number), suffix };
+}
+
+function cmpParsedVersions(a, b) {
+  for (let i = 0; i < 3; i += 1) {
+    if (a.base[i] !== b.base[i]) {
+      return a.base[i] < b.base[i] ? -1 : 1;
+    }
+  }
+  // Same base: the bare version is that base's FIRST release, so any
+  // suffixed build of the same base is newer.
+  if (!a.suffix && !b.suffix) return 0;
+  if (!a.suffix) return -1;
+  if (!b.suffix) return 1;
+  const pa = VERSION_SCHEMA_PRIORITY[a.suffix.schema] || 0;
+  const pb = VERSION_SCHEMA_PRIORITY[b.suffix.schema] || 0;
+  if (pa !== pb) return pa < pb ? -1 : 1;
+  if (a.suffix.sequence !== null && b.suffix.sequence !== null) {
+    if (a.suffix.sequence === b.suffix.sequence) return 0;
+    return a.suffix.sequence < b.suffix.sequence ? -1 : 1;
+  }
+  if (a.suffix.raw === b.suffix.raw) return 0;
+  return a.suffix.raw < b.suffix.raw ? -1 : 1;
+}
+
+// Mirrors `compare_app_versions`: parseable beats unparseable, two
+// unparseable ones fall back to plain string order.
+function compareAppVersions(a, b) {
+  const pa = parseAppVersion(a);
+  const pb = parseAppVersion(b);
+  if (pa && pb) return cmpParsedVersions(pa, pb);
+  if (pa) return 1;
+  if (pb) return -1;
+  const ta = String(a || "").trim();
+  const tb = String(b || "").trim();
+  if (ta === tb) return 0;
+  return ta < tb ? -1 : 1;
+}
+
+// Mirrors `base_lang_code`: first chunk before `_`/`-`, kept only when it
+// has at least two characters. Deliberately does not lowercase — the
+// client doesn't either.
+function baseLangCode(locale) {
+  const trimmed = String(locale || "").trim();
+  if (!trimmed) {
+    return "";
+  }
+  const idx = trimmed.search(/[_-]/);
+  const base = idx === -1 ? trimmed : trimmed.slice(0, idx);
+  return base.length >= 2 ? base : "";
+}
+
+// Mirrors `pick_changelog`: base language, then en, then zh, then the
+// first key in sort order (the client's BTreeMap iterates sorted), then
+// the legacy string. A non-empty map never falls through to legacy.
+function pickChangelog(legacy, changelogs, locale) {
+  const map = changelogs && typeof changelogs === "object" ? changelogs : {};
+  const keys = Object.keys(map);
+  if (keys.length) {
+    const base = baseLangCode(locale);
+    if (base && typeof map[base] === "string") {
+      return map[base];
+    }
+    for (const fallback of ["en", "zh"]) {
+      if (typeof map[fallback] === "string") {
+        return map[fallback];
+      }
+    }
+    const first = keys.slice().sort()[0];
+    if (typeof map[first] === "string") {
+      return map[first];
+    }
+  }
+  return String(legacy || "");
+}
+
+// Mirrors the client's join: a lone section stays plain so single-version
+// notes keep their current look; two or more get bold version headings
+// (the dialog renders Markdown).
+function joinChangelogSections(sections) {
+  if (sections.length <= 1) {
+    return sections.length ? sections[0].text : "";
+  }
+  return sections
+    .map((section) => `**v${section.version.replace(/^v+/, "")}**\n\n${section.text}`)
+    .join("\n\n");
+}
+
+// Pre-join the stable row's notes: policy versions from the auto version
+// downwards, newest first, capped like the client does. `resolveText`
+// decides how one entry's text is read (per-locale, or the legacy string
+// alone). Entries that resolve to empty text don't consume a cap slot.
+function stableChangelogSections(covered, resolveText) {
+  const sections = [];
+  for (const item of covered) {
+    const text = resolveText(item).trim();
+    if (!text) {
+      continue;
+    }
+    sections.push({ version: String(item.version || "").trim(), text });
+    if (sections.length >= AGGREGATED_CHANGELOG_MAX_VERSIONS) {
+      break;
+    }
+  }
+  return sections;
+}
+
+// Build the auto channel's `changelog` / `changelogs` pair, aggregated
+// across every policy version at or below the auto version.
+function buildStableChangelogs(versions, autoEntry) {
+  if (!autoEntry) {
+    return { changelog: "", changelogs: {} };
+  }
+  const covered = versions
+    .filter((item) => compareAppVersions(item.version, autoEntry.version) <= 0)
+    .sort((a, b) => compareAppVersions(b.version, a.version));
+  // A policy that doesn't list its own auto version (env fallback, or a
+  // hand-edited one) must still lead with the auto entry's own notes.
+  if (!covered.some((item) => item.version === autoEntry.version)) {
+    covered.unshift(autoEntry);
+  }
+  const locales = new Set();
+  for (const item of covered) {
+    for (const code of Object.keys(item.changelogs || {})) {
+      locales.add(code);
+    }
+  }
+  const changelogs = {};
+  for (const locale of locales) {
+    const text = joinChangelogSections(
+      stableChangelogSections(covered, (item) =>
+        pickChangelog(item.changelog, item.changelogs, locale)
+      )
+    );
+    if (text) {
+      changelogs[locale] = text;
+    }
+  }
+  return {
+    // Legacy field: aggregated from the legacy strings alone. Reading it
+    // through `pickChangelog` would let an i18n map win and change what a
+    // pre-i18n consumer sees; clients with a non-empty map never read it.
+    changelog: joinChangelogSections(
+      stableChangelogSections(covered, (item) => String(item.changelog || ""))
+    ),
+    changelogs,
+  };
 }
 
 function normalizeAppUrls(value) {
