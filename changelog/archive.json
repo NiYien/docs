@@ -24,9 +24,17 @@
       "version": "1.6.3-ni.98",
       "tag": "run-30749555105",
       "published_at": "2026-08-02T13:43:44Z",
-      "changelog": "1. 优化手动镜头配置\n2. 修复部分佳能相机无法深度搜索的bug\n3. 修复一些小问题",
+      "changelog": "1. Optimized manual lens configuration\n2. Fixed a bug where some Canon cameras could not perform a deep search\n3. Fixed some minor issues",
       "changelogs": {
-        "zh": "1. 优化手动镜头配置\n2. 修复部分佳能相机无法深度搜索的bug\n3. 修复一些小问题"
+        "zh": "1. 优化手动镜头配置\n2. 修复部分佳能相机无法深度搜索的bug\n3. 修复一些小问题",
+        "en": "1. Optimized manual lens configuration\n2. Fixed a bug where some Canon cameras could not perform a deep search\n3. Fixed some minor issues",
+        "ja": "1. 手動レンズ設定を最適化\n2. 一部のCanonカメラでディープサーチができない不具合を修正\n3. いくつかの軽微な問題を修正",
+        "ko": "1. 수동 렌즈 구성 최적화\n2. 일부 Canon 카메라에서 딥 서치가 불가능한 버그 수정\n3. 일부 사소한 문제 수정",
+        "de": "1. Optimierung der manuellen Objektivkonfiguration\n2. Fehler behoben, bei dem einige Canon-Kameras keine Tiefensuche durchführen konnten\n3. Einige kleinere Probleme behoben",
+        "fr": "1. Optimisation de la configuration manuelle des objectifs\n2. Correction d'un bug empêchant certaines caméras Canon d'effectuer une recherche approfondie\n3. Correction de quelques problèmes mineurs",
+        "es": "1. Optimizar la configuración manual de la lente\n2. Corregir un error por el que algunas cámaras Canon no podían realizar una búsqueda profunda\n3. Corregir algunos problemas menores",
+        "ru": "1. Оптимизация ручной конфигурации объектива\n2. Исправлена ошибка, из-за которой некоторые камеры Canon не могли выполнять глубокий поиск\n3. Исправлены некоторые мелкие проблемы",
+        "pt": "1. Otimizar a configuração manual da lente\n2. Corrigir um bug que impedia algumas câmeras Canon de fazer uma pesquisa profunda\n3. Corrigir alguns problemas menores"
       },
       "recommended": true
     },
