@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.103",
+      "tag": "run-31142707888",
+      "published_at": "2026-08-07T04:08:45Z",
+      "changelog": "- Fixed a bug where rolling shutter correction was abnormal on some Sony models\n- Improved sync accuracy for some BRAW files",
+      "changelogs": {
+        "zh": "1. 解决索尼部分机型卷帘矫正异常的bug\n2. 优化部分braw同步精度",
+        "en": "- Fixed a bug where rolling shutter correction was abnormal on some Sony models\n- Improved sync accuracy for some BRAW files",
+        "ja": "- ソニーの一部機種でローリングシャッター補正が異常になるバグを修正\n- 一部のBRAWの同期精度を最適化",
+        "ko": "- 소니 일부 모델에서 롤링 셔터 보정이 비정상적으로 동작하는 버그 수정\n- 일부 BRAW 동기화 정확도 개선",
+        "de": "- Fehler behoben, bei dem die Roll-Shutter-Korrektur bei einigen Sony-Modellen fehlerhaft war\n- Sync-Genauigkeit für einige BRAW-Dateien verbessert",
+        "fr": "- Correction d'un bug où la correction du rolling shutter était anormale sur certains modèles Sony\n- Amélioration de la précision de synchronisation pour certains BRAW",
+        "es": "- Se corrigió un error en el que la corrección del rolling shutter era anómala en algunos modelos Sony\n- Se mejoró la precisión de sincronización para algunos BRAW",
+        "ru": "- Исправлена ошибка, из-за которой коррекция роллинг-шаттера работала некорректно на некоторых камерах Sony\n- Улучшена точность синхронизации для некоторых файлов BRAW",
+        "pt": "- Corrigido um bug em que a correção do rolling shutter estava anormal em alguns modelos Sony\n- Melhorada a precisão de sincronização para alguns BRAW"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.100",
       "tag": "run-30890788910",
       "published_at": "2026-08-04T10:12:25Z",
