@@ -190,6 +190,14 @@
       box-shadow: 0 18px 30px rgba(0, 0, 0, 0.04);
     }
 
+    /* Cards for dimensions the current event does not carry are hidden via the
+       `hidden` attribute. Stated explicitly so that adding a `display` rule to
+       `.card` later cannot silently outrank the UA stylesheet and bring them
+       back. */
+    .card[hidden] {
+      display: none;
+    }
+
     .card h2 {
       margin: 0 0 12px;
       font-size: 18px;
@@ -758,9 +766,10 @@
       cityRankMetricEl.value = normalizeRankMetric(cityRankMetricEl.value);
       localStorage.setItem("telemetry_stats_city_rank_metric", cityRankMetricEl.value);
       if (lastPayload) {
-        renderCitySummary(lastPayload.city_totals || {}, lastPayload.city_unique_totals || {}, lastPayload.city_brand_totals || {}, cityRankMetricEl.value);
-        renderTable("brands", lastPayload.brand_totals || {}, lastPayload.brand_unique_totals || {}, "品牌", cityRankMetricEl.value);
-        renderTable("models", lastPayload.model_totals || {}, lastPayload.model_unique_totals || {}, "型号", cityRankMetricEl.value);
+        // Must go through renderCameraDimensions, not renderTable directly --
+        // see the comment on that function.
+        const cameraView = renderCameraDimensions(lastPayload, cityRankMetricEl.value);
+        renderCitySummary(lastPayload.city_totals || {}, lastPayload.city_unique_totals || {}, cameraView.cityBrandTotals, cityRankMetricEl.value, cameraView.brandAvailable);
         renderTable("countries", lastPayload.country_totals || {}, lastPayload.country_unique_totals || {}, "国家/地区", cityRankMetricEl.value);
       }
     });
@@ -804,15 +813,13 @@
         lastPayload = data;
         syncSourceOptions(data.available_sources || []);
         renderHealthStrip(data.health);
-        renderKpis(data);
-        renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, data.city_brand_totals || {}, cityRankMetricEl.value);
-        renderTable("brands", data.brand_totals || {}, data.brand_unique_totals || {}, "品牌", cityRankMetricEl.value);
-        renderTable("models", data.model_totals || {}, data.model_unique_totals || {}, "型号", cityRankMetricEl.value);
+        const cameraView = renderCameraDimensions(data, cityRankMetricEl.value);
+        renderKpis(data, cameraView);
+        renderCitySummary(data.city_totals || {}, data.city_unique_totals || {}, cameraView.cityBrandTotals, cityRankMetricEl.value, cameraView.brandAvailable);
         renderTable("countries", data.country_totals || {}, data.country_unique_totals || {}, "国家/地区", cityRankMetricEl.value);
         renderHours("hours", data.hour_totals || []);
         renderWeeklyUsage("weeklyUsage", data.weekly_usage || {});
         renderSourceSummary("sourceSummary", data.source_totals || {}, data.source_unique_totals || {}, data.filters || {});
-        renderMatrix("matrix", data.city_brand_totals || {}, data.city_totals || {}, data.brand_totals || {});
 
         let mapOk = true;
         try {
@@ -843,6 +850,11 @@
         statusEl.textContent = "加载失败（检查 Token）";
         breakpointHintEl.textContent = "";
         kpiEl.innerHTML = "";
+        // An error state must not inherit the previous payload's availability
+        // verdict -- show the full (empty) skeleton instead of a partial one.
+        setCardVisible("brands", true);
+        setCardVisible("models", true);
+        setCardVisible("matrix", true);
         document.getElementById("cities").innerHTML = "";
         document.getElementById("brands").innerHTML = "";
         document.getElementById("models").innerHTML = "";
@@ -910,9 +922,12 @@
       return String(n);
     }
 
-    function renderKpis(data) {
+    function renderKpis(data, cameraView) {
       const cityTotals = data.city_totals || {};
-      const brandTotals = data.brand_totals || {};
+      // Case-merged totals, so the count reflects distinct brands rather than
+      // distinct spellings.
+      const brandTotals = cameraView?.brandTotals || data.brand_totals || {};
+      const brandAvailable = cameraView ? cameraView.brandAvailable : true;
       const totalOpens = Object.values(cityTotals).reduce((sum, val) => sum + (val || 0), 0);
       const uniquePeople = data.missing_unique_data ? "—" : (data.global_unique_total || 0);
       const newPeople = data.missing_new_data ? "—" : (data.global_new_total || 0);
@@ -934,7 +949,8 @@
         buildKpi("Tool 迁移（另计）", migratedPeople),
         buildKpi("总打开次数", totalOpens),
         buildKpi("活跃城市", activeCities),
-        buildKpi("活跃品牌", activeBrands),
+        // Dropped rather than shown as 1 when the event carries no camera brand.
+        brandAvailable ? buildKpi("活跃品牌", activeBrands) : "",
         buildKpi("来源数", activeSources),
         buildKpi("周活跃用户", weeklyUsers),
         buildKpi("重度占比", `${Math.round(heavyRatio * 100)}%`),
@@ -955,7 +971,11 @@
       return `<div><h3>${label}</h3><strong>${value}</strong></div>`;
     }
 
-    function renderCitySummary(cityTotals, cityUniqueTotals, cityBrandTotals, rankMetric = "people") {
+    // `showBrandColumn` is false when the event carries no camera brand: the
+    // column would then read 1 for every city (the lone placeholder bucket).
+    // Only that column drops -- city/people/opens stay valid for every event, so
+    // this card is never hidden outright.
+    function renderCitySummary(cityTotals, cityUniqueTotals, cityBrandTotals, rankMetric = "people", showBrandColumn = true) {
       const container = document.getElementById("cities");
       const metric = rankMetric === "opens" ? "opens" : "people";
       const entries = Object.entries(cityTotals)
@@ -984,7 +1004,9 @@
 
       const table = document.createElement("table");
       const header = document.createElement("tr");
-      header.innerHTML = "<th>城市</th><th>人数</th><th>打开次数</th><th>品牌数</th>";
+      header.innerHTML = showBrandColumn
+        ? "<th>城市</th><th>人数</th><th>打开次数</th><th>品牌数</th>"
+        : "<th>城市</th><th>人数</th><th>打开次数</th>";
       table.appendChild(header);
 
       const summary = document.createElement("p");
@@ -993,7 +1015,8 @@
 
       for (const [city, people, count, brands] of entries) {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${escapeHtml(cleanLabel(city))}</td><td>${people}</td><td>${count}</td><td>${brands}</td>`;
+        const brandCell = showBrandColumn ? `<td>${brands}</td>` : "";
+        row.innerHTML = `<td>${escapeHtml(cleanLabel(city))}</td><td>${people}</td><td>${count}</td>${brandCell}`;
         table.appendChild(row);
       }
 
@@ -1046,6 +1069,47 @@
       container.innerHTML = "";
       container.appendChild(summary);
       container.appendChild(table);
+    }
+
+    function setCardVisible(containerId, visible) {
+      const card = document.getElementById(containerId)?.closest(".card");
+      if (card) {
+        card.hidden = !visible;
+      }
+    }
+
+    // Single entry point for every camera-dimension panel. Both render paths go
+    // through here -- `loadStats` after a fetch, and the rank-metric change
+    // handler re-rendering the cached payload. Calling `renderTable("brands"…)`
+    // directly from either one would bypass the availability check and bring a
+    // hidden card back, and only some of them (that path touches neither the
+    // matrix nor the KPIs), leaving the page half hidden and half shown.
+    //
+    // Returns the merged view so callers can feed the same numbers to the KPI
+    // and city panels. `lastPayload` is never mutated -- exports must keep
+    // emitting the raw API payload.
+    function renderCameraDimensions(data, rankMetric) {
+      const brandMap = buildBrandCaseMap(data.brand_totals || {});
+      const brandTotals = applyBrandCaseMap(brandMap, data.brand_totals || {});
+      const brandUniqueTotals = applyBrandCaseMap(brandMap, data.brand_unique_totals || {});
+      const cityBrandTotals = applyBrandCaseMapToMatrix(brandMap, data.city_brand_totals || {});
+
+      const brandAvailable = !dimensionUnavailable(brandTotals, "Other");
+      const modelAvailable = !dimensionUnavailable(data.model_totals || {}, "Unknown");
+
+      setCardVisible("brands", brandAvailable);
+      setCardVisible("matrix", brandAvailable);
+      setCardVisible("models", modelAvailable);
+
+      if (brandAvailable) {
+        renderTable("brands", brandTotals, brandUniqueTotals, "品牌", rankMetric);
+        renderMatrix("matrix", cityBrandTotals, data.city_totals || {}, brandTotals);
+      }
+      if (modelAvailable) {
+        renderTable("models", data.model_totals || {}, data.model_unique_totals || {}, "型号", rankMetric);
+      }
+
+      return { brandTotals, cityBrandTotals, brandAvailable };
     }
 
     function renderHours(targetId, totals) {
@@ -1382,6 +1446,75 @@
       } catch (error) {
         return text;
       }
+    }
+
+    // Not every event carries every dimension. `manifest_fetch` fires at startup
+    // while pulling the update manifest, before any video is loaded, so the
+    // client has no camera to report; ingestion then fills the placeholder
+    // (`api/_telemetry-shared.js:69-70` -- these two literals are bound to that
+    // server-side default and must be changed together).
+    //
+    // A single placeholder row reads as real data, which is worse than an empty
+    // table: an empty table invites doubt, one "Other" row invites belief. So a
+    // dimension whose every key is the placeholder is treated as absent and its
+    // panels are hidden entirely.
+    //
+    // An EMPTY key set is not the same thing -- that is "no data for this event
+    // in this window", which keeps its normal "no data" placeholder. The
+    // short-circuit order below carries that distinction and must not be
+    // reversed.
+    function dimensionUnavailable(totals, placeholder) {
+      const keys = Object.keys(totals || {});
+      return keys.length > 0 && keys.every((key) => cleanLabel(key) === placeholder);
+    }
+
+    // gyroflow reports camera brands in camel case (`Canon`) while NiYien Tool
+    // reports them upper case (`CANON`). The source filter defaults to "all
+    // sources", so both land in one view and split every brand into two rows.
+    // Merging happens here, in the presentation layer only: stored events, Redis
+    // keys and client reporting are untouched, and the export path deliberately
+    // keeps the raw payload.
+    //
+    // Only letter case is folded. `BMD` vs `Blackmagic Design` are two different
+    // strings, not two spellings of one word, and are left alone.
+    function buildBrandCaseMap(brandTotals) {
+      const groups = new Map();
+      for (const [label, count] of Object.entries(brandTotals || {})) {
+        const key = cleanLabel(label).toLowerCase();
+        const current = groups.get(key);
+        if (!current || (Number(count) || 0) > current.count) {
+          groups.set(key, { label, count: Number(count) || 0 });
+        }
+      }
+
+      const map = new Map();
+      for (const label of Object.keys(brandTotals || {})) {
+        const winner = groups.get(cleanLabel(label).toLowerCase());
+        map.set(label, winner ? winner.label : label);
+      }
+      return map;
+    }
+
+    // Returns a NEW object. `brand_totals`, `brand_unique_totals` and
+    // `city_brand_totals` are joined by their label strings -- the tables look up
+    // people counts by the totals' label, and the matrix indexes cells by brand
+    // name -- so all three must be rewritten through the SAME map. Rewriting only
+    // one of them yields an all-zero people column or an all-zero matrix.
+    function applyBrandCaseMap(map, totals) {
+      const merged = {};
+      for (const [label, count] of Object.entries(totals || {})) {
+        const display = map.get(label) || label;
+        merged[display] = (merged[display] || 0) + (Number(count) || 0);
+      }
+      return merged;
+    }
+
+    function applyBrandCaseMapToMatrix(map, cityBrandTotals) {
+      const merged = {};
+      for (const [city, brands] of Object.entries(cityBrandTotals || {})) {
+        merged[city] = applyBrandCaseMap(map, brands || {});
+      }
+      return merged;
     }
 
     function exportJson() {
