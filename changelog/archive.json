@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.107",
+      "tag": "run-31460189835",
+      "published_at": "2026-08-11T05:33:59Z",
+      "changelog": "1. Fix rolling shutter correction parameters for some Nikon models\n2. Fix some bugs",
+      "changelogs": {
+        "zh": "1. 修复nikon部分机型卷帘快门矫正参数\n2. 修复一些bug",
+        "en": "1. Fix rolling shutter correction parameters for some Nikon models\n2. Fix some bugs",
+        "ja": "1. 一部のNikon機種のローリングシャッターの補正パラメータを修正\n2. いくつかのバグを修正",
+        "ko": "1. 일부 Nikon 모델의 롤링 셔터 보정 매개변수 수정\n2. 일부 버그 수정",
+        "de": "1. Korrekturparameter für den Rolling Shutter bei einigen Nikon-Modellen korrigiert\n2. Einige Fehler behoben",
+        "fr": "1. Correction des paramètres de l'obturateur déroulant pour certains modèles Nikon\n2. Correction de quelques bugs",
+        "es": "1. Corregidos los parámetros de corrección del obturador de cortina para algunos modelos de Nikon\n2. Corregidos algunos errores",
+        "ru": "1. Исправлены параметры коррекции rolling shutter для некоторых моделей Nikon\n2. Исправлены некоторые ошибки",
+        "pt": "1. Corrigidos os parâmetros de correção do obturador de cortina para alguns modelos Nikon\n2. Corrigidos alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.103",
       "tag": "run-31142707888",
       "published_at": "2026-08-07T04:08:45Z",
