@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.108",
+      "tag": "run-31807513951",
+      "published_at": "2026-08-14T15:08:45Z",
+      "changelog": "1. Improved range selection, added previous/next clip selection buttons\n2. Improved Android operation",
+      "changelogs": {
+        "zh": "1. 优化选择范围功能，增加上一个，下一个片段选择按钮\n2. 优化安卓操作",
+        "en": "1. Improved range selection, added previous/next clip selection buttons\n2. Improved Android operation",
+        "ja": "1. 選択範囲機能を改善、前/次のクリップ選択ボタンを追加\n2. Android操作を改善",
+        "ko": "1. 선택 범위 기능 개선, 이전/다음 클립 선택 버튼 추가\n2. Android 조작 개선",
+        "de": "1. Auswahlbereichsfunktion verbessert, Schaltflächen für vorherigen/nächsten Clip hinzugefügt\n2. Android-Bedienung verbessert",
+        "fr": "1. Amélioration de la fonction de sélection de plage, ajout de boutons de sélection du clip précédent/suivant\n2. Amélioration de l'utilisation sur Android",
+        "es": "1. Mejora de la función de selección de rango, botones añadidos para seleccionar el clip anterior/siguiente\n2. Mejora del uso en Android",
+        "ru": "1. Улучшена функция выбора диапазона, добавлены кнопки выбора предыдущего/следующего клипа\n2. Улучшена работа на Android",
+        "pt": "1. Melhoria na função de seleção de intervalo, adicionados botões para selecionar o clipe anterior/seguinte\n2. Melhoria na operação no Android"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.107",
       "tag": "run-31460189835",
       "published_at": "2026-08-11T05:33:59Z",
