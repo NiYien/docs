@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.109",
+      "tag": "run-31869621244",
+      "published_at": "2026-08-15T07:00:40Z",
+      "changelog": "1. Fixed a bug where Sony high frame rate recordings were missing lens profile files.",
+      "changelogs": {
+        "zh": "1. 修复索尼高帧率缺失镜头文件bug",
+        "en": "1. Fixed a bug where Sony high frame rate recordings were missing lens profile files.",
+        "ja": "1. ソニー高フレームレートでレンズファイルが欠落するバグを修正。",
+        "ko": "1. 소니 고프레임 레이트에서 렌즈 파일이 누락되는 버그를 수정했습니다.",
+        "de": "1. Fehler behoben, bei dem bei Sony mit hoher Bildrate Objektivdateien fehlten.",
+        "fr": "1. Correction d'un bug où les fichiers d'objectif manquaient pour les hautes fréquences d'images Sony.",
+        "es": "1. Corregido el error de archivos de lente faltantes en alta velocidad de fotogramas de Sony.",
+        "ru": "1. Исправлена ошибка отсутствия файлов объектива для высокой частоты кадров Sony.",
+        "pt": "1. Corrigido o bug de arquivos de lente ausentes em alta taxa de quadros da Sony."
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.108",
       "tag": "run-31807513951",
       "published_at": "2026-08-14T15:08:45Z",
