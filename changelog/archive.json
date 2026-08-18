@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.110",
+      "tag": "run-32134887124",
+      "published_at": "2026-08-18T15:46:49Z",
+      "changelog": "1. Fixed incorrect preview curve for some DNG files",
+      "changelogs": {
+        "zh": "1. 修复部分dng预览曲线错误的问题",
+        "en": "1. Fixed incorrect preview curve for some DNG files",
+        "ja": "1. 一部のDNGファイルでプレビューカーブが正しくない問題を修正",
+        "ko": "1. 일부 DNG 파일의 미리보기 커브 오류 수정",
+        "de": "1. Fehlerhafte Vorschaukurve bei einigen DNG-Dateien behoben",
+        "fr": "1. Correction de la courbe d'aperçu incorrecte pour certains fichiers DNG",
+        "es": "1. Corregido el problema de la curva de vista previa incorrecta en algunos archivos DNG",
+        "ru": "1. Исправлена проблема с некорректной кривой предпросмотра для некоторых файлов DNG",
+        "pt": "1. Corrigido o problema de curva de pré-visualização incorreta em alguns arquivos DNG"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.109",
       "tag": "run-31869621244",
       "published_at": "2026-08-15T07:00:40Z",
