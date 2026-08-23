@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.112",
+      "tag": "run-32636661658",
+      "published_at": "2026-08-23T12:04:06Z",
+      "changelog": "1. Fixed bmcc dng video parsing\n2. Fixed issue where export fails when bitrate is too high",
+      "changelogs": {
+        "zh": "1. 修复bmcc dng视频解析\n2. 修复码率过大时，无法导出问题",
+        "en": "1. Fixed bmcc dng video parsing\n2. Fixed issue where export fails when bitrate is too high",
+        "ja": "1. bmcc dng ビデオの解析を修正\n2. ビットレートが高すぎるとエクスポートできない問題を修正",
+        "ko": "1. bmcc dng 비디오 파싱 수정\n2. 비트레이트가 너무 높을 때 내보내기가 불가능한 문제 수정",
+        "de": "1. Fehler beim Parsen von bmcc-dng-Videos behoben\n2. Problem behoben, dass Export bei zu hoher Bitrate nicht möglich war",
+        "fr": "1. Correction de l'analyse des vidéos bmcc dng\n2. Correction du problème d'export impossible lorsque le débit binaire est trop élevé",
+        "es": "1. Corrección del análisis de vídeos bmcc dng\n2. Corregido el problema de no poder exportar cuando la tasa de bits es demasiado alta",
+        "ru": "1. Исправлен разбор видео bmcc dng\n2. Исправлена проблема невозможности экспорта при слишком большом битрейте",
+        "pt": "1. Correção da análise de vídeos bmcc dng\n2. Corrigido o problema de não ser possível exportar quando a taxa de bits é muito alta"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.110",
       "tag": "run-32134887124",
       "published_at": "2026-08-18T15:46:49Z",
