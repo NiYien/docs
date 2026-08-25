@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.117",
+      "tag": "run-32834966779",
+      "published_at": "2026-08-25T10:33:17Z",
+      "changelog": "1. Fix issue where some Windows systems show no installed plugins\n2. Fix abnormal horizon correction on some Canon cameras\n3. Fix issue where some Panasonic cameras cannot be matched\n4. Fix issue where some Intel GPUs cannot generate\n5. Fix abnormal stabilization at 100/120fps on some Sony models",
+      "changelogs": {
+        "zh": "1.修复部分windows无安装插件显示的问题\n2.修复部分佳能相机水平校正异常的问题\n3.修复部分松下相机无法匹配问题\n4.修复部分intel显卡无法生成\n5.修复部分sony机型100/120fps防抖异常问题",
+        "en": "1. Fix issue where some Windows systems show no installed plugins\n2. Fix abnormal horizon correction on some Canon cameras\n3. Fix issue where some Panasonic cameras cannot be matched\n4. Fix issue where some Intel GPUs cannot generate\n5. Fix abnormal stabilization at 100/120fps on some Sony models",
+        "ja": "1. 一部Windowsでインストール済みプラグインが表示されない問題を修正\n2. 一部Canonカメラで水平補正が異常になる問題を修正\n3. 一部Panasonicカメラがマッチングできない問題を修正\n4. 一部Intel GPUで生成できない問題を修正\n5. 一部Sony機種で100/120fpsのスタビライズが異常になる問題を修正",
+        "ko": "1. 일부 Windows에서 설치된 플러그인이 표시되지 않는 문제 수정\n2. 일부 Canon 카메라의 수평 보정 이상 문제 수정\n3. 일부 Panasonic 카메라가 매칭되지 않는 문제 수정\n4. 일부 Intel GPU에서 생성할 수 없는 문제 수정\n5. 일부 Sony 모델의 100/120fps 스태빌라이즈 이상 문제 수정",
+        "de": "1. Problem behoben, bei dem auf einigen Windows-Systemen keine installierten Plugins angezeigt wurden\n2. Problem mit fehlerhafter Horizontkorrektur bei einigen Canon-Kameras behoben\n3. Problem behoben, bei dem einige Panasonic-Kameras nicht zugeordnet werden konnten\n4. Problem behoben, bei dem einige Intel-GPUs nicht generieren konnten\n5. Problem mit fehlerhafter Stabilisierung bei 100/120fps bei einigen Sony-Modellen behoben",
+        "fr": "1. Correction d'un problème où certains systèmes Windows n'affichaient aucun plugin installé\n2. Correction d'un problème de correction d'horizon anormale sur certaines caméras Canon\n3. Correction d'un problème où certaines caméras Panasonic ne pouvaient pas être mises en correspondance\n4. Correction d'un problème où certains GPU Intel ne pouvaient pas générer\n5. Correction d'un problème de stabilisation anormale à 100/120fps sur certains modèles Sony",
+        "es": "1. Se corrige un problema por el que algunos equipos Windows no mostraban los complementos instalados\n2. Se corrige un problema de corrección de horizonte anómala en algunas cámaras Canon\n3. Se corrige un problema por el que algunas cámaras Panasonic no podían coincidir\n4. Se corrige un problema por el que algunas GPU Intel no podían generar\n5. Se corrige un problema de estabilización anómala a 100/120fps en algunos modelos Sony",
+        "ru": "1. Исправлена проблема, из-за которой на некоторых системах Windows не отображались установленные плагины\n2. Исправлена проблема некорректной коррекции горизонта на некоторых камерах Canon\n3. Исправлена проблема, из-за которой некоторые камеры Panasonic не могли быть сопоставлены\n4. Исправлена проблема, из-за которой некоторые видеокарты Intel не могли генерировать\n5. Исправлена проблема некорректной стабилизации при 100/120fps на некоторых моделях Sony",
+        "pt": "1. Correção de problema em que alguns sistemas Windows não exibiam os plug-ins instalados\n2. Correção de problema de correção de horizonte anormal em algumas câmeras Canon\n3. Correção de problema em que algumas câmeras Panasonic não eram reconhecidas\n4. Correção de problema em que algumas GPUs Intel não conseguiam gerar\n5. Correção de problema de estabilização anormal a 100/120fps em alguns modelos Sony"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.116",
       "tag": "run-32822306292",
       "published_at": "2026-08-25T08:46:58Z",
