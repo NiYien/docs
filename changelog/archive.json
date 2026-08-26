@@ -3,6 +3,132 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.117",
+      "tag": "run-32834966779",
+      "published_at": "2026-08-25T10:33:17Z",
+      "changelog": "1. Fix issue where some Windows systems show no installed plugins\n2. Fix abnormal horizon correction on some Canon cameras\n3. Fix issue where some Panasonic cameras cannot be matched\n4. Fix issue where some Intel GPUs cannot generate\n5. Fix abnormal stabilization at 100/120fps on some Sony models",
+      "changelogs": {
+        "zh": "1.修复部分windows无安装插件显示的问题\n2.修复部分佳能相机水平校正异常的问题\n3.修复部分松下相机无法匹配问题\n4.修复部分intel显卡无法生成\n5.修复部分sony机型100/120fps防抖异常问题",
+        "en": "1. Fix issue where some Windows systems show no installed plugins\n2. Fix abnormal horizon correction on some Canon cameras\n3. Fix issue where some Panasonic cameras cannot be matched\n4. Fix issue where some Intel GPUs cannot generate\n5. Fix abnormal stabilization at 100/120fps on some Sony models",
+        "ja": "1. 一部Windowsでインストール済みプラグインが表示されない問題を修正\n2. 一部Canonカメラで水平補正が異常になる問題を修正\n3. 一部Panasonicカメラがマッチングできない問題を修正\n4. 一部Intel GPUで生成できない問題を修正\n5. 一部Sony機種で100/120fpsのスタビライズが異常になる問題を修正",
+        "ko": "1. 일부 Windows에서 설치된 플러그인이 표시되지 않는 문제 수정\n2. 일부 Canon 카메라의 수평 보정 이상 문제 수정\n3. 일부 Panasonic 카메라가 매칭되지 않는 문제 수정\n4. 일부 Intel GPU에서 생성할 수 없는 문제 수정\n5. 일부 Sony 모델의 100/120fps 스태빌라이즈 이상 문제 수정",
+        "de": "1. Problem behoben, bei dem auf einigen Windows-Systemen keine installierten Plugins angezeigt wurden\n2. Problem mit fehlerhafter Horizontkorrektur bei einigen Canon-Kameras behoben\n3. Problem behoben, bei dem einige Panasonic-Kameras nicht zugeordnet werden konnten\n4. Problem behoben, bei dem einige Intel-GPUs nicht generieren konnten\n5. Problem mit fehlerhafter Stabilisierung bei 100/120fps bei einigen Sony-Modellen behoben",
+        "fr": "1. Correction d'un problème où certains systèmes Windows n'affichaient aucun plugin installé\n2. Correction d'un problème de correction d'horizon anormale sur certaines caméras Canon\n3. Correction d'un problème où certaines caméras Panasonic ne pouvaient pas être mises en correspondance\n4. Correction d'un problème où certains GPU Intel ne pouvaient pas générer\n5. Correction d'un problème de stabilisation anormale à 100/120fps sur certains modèles Sony",
+        "es": "1. Se corrige un problema por el que algunos equipos Windows no mostraban los complementos instalados\n2. Se corrige un problema de corrección de horizonte anómala en algunas cámaras Canon\n3. Se corrige un problema por el que algunas cámaras Panasonic no podían coincidir\n4. Se corrige un problema por el que algunas GPU Intel no podían generar\n5. Se corrige un problema de estabilización anómala a 100/120fps en algunos modelos Sony",
+        "ru": "1. Исправлена проблема, из-за которой на некоторых системах Windows не отображались установленные плагины\n2. Исправлена проблема некорректной коррекции горизонта на некоторых камерах Canon\n3. Исправлена проблема, из-за которой некоторые камеры Panasonic не могли быть сопоставлены\n4. Исправлена проблема, из-за которой некоторые видеокарты Intel не могли генерировать\n5. Исправлена проблема некорректной стабилизации при 100/120fps на некоторых моделях Sony",
+        "pt": "1. Correção de problema em que alguns sistemas Windows não exibiam os plug-ins instalados\n2. Correção de problema de correção de horizonte anormal em algumas câmeras Canon\n3. Correção de problema em que algumas câmeras Panasonic não eram reconhecidas\n4. Correção de problema em que algumas GPUs Intel não conseguiam gerar\n5. Correção de problema de estabilização anormal a 100/120fps em alguns modelos Sony"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.116",
+      "tag": "run-32822306292",
+      "published_at": "2026-08-25T08:46:58Z",
+      "changelog": "1. Fixed a display issue on some Windows systems without installed plugins.\n2. Fixed abnormal horizontal correction on some Canon cameras.\n3. Fixed a matching issue on some Panasonic cameras.\n4. Fixed failure to generate on some Intel graphics cards.\n5. Fixed abnormal stabilization on some Sony models at 100/120 fps.",
+      "changelogs": {
+        "zh": "1.修复部分windows无安装插件显示的问题\n2.修复部分佳能相机水平校正异常的问题\n3.修复部分松下相机无法匹配问题\n4.修复部分intel显卡无法生成\n5.修复部分sony机型100/120fps防抖异常问题",
+        "en": "1. Fixed a display issue on some Windows systems without installed plugins.\n2. Fixed abnormal horizontal correction on some Canon cameras.\n3. Fixed a matching issue on some Panasonic cameras.\n4. Fixed failure to generate on some Intel graphics cards.\n5. Fixed abnormal stabilization on some Sony models at 100/120 fps.",
+        "ja": "1. 一部のWindowsでプラグインがインストールされていない際の表示問題を修正\n2. 一部のCanonカメラで水平補正が異常になる問題を修正\n3. 一部のPanasonicカメラでマッチングできない問題を修正\n4. 一部のIntel GPUで生成できない問題を修正\n5. 一部のSony機種で100/120fpsの手ぶれ補正が異常になる問題を修正",
+        "ko": "1. 일부 Windows에서 플러그인이 설치되지 않은 경우 표시 문제 수정\n2. 일부 Canon 카메라의 수평 보정 이상 문제 수정\n3. 일부 Panasonic 카메라가 매칭되지 않는 문제 수정\n4. 일부 Intel GPU에서 생성되지 않는 문제 수정\n5. 일부 Sony 모델의 100/120fps 손떨림 보정 이상 문제 수정",
+        "de": "1. Problem mit der Anzeige auf einigen Windows-Systemen ohne installierte Plugins behoben.\n2. Problem mit abnormer Horizontkorrektur bei einigen Canon-Kameras behoben.\n3. Problem behoben, dass einige Panasonic-Kameras nicht zugeordnet werden konnten.\n4. Problem behoben, dass einige Intel-Grafikkarten keine Generierung durchführen konnten.\n5. Problem mit abnormer Stabilisierung bei einigen Sony-Modellen bei 100/120 fps behoben.",
+        "fr": "1. Correction d'un problème d'affichage sur certains systèmes Windows sans plugins installés.\n2. Correction d'un problème de correction d'horizon anormale sur certains appareils Canon.\n3. Correction d'un problème d'appairage sur certains appareils Panasonic.\n4. Correction d'un problème de génération sur certaines cartes graphiques Intel.\n5. Correction d'un problème de stabilisation anormale sur certains modèles Sony en 100/120 fps.",
+        "es": "1. Se corrigió un problema de visualización en algunos sistemas Windows sin plugins instalados.\n2. Se corrigió un problema de corrección de horizonte anómala en algunas cámaras Canon.\n3. Se corrigió un problema de coincidencia en algunas cámaras Panasonic.\n4. Se corrigió un problema de generación en algunas tarjetas gráficas Intel.\n5. Se corrigió un problema de estabilización anómala en algunos modelos Sony a 100/120 fps.",
+        "ru": "1. Исправлена проблема с отображением на некоторых системах Windows без установленных плагинов.\n2. Исправлена проблема некорректной горизонтальной коррекции на некоторых камерах Canon.\n3. Исправлена проблема, из-за которой некоторые камеры Panasonic не сопоставлялись.\n4. Исправлена проблема с генерацией на некоторых видеокартах Intel.\n5. Исправлена проблема некорректной стабилизации на некоторых моделях Sony при 100/120 fps.",
+        "pt": "1. Corrigido um problema de exibição em alguns sistemas Windows sem plugins instalados.\n2. Corrigido um problema de correção de horizonte anormal em algumas câmeras Canon.\n3. Corrigido um problema de correspondência em algumas câmeras Panasonic.\n4. Corrigido um problema de geração em algumas GPUs Intel.\n5. Corrigido um problema de estabilização anormal em alguns modelos Sony a 100/120 fps."
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.112",
+      "tag": "run-32636661658",
+      "published_at": "2026-08-23T12:04:06Z",
+      "changelog": "1. Fixed bmcc dng video parsing\n2. Fixed issue where export fails when bitrate is too high",
+      "changelogs": {
+        "zh": "1. 修复bmcc dng视频解析\n2. 修复码率过大时，无法导出问题",
+        "en": "1. Fixed bmcc dng video parsing\n2. Fixed issue where export fails when bitrate is too high",
+        "ja": "1. bmcc dng ビデオの解析を修正\n2. ビットレートが高すぎるとエクスポートできない問題を修正",
+        "ko": "1. bmcc dng 비디오 파싱 수정\n2. 비트레이트가 너무 높을 때 내보내기가 불가능한 문제 수정",
+        "de": "1. Fehler beim Parsen von bmcc-dng-Videos behoben\n2. Problem behoben, dass Export bei zu hoher Bitrate nicht möglich war",
+        "fr": "1. Correction de l'analyse des vidéos bmcc dng\n2. Correction du problème d'export impossible lorsque le débit binaire est trop élevé",
+        "es": "1. Corrección del análisis de vídeos bmcc dng\n2. Corregido el problema de no poder exportar cuando la tasa de bits es demasiado alta",
+        "ru": "1. Исправлен разбор видео bmcc dng\n2. Исправлена проблема невозможности экспорта при слишком большом битрейте",
+        "pt": "1. Correção da análise de vídeos bmcc dng\n2. Corrigido o problema de não ser possível exportar quando a taxa de bits é muito alta"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.110",
+      "tag": "run-32134887124",
+      "published_at": "2026-08-18T15:46:49Z",
+      "changelog": "1. Fixed incorrect preview curve for some DNG files",
+      "changelogs": {
+        "zh": "1. 修复部分dng预览曲线错误的问题",
+        "en": "1. Fixed incorrect preview curve for some DNG files",
+        "ja": "1. 一部のDNGファイルでプレビューカーブが正しくない問題を修正",
+        "ko": "1. 일부 DNG 파일의 미리보기 커브 오류 수정",
+        "de": "1. Fehlerhafte Vorschaukurve bei einigen DNG-Dateien behoben",
+        "fr": "1. Correction de la courbe d'aperçu incorrecte pour certains fichiers DNG",
+        "es": "1. Corregido el problema de la curva de vista previa incorrecta en algunos archivos DNG",
+        "ru": "1. Исправлена проблема с некорректной кривой предпросмотра для некоторых файлов DNG",
+        "pt": "1. Corrigido o problema de curva de pré-visualização incorreta em alguns arquivos DNG"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.109",
+      "tag": "run-31869621244",
+      "published_at": "2026-08-15T07:00:40Z",
+      "changelog": "1. Fixed a bug where Sony high frame rate recordings were missing lens profile files.",
+      "changelogs": {
+        "zh": "1. 修复索尼高帧率缺失镜头文件bug",
+        "en": "1. Fixed a bug where Sony high frame rate recordings were missing lens profile files.",
+        "ja": "1. ソニー高フレームレートでレンズファイルが欠落するバグを修正。",
+        "ko": "1. 소니 고프레임 레이트에서 렌즈 파일이 누락되는 버그를 수정했습니다.",
+        "de": "1. Fehler behoben, bei dem bei Sony mit hoher Bildrate Objektivdateien fehlten.",
+        "fr": "1. Correction d'un bug où les fichiers d'objectif manquaient pour les hautes fréquences d'images Sony.",
+        "es": "1. Corregido el error de archivos de lente faltantes en alta velocidad de fotogramas de Sony.",
+        "ru": "1. Исправлена ошибка отсутствия файлов объектива для высокой частоты кадров Sony.",
+        "pt": "1. Corrigido o bug de arquivos de lente ausentes em alta taxa de quadros da Sony."
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.108",
+      "tag": "run-31807513951",
+      "published_at": "2026-08-14T15:08:45Z",
+      "changelog": "1. Improved range selection, added previous/next clip selection buttons\n2. Improved Android operation",
+      "changelogs": {
+        "zh": "1. 优化选择范围功能，增加上一个，下一个片段选择按钮\n2. 优化安卓操作",
+        "en": "1. Improved range selection, added previous/next clip selection buttons\n2. Improved Android operation",
+        "ja": "1. 選択範囲機能を改善、前/次のクリップ選択ボタンを追加\n2. Android操作を改善",
+        "ko": "1. 선택 범위 기능 개선, 이전/다음 클립 선택 버튼 추가\n2. Android 조작 개선",
+        "de": "1. Auswahlbereichsfunktion verbessert, Schaltflächen für vorherigen/nächsten Clip hinzugefügt\n2. Android-Bedienung verbessert",
+        "fr": "1. Amélioration de la fonction de sélection de plage, ajout de boutons de sélection du clip précédent/suivant\n2. Amélioration de l'utilisation sur Android",
+        "es": "1. Mejora de la función de selección de rango, botones añadidos para seleccionar el clip anterior/siguiente\n2. Mejora del uso en Android",
+        "ru": "1. Улучшена функция выбора диапазона, добавлены кнопки выбора предыдущего/следующего клипа\n2. Улучшена работа на Android",
+        "pt": "1. Melhoria na função de seleção de intervalo, adicionados botões para selecionar o clipe anterior/seguinte\n2. Melhoria na operação no Android"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.107",
+      "tag": "run-31460189835",
+      "published_at": "2026-08-11T05:33:59Z",
+      "changelog": "1. Fix rolling shutter correction parameters for some Nikon models\n2. Fix some bugs",
+      "changelogs": {
+        "zh": "1. 修复nikon部分机型卷帘快门矫正参数\n2. 修复一些bug",
+        "en": "1. Fix rolling shutter correction parameters for some Nikon models\n2. Fix some bugs",
+        "ja": "1. 一部のNikon機種のローリングシャッターの補正パラメータを修正\n2. いくつかのバグを修正",
+        "ko": "1. 일부 Nikon 모델의 롤링 셔터 보정 매개변수 수정\n2. 일부 버그 수정",
+        "de": "1. Korrekturparameter für den Rolling Shutter bei einigen Nikon-Modellen korrigiert\n2. Einige Fehler behoben",
+        "fr": "1. Correction des paramètres de l'obturateur déroulant pour certains modèles Nikon\n2. Correction de quelques bugs",
+        "es": "1. Corregidos los parámetros de corrección del obturador de cortina para algunos modelos de Nikon\n2. Corregidos algunos errores",
+        "ru": "1. Исправлены параметры коррекции rolling shutter для некоторых моделей Nikon\n2. Исправлены некоторые ошибки",
+        "pt": "1. Corrigidos os parâmetros de correção do obturador de cortina para alguns modelos Nikon\n2. Corrigidos alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.103",
       "tag": "run-31142707888",
       "published_at": "2026-08-07T04:08:45Z",
