@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.123",
+      "tag": "run-32974024281",
+      "published_at": "2026-08-26T14:20:04Z",
+      "changelog": "1. Fixed a bug where installation location settings were not working on some device models\n2. Added Linux deployment",
+      "changelogs": {
+        "zh": "1. 修复部分机型安装位置设置无效的bug\n2. 新增linux部署",
+        "en": "1. Fixed a bug where installation location settings were not working on some device models\n2. Added Linux deployment",
+        "ja": "1. 一部の機種でインストール先の設定が反映されないバグを修正\n2. Linux デプロイを追加",
+        "ko": "1. 일부 기종에서 설치 위치 설정이 적용되지 않는 버그 수정\n2. Linux 배포 추가",
+        "de": "1. Bug behoben, bei dem die Installationsort-Einstellung bei einigen Gerätemodellen nicht wirksam war\n2. Linux-Bereitstellung hinzugefügt",
+        "fr": "1. Correction d'un bug où les paramètres de l'emplacement d'installation ne fonctionnaient pas sur certains modèles\n2. Ajout du déploiement Linux",
+        "es": "1. Corregido un bug por el que la configuración de la ubicación de instalación no funcionaba en algunos modelos\n2. Añadido el despliegue de Linux",
+        "ru": "1. Исправлен баг, из-за которого на некоторых моделях не работала настройка расположения установки\n2. Добавлено развертывание на Linux",
+        "pt": "1. Corrigido um bug em que as configurações de localização de instalação não eram aplicadas em alguns modelos\n2. Adicionada a implantação para Linux"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.117",
       "tag": "run-32834966779",
       "published_at": "2026-08-25T10:33:17Z",
