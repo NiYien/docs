@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Download — NiYien A1</title>
-<meta name="description" content="Download the NiYien A1 app for Windows, macOS, and Android. The app checks for updates automatically.">
+<meta name="description" content="Download the NiYien A1 app for Windows, macOS, Linux, and Android. The app checks for updates automatically.">
 <link rel="icon" href="../shared/img/niyien-logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
-  .dl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-top: 40px; }
+  .dl-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin-top: 40px; }
   .dl-card { padding: 44px 28px 34px; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .dl-icon { height: 84px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
   .dl-icon svg { width: 74px; height: 74px; }
@@ -15,7 +15,8 @@
   .dl-ver { margin-top: 8px; font-size: 15px; color: var(--muted); }
   .dl-btn { margin-top: 24px; width: 100%; max-width: 210px; font-size: 16px; }
   .dl-links { display: flex; gap: 28px; justify-content: center; margin-top: 36px; flex-wrap: wrap; font-size: 15.5px; }
-  @media (max-width: 768px) { .dl-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 1024px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { .dl-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body data-page="download">
@@ -41,6 +42,12 @@
       <h3 class="dl-name">macOS</h3>
       <p class="dl-ver" id="verMacos">Fetching version…</p>
       <a class="btn dl-btn" href="#" id="btnMacos" data-platform="macos">Download</a>
+    </div>
+    <div class="card dl-card">
+      <span class="dl-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5" fill="#111827"/><path d="m7 8 3 3-3 3m5.5 0H17" fill="none" stroke="#F9FAFB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h3 class="dl-name">Linux</h3>
+      <p class="dl-ver" id="verLinux">Fetching version…</p>
+      <a class="btn dl-btn" href="#" id="btnLinux" data-platform="linux">Download</a>
     </div>
     <div class="card dl-card">
       <span class="dl-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#3DDC84" d="M17.5 8.5h-11A1.5 1.5 0 0 0 5 10v7a1.5 1.5 0 0 0 1.5 1.5H8V21a1 1 0 0 0 2 0v-2.5h4V21a1 1 0 0 0 2 0v-2.5h1.5A1.5 1.5 0 0 0 19 17v-7a1.5 1.5 0 0 0-1.5-1.5zM7.2 4.3l-1-1.7a.4.4 0 0 1 .7-.4l1 1.8a6.7 6.7 0 0 1 5.2 0l1-1.8a.4.4 0 0 1 .7.4l-1 1.7A5.6 5.6 0 0 1 17 8H7a5.6 5.6 0 0 1 .2-3.7z"/></svg></span>
@@ -112,7 +119,7 @@ function fetchManifest(platform) {
   return fetch('/api/manifest?platform=' + encodeURIComponent(platform))
     .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); });
 }
-['windows', 'macos', 'android'].forEach(function (p) {
+['windows', 'macos', 'linux', 'android'].forEach(function (p) {
   var cap = p.charAt(0).toUpperCase() + p.slice(1);
   var verEl = document.getElementById('ver' + cap);
   fetchManifest(p).then(function (data) {
