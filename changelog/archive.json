@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.124",
+      "tag": "run-33042095060",
+      "published_at": "2026-08-27T06:15:34Z",
+      "changelog": "1. Added pure manual mode",
+      "changelogs": {
+        "zh": "1. 添加纯手动模式",
+        "en": "1. Added pure manual mode",
+        "ja": "1. 完全手動モードを追加",
+        "ko": "1. 순수 수동 모드 추가",
+        "de": "1. Reinen manuellen Modus hinzugefügt",
+        "fr": "1. Ajout du mode entièrement manuel",
+        "es": "1. Añadido el modo totalmente manual",
+        "ru": "1. Добавлен полностью ручной режим",
+        "pt": "1. Adicionado modo totalmente manual"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.123",
       "tag": "run-32974024281",
       "published_at": "2026-08-26T14:20:04Z",
