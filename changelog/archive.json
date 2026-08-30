@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.127",
+      "tag": "run-33304446303",
+      "published_at": "2026-08-30T10:21:32Z",
+      "changelog": "1. Added support for A6100, A5100, A6000\n2. Optimized operations",
+      "changelogs": {
+        "zh": "1.添加对A6100,A5100,A6000的支持\n2.优化操作",
+        "en": "1. Added support for A6100, A5100, A6000\n2. Optimized operations",
+        "ja": "1. A6100、A5100、A6000のサポートを追加\n2. 操作を最適化",
+        "ko": "1. A6100, A5100, A6000 지원 추가\n2. 조작 최적화",
+        "de": "1. Unterstützung für A6100, A5100, A6000 hinzugefügt\n2. Bedienung optimiert",
+        "fr": "1. Ajout de la prise en charge des A6100, A5100, A6000\n2. Optimisation des opérations",
+        "es": "1. Se añadió soporte para A6100, A5100, A6000\n2. Se optimizaron las operaciones",
+        "ru": "1. Добавлена поддержка A6100, A5100, A6000\n2. Оптимизирована работа",
+        "pt": "1. Adicionado suporte para A6100, A5100, A6000\n2. Operações otimizadas"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.124",
       "tag": "run-33042095060",
       "published_at": "2026-08-27T06:15:34Z",
