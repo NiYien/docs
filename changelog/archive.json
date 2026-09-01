@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.128",
+      "tag": "run-33456719528",
+      "published_at": "2026-09-01T02:27:54Z",
+      "changelog": "1. Add recognition of Canon APSC mode\n2. Fix horizontal correction anomalies on some Canon models",
+      "changelogs": {
+        "zh": "1. 增加Canon APSC模式的识别\n2. 修复部分Canon机型水平矫正异常",
+        "en": "1. Add recognition of Canon APSC mode\n2. Fix horizontal correction anomalies on some Canon models",
+        "ja": "1. Canon APSCモードの認識を追加\n2. 一部のCanon機種で水平補正が異常になる問題を修正",
+        "ko": "1. Canon APSC 모드 인식 추가\n2. 일부 Canon 모델의 수평 보정 이상 수정",
+        "de": "1. Erkennung des Canon-APSC-Modus hinzugefügt\n2. Fehler bei der horizontalen Korrektur einiger Canon-Modelle behoben",
+        "fr": "1. Ajout de la reconnaissance du mode APSC Canon\n2. Correction de l'anomalie de correction horizontale sur certains modèles Canon",
+        "es": "1. Añadido reconocimiento del modo APSC de Canon\n2. Corregido el error de corrección horizontal en algunos modelos Canon",
+        "ru": "1. Добавлено распознавание режима APSC Canon\n2. Исправлена ошибка горизонтальной коррекции на некоторых моделях Canon",
+        "pt": "1. Adicionado reconhecimento do modo APSC da Canon\n2. Corrigida a anomalia na correção horizontal em alguns modelos Canon"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.127",
       "tag": "run-33304446303",
       "published_at": "2026-08-30T10:21:32Z",
