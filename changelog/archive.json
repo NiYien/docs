@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.130",
+      "tag": "run-34227078379",
+      "published_at": "2026-09-08T13:34:49Z",
+      "changelog": "1. Release fcpx plugin\n2. Fix some bugs",
+      "changelogs": {
+        "zh": "1. 发布fcpx插件\n2. 修复一些bug",
+        "en": "1. Release fcpx plugin\n2. Fix some bugs",
+        "ja": "1. fcpxプラグインをリリース\n2. いくつかのバグを修正",
+        "ko": "1. fcpx 플러그인 릴리스\n2. 일부 버그 수정",
+        "de": "1. fcpx-Plugin veröffentlicht\n2. Einige Fehler behoben",
+        "fr": "1. Publication du plugin fcpx\n2. Correction de quelques bugs",
+        "es": "1. Publicación del plugin fcpx\n2. Corrección de algunos errores",
+        "ru": "1. Релиз плагина fcpx\n2. Исправление некоторых ошибок",
+        "pt": "1. Lançamento do plugin fcpx\n2. Corrigir alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.129",
       "tag": "run-34213324097",
       "published_at": "2026-09-08T11:58:00Z",
