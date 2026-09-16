@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.134",
+      "tag": "run-34970434815",
+      "published_at": "2026-09-16T00:56:11Z",
+      "changelog": "1. Fixed data loss when exporting HDR videos on macOS\n2. Added FCPX plugin",
+      "changelogs": {
+        "zh": "1. 修复macos下HDR视频导出丢失数据问题\n2. 添加FCPX插件",
+        "en": "1. Fixed data loss when exporting HDR videos on macOS\n2. Added FCPX plugin",
+        "ja": "1. macOSでのHDR動画書き出し時にデータが失われる問題を修正\n2. FCPXプラグインを追加",
+        "ko": "1. macOS에서 HDR 동영상 내보내기 시 데이터 손실 문제 수정\n2. FCPX 플러그인 추가",
+        "de": "1. Datenverlust beim Export von HDR-Videos unter macOS behoben\n2. FCPX-Plugin hinzugefügt",
+        "fr": "1. Correction de la perte de données lors de l'export de vidéos HDR sur macOS\n2. Ajout du plugin FCPX",
+        "es": "1. Corregida la pérdida de datos al exportar vídeos HDR en macOS\n2. Añadido el plugin de FCPX",
+        "ru": "1. Исправлена потеря данных при экспорте HDR-видео в macOS\n2. Добавлен плагин FCPX",
+        "pt": "1. Corrigida a perda de dados ao exportar vídeos HDR no macOS\n2. Adicionado o plugin do FCPX"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.131",
       "tag": "run-34297003933",
       "published_at": "2026-09-09T02:23:20Z",
