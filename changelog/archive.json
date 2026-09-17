@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.136",
+      "tag": "run-35201801822",
+      "published_at": "2026-09-17T10:48:19Z",
+      "changelog": "1. Added direct CRM support\n2. Fixed some bugs",
+      "changelogs": {
+        "zh": "1. 添加CRM直接支持\n2. 修复一些bug ",
+        "en": "1. Added direct CRM support\n2. Fixed some bugs",
+        "ja": "1. CRMの直接サポートを追加\n2. いくつかのバグを修正",
+        "ko": "1. CRM 직접 지원 추가\n2. 일부 버그 수정",
+        "de": "1. Direkte CRM-Unterstützung hinzugefügt\n2. Einige Bugs behoben",
+        "fr": "1. Ajout du support direct de CRM\n2. Correction de quelques bugs",
+        "es": "1. Añadido soporte directo de CRM\n2. Corregidos algunos bugs",
+        "ru": "1. Добавлена прямая поддержка CRM\n2. Исправлены некоторые ошибки",
+        "pt": "1. Adicionado suporte direto a CRM\n2. Corrigidos alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.134",
       "tag": "run-34970434815",
       "published_at": "2026-09-16T00:56:11Z",
