@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.137",
+      "tag": "run-36323318241",
+      "published_at": "2026-09-28T14:11:10Z",
+      "changelog": "1. Optimize fpcx plugin\n2. Fix portrait shooting bug on some Sony cameras\n3. Support changing output codec on macOS\n4. Fix kinifinity recognition bug",
+      "changelogs": {
+        "zh": "1. 优化fpcx插件\n2. 解决部分索尼相机竖拍的bug\n3. macos下支持修改输出编码\n4. 修复kinifinity识别bug",
+        "en": "1. Optimize fpcx plugin\n2. Fix portrait shooting bug on some Sony cameras\n3. Support changing output codec on macOS\n4. Fix kinifinity recognition bug",
+        "ja": "1. fpcxプラグインを最適化\n2. 一部のSonyカメラの縦撮影のバグを修正\n3. macOSで出力コーデックの変更をサポート\n4. kinifinityの認識バグを修正",
+        "ko": "1. fpcx 플러그인 최적화\n2. 일부 Sony 카메라의 세로 촬영 버그 수정\n3. macOS에서 출력 코덱 변경 지원\n4. kinifinity 인식 버그 수정",
+        "de": "1. fpcx-Plugin optimieren\n2. Bug bei vertikaler Aufnahme mit einigen Sony-Kameras beheben\n3. Ändern des Ausgabe-Codecs unter macOS unterstützen\n4. kinifinity-Erkennungsbug beheben",
+        "fr": "1. Optimiser le plugin fpcx\n2. Corriger le bug de prise de vue verticale sur certaines caméras Sony\n3. Prendre en charge la modification du codec de sortie sous macOS\n4. Corriger le bug de reconnaissance de kinifinity",
+        "es": "1. Optimizar el plugin fpcx\n2. Corregir el bug de grabación vertical en algunas cámaras Sony\n3. Permitir cambiar el códec de salida en macOS\n4. Corregir el bug de reconocimiento de kinifinity",
+        "ru": "1. Оптимизировать плагин fpcx\n2. Исправить баг вертикальной съёмки на некоторых камерах Sony\n3. Добавить поддержку изменения выходного кодека в macOS\n4. Исправить баг распознавания kinifinity",
+        "pt": "1. Otimizar o plugin fpcx\n2. Corrigir o bug de gravação vertical em algumas câmeras Sony\n3. Adicionar suporte para alterar o codec de saída no macOS\n4. Corrigir o bug de reconhecimento do kinifinity"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.136",
       "tag": "run-35201801822",
       "published_at": "2026-09-17T10:48:19Z",
