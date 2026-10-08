@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.138",
+      "tag": "run-37698040319",
+      "published_at": "2026-10-08T00:41:55Z",
+      "changelog": "1. Fixed the DaVinci portrait bug at certain resolutions\n2. Added some experimental features\n     a. Optical sync\n     b. Translation stabilization\n     c. Built-in stabilization reconstruction\n3. Fixed some bugs",
+      "changelogs": {
+        "zh": "1. 解决部分分辨率下，达芬奇竖屏bug\n2. 添加部分实验性功能\n     a. 光学同步\n     b. 位移防抖 \n     c. 内置防抖重建\n3.解决一些bug",
+        "en": "1. Fixed the DaVinci portrait bug at certain resolutions\n2. Added some experimental features\n     a. Optical sync\n     b. Translation stabilization\n     c. Built-in stabilization reconstruction\n3. Fixed some bugs",
+        "ja": "1. 一部の解像度におけるDaVinciの縦画面バグを修正\n2. 一部の実験的機能を追加\n     a. 光学同期\n     b. 並進スタビライズ\n     c. 内蔵スタビライズ再構築\n3. いくつかのバグを修正",
+        "ko": "1. 일부 해상도에서 DaVinci 세로 화면 버그 수정\n2. 일부 실험적 기능 추가\n     a. 광학 동기화\n     b. 이동 스태빌라이즈\n     c. 내장 스태빌라이즈 재구성\n3. 일부 버그 수정",
+        "de": "1. DaVinci-Hochformat-Bug bei bestimmten Auflösungen behoben\n2. Einige experimentelle Funktionen hinzugefügt\n     a. Optische Synchronisation\n     b. Translationsstabilisierung\n     c. Integrierte Stabilisierungs-Rekonstruktion\n3. Einige Bugs behoben",
+        "fr": "1. Correction du bug de portrait dans DaVinci à certaines résolutions\n2. Ajout de quelques fonctionnalités expérimentales\n     a. Synchronisation optique\n     b. Stabilisation de translation\n     c. Reconstruction de stabilisation intégrée\n3. Correction de quelques bugs",
+        "es": "1. Corregido el bug de orientación vertical de DaVinci en ciertas resoluciones\n2. Se añadieron algunas funciones experimentales\n     a. Sincronización óptica\n     b. Estabilización de desplazamiento\n     c. Reconstrucción de estabilización integrada\n3. Se corrigieron algunos bugs",
+        "ru": "1. Исправлен баг с портретной ориентацией в DaVinci при некоторых разрешениях\n2. Добавлены некоторые экспериментальные функции\n     a. Оптическая синхронизация\n     b. Стабилизация смещения\n     c. Встроенная реконструкция стабилизации\n3. Исправлены некоторые баги",
+        "pt": "1. Corrigido o bug de retrato do DaVinci em algumas resoluções\n2. Adicionadas algumas funcionalidades experimentais\n     a. Sincronização óptica\n     b. Estabilização de deslocamento\n     c. Reconstrução de estabilização integrada\n3. Corrigidos alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.137",
       "tag": "run-36323318241",
       "published_at": "2026-09-28T14:11:10Z",
