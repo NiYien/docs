@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.140",
+      "tag": "run-37947737818",
+      "published_at": "2026-10-09T15:54:54Z",
+      "changelog": "1. Optimized translational stabilization\n2. Fixed some bugs",
+      "changelogs": {
+        "zh": "1. 优化位移防抖\n2. 修复一些bug ",
+        "en": "1. Optimized translational stabilization\n2. Fixed some bugs",
+        "ja": "1. 並進スタビライズを最適化\n2. いくつかのバグを修正",
+        "ko": "1. 병진 스태빌라이즈 최적화\n2. 몇 가지 버그 수정",
+        "de": "1. Translationsstabilisierung optimiert\n2. Einige Bugs behoben",
+        "fr": "1. Stabilisation en translation optimisée\n2. Correction de quelques bugs",
+        "es": "1. Estabilización de traslación optimizada\n2. Corregidos algunos bugs",
+        "ru": "1. Оптимизирована стабилизация смещения\n2. Исправлены некоторые баги",
+        "pt": "1. Estabilização de translação otimizada\n2. Corrigidos alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.138",
       "tag": "run-37698040319",
       "published_at": "2026-10-08T00:41:55Z",
