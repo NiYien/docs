@@ -135,7 +135,9 @@ test('Disabled, internal, or different invitation groups do not advertise a vers
   for (const attributes of [{ publicLinkEnabled: false }, { isInternalGroup: true }, { publicLink: 'https://testflight.apple.com/join/other' }]) {
     let requests = 0;
     const lookup = createTestFlightLookup({ env, now: () => NOW, fetchImpl: async () => { requests += 1; return response(await group(attributes)); } });
-    assert.equal((await lookup()).body.version, '');
+    const result = await lookup();
+    assert.equal(result.body.version, '');
+    assert.equal(result.cacheSeconds, 3600);
     assert.equal(requests, 1);
   }
 });
@@ -180,15 +182,17 @@ test('Cached versions expire before the build expires', async () => {
 test('Pagination never sends authentication to an unexpected host', async () => {
   const { createTestFlightLookup } = await api;
   let requests = 0;
-  const lookup = createTestFlightLookup({ env, now: () => NOW, fetchImpl: async () => {
+  const logs = [];
+  const lookup = createTestFlightLookup({ env, now: () => NOW, warn: (...args) => logs.push(args), fetchImpl: async () => {
     requests += 1;
     return response({ ...(await group()), links: { next: 'https://unexpected.example.test/v1/builds' } });
   } });
-  await assert.rejects(lookup(), { code: 'invalid_pagination_url' });
+  assert.equal((await lookup()).body.status, 'unavailable');
+  assert.equal(logs[0][1], 'invalid_pagination_url');
   assert.equal(requests, 1);
 });
 
-test('Authentication and upstream errors return an uncached unavailable response without private data', async () => {
+test('Authentication and upstream errors return a cacheable unavailable result without private data', async () => {
   const { createTestFlightLookup, createTestFlightHandler } = await api;
   for (const configuration of [
     { env: {} },
@@ -197,13 +201,13 @@ test('Authentication and upstream errors return an uncached unavailable response
     { env, fetchImpl: async () => { throw new Error('PRIVATE DATA MUST NOT BE RETURNED'); } },
   ]) {
     const logs = [];
-    const handler = createTestFlightHandler(createTestFlightLookup({ now: () => NOW, ...configuration }), (...args) => logs.push(args));
+    const handler = createTestFlightHandler(createTestFlightLookup({ now: () => NOW, ...configuration, warn: (...args) => logs.push(args) }), (...args) => logs.push(args));
     const result = fakeResponse();
     await handler({ method: 'GET' }, result);
-    assert.equal(result.code, 503);
-    assert.equal(result.headers['Cache-Control'], 'no-store');
-    assert.equal(result.headers['Vercel-CDN-Cache-Control'], 'no-store');
-    assert.equal(result.headers['CDN-Cache-Control'], 'no-store');
+    assert.equal(result.code, 200);
+    assert.equal(result.headers['Cache-Control'], 'public, max-age=0, must-revalidate');
+    assert.equal(result.headers['Vercel-CDN-Cache-Control'], 'public, max-age=3600');
+    assert.equal(result.headers['CDN-Cache-Control'], 'public, max-age=3600');
     assert.equal(result.body.version, '');
     assert.doesNotMatch(JSON.stringify({ body: result.body, logs }), /PRIVATE DATA|BEGIN PRIVATE KEY|test-issuer/);
   }
@@ -269,4 +273,99 @@ test('The public TestFlight URL is a rewrite and does not add a serverless entry
   assert.equal(config.functions['api/testflight.js'], undefined);
   assert.equal(fs.existsSync(path.join(__dirname, '../api/testflight.js')), false);
   assert.equal(fs.existsSync(path.join(__dirname, '../lib/testflight.js')), true);
+});
+
+test('Failed lookups share one cached result and retry only after one hour', async () => {
+  const { createTestFlightLookup, createTestFlightHandler } = await api;
+  let time = NOW;
+  let requests = 0;
+  let failing = true;
+  const logs = [];
+  const lookup = createTestFlightLookup({ env, now: () => time, warn: (...args) => logs.push(args), fetchImpl: async url => {
+    requests += 1;
+    await new Promise(resolve => setImmediate(resolve));
+    if (failing) return response({}, 401);
+    return response(new URL(url).pathname === '/v1/betaGroups' ? await group() : fixture('recovered', '1.0.3', '10'));
+  } });
+  const handler = createTestFlightHandler(lookup);
+  const first = fakeResponse();
+  const concurrent = fakeResponse();
+  await Promise.all([handler({ method: 'GET' }, first), handler({ method: 'GET' }, concurrent)]);
+  assert.equal(first.code, 200);
+  assert.equal(first.body.status, 'unavailable');
+  assert.equal(first.headers['Vercel-CDN-Cache-Control'], 'public, max-age=3600');
+  assert.equal(requests, 1);
+  assert.equal(logs.length, 1);
+
+  failing = false;
+  time += 3590000;
+  const cached = fakeResponse();
+  await handler({ method: 'GET' }, cached);
+  assert.equal(cached.body.status, 'unavailable');
+  assert.equal(cached.headers['Vercel-CDN-Cache-Control'], 'public, max-age=10');
+  assert.equal(requests, 1);
+  assert.equal(logs.length, 1);
+
+  time += 10000;
+  const recovered = fakeResponse();
+  await handler({ method: 'GET' }, recovered);
+  assert.equal(recovered.body.version, '1.0.3');
+  assert.equal(recovered.body.status, 'available');
+  assert.equal(requests, 3);
+});
+
+test('Missing configuration is cached until expiry, and a new deployment can retry immediately', async () => {
+  const { createTestFlightLookup } = await api;
+  const configuration = {};
+  let time = NOW;
+  let requests = 0;
+  const logs = [];
+  const options = { env: configuration, now: () => time, warn: (...args) => logs.push(args), fetchImpl: async url => {
+    requests += 1;
+    return response(new URL(url).pathname === '/v1/betaGroups' ? await group() : fixture('configured', '1.0.2', '10'));
+  } };
+  const lookup = createTestFlightLookup(options);
+  assert.equal((await lookup()).body.status, 'unavailable');
+  assert.equal(logs.length, 1);
+  Object.assign(configuration, env);
+  time += 60000;
+  assert.equal((await lookup()).body.status, 'unavailable');
+  assert.equal(requests, 0);
+  assert.equal(logs.length, 1);
+
+  const freshDeployment = createTestFlightLookup(options);
+  assert.equal((await freshDeployment()).body.status, 'available');
+  assert.equal(requests, 2);
+  time = NOW + 3600000;
+  assert.equal((await lookup()).body.status, 'available');
+  assert.equal(requests, 4);
+});
+
+test('An unexpected lookup exception still produces a cacheable public unavailable response', async () => {
+  const { createTestFlightHandler } = await api;
+  const logs = [];
+  const handler = createTestFlightHandler(async () => { throw new Error('PRIVATE DATA MUST NOT BE RETURNED'); }, (...args) => logs.push(args));
+  const result = fakeResponse();
+  await handler({ method: 'GET' }, result);
+  assert.equal(result.code, 200);
+  assert.equal(result.body.status, 'unavailable');
+  assert.equal(result.body.version, '');
+  assert.equal(result.headers['Vercel-CDN-Cache-Control'], 'public, max-age=3600');
+  assert.doesNotMatch(JSON.stringify({ body: result.body, logs }), /PRIVATE DATA/);
+});
+
+test('A build that expires during the Apple query produces a cached unavailable result', async () => {
+  const { createTestFlightLookup } = await api;
+  let time = NOW;
+  const logs = [];
+  const lookup = createTestFlightLookup({ env, now: () => time, warn: (...args) => logs.push(args), fetchImpl: async url => {
+    if (new URL(url).pathname === '/v1/betaGroups') return response(await group());
+    time += 2000;
+    return response(fixture('expired-during-query', '1.0.3', '10', { build: { expirationDate: new Date(NOW + 1000).toISOString() } }));
+  } });
+  const result = await lookup();
+  assert.equal(result.body.status, 'unavailable');
+  assert.equal(result.body.version, '');
+  assert.equal(result.cacheSeconds, 3600);
+  assert.equal(logs[0][1], 'build_expired_during_lookup');
 });
