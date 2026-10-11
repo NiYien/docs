@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Download — NiYien A1</title>
-<meta name="description" content="Download the NiYien A1 app for Windows, macOS, Linux, and Android. The app checks for updates automatically.">
+<meta name="description" content="Download the NiYien A1 app for Windows, macOS, Linux, Android, and iOS. Join the iOS beta through TestFlight.">
 <link rel="icon" href="../shared/img/niyien-logo.png">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
-  .dl-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin-top: 40px; }
-  .dl-card { padding: 44px 28px 34px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .dl-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px; margin-top: 40px; }
+  .dl-card { padding: 44px 20px 34px; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .dl-icon { height: 84px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
   .dl-icon svg { width: 74px; height: 74px; }
   .dl-name { font-size: 21px; font-weight: 700; color: var(--ink); }
-  .dl-ver { margin-top: 8px; font-size: 15px; color: var(--muted); }
-  .dl-btn { margin-top: 24px; width: 100%; max-width: 210px; font-size: 16px; }
+  .dl-ver { margin-top: 8px; margin-bottom: 24px; font-size: 15px; color: var(--muted); }
+  .dl-btn { margin-top: auto; padding: 12px 14px; width: 100%; max-width: 210px; font-size: 16px; }
   .dl-links { display: flex; gap: 28px; justify-content: center; margin-top: 36px; flex-wrap: wrap; font-size: 15.5px; }
   @media (max-width: 1024px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 640px) { .dl-grid { grid-template-columns: 1fr; } }
@@ -26,7 +26,7 @@
 <div class="page-head"><div class="container">
   <div class="eyebrow">DOWNLOAD</div>
   <h1 class="h2">Download NiYien A1</h1>
-  <p class="lead">Pick your platform. The app checks for updates automatically.</p>
+  <p class="lead">Pick your platform. Desktop and Android apps check for updates automatically. Join the iOS beta through TestFlight.</p>
 </div></div>
 
 <div class="container" style="padding-bottom:24px">
@@ -54,6 +54,12 @@
       <h3 class="dl-name">Android</h3>
       <p class="dl-ver" id="verAndroid">Fetching version…</p>
       <a class="btn dl-btn" href="#" id="btnAndroid" data-platform="android">Download</a>
+    </div>
+    <div class="card dl-card">
+      <span class="dl-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#111827" d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.6-1-2.6-3.6zM14.1 5.6c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.2 1.9-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg></span>
+      <h3 class="dl-name">iOS</h3>
+      <p class="dl-ver" id="verIos">Version 1.0.0<br>TestFlight beta</p>
+      <a class="btn dl-btn" href="https://testflight.apple.com/join/MGh9AhgQ" id="btnIos">Join TestFlight</a>
     </div>
   </div>
   <p class="dl-links">
@@ -115,6 +121,15 @@ function manifestAppUrl(data, platform) {
   if (platform === 'windows') return pkg.installer_url || app.url || pkg.package_url || '';
   return app.url || pkg.installer_url || pkg.package_url || '';
 }
+function manifestAppVersion(data, platform) {
+  var app = (data && data.app) || {};
+  var pkg = (app.packages && app.packages[platform]) || {};
+  if (platform === 'android') {
+    // This published Android 1.0.0 package predates version metadata.
+    return pkg.version || (pkg.package_sha256 === 'cce453c92e18ee4c4c2d932203b86b7eab1b794d812b94be4e8fef65d6a84f53' ? '1.0.0' : '');
+  }
+  return app.version || '';
+}
 function fetchManifest(platform) {
   return fetch('/api/manifest?platform=' + encodeURIComponent(platform))
     .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); });
@@ -123,7 +138,7 @@ function fetchManifest(platform) {
   var cap = p.charAt(0).toUpperCase() + p.slice(1);
   var verEl = document.getElementById('ver' + cap);
   fetchManifest(p).then(function (data) {
-    var v = data && data.app && data.app.version;
+    var v = manifestAppVersion(data, p);
     verEl.textContent = v ? MSG.ver + v : MSG.fail;
   }).catch(function () { verEl.textContent = MSG.fail; });
   document.getElementById('btn' + cap).addEventListener('click', function (e) {

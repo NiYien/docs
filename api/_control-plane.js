@@ -237,7 +237,7 @@ export async function buildManifestPayload(req) {
     releasePolicy.versions[0] ||
     null;
   const requestEntry =
-    releasePolicy.versions.find((item) => item.version === requestedAppVersion) || null;
+    releasePolicy.versions.find((item) => platformVersion(item, platform) === requestedAppVersion || item.version === requestedAppVersion) || null;
   const resolvedEntry = requestEntry || autoEntry;
   // Decoupled bundle layout: lens lives in `releases/lens-<sha12>/`, plugin in
   // `releases/plugin-<sha12>/`. Each is independent — a publish that updates
@@ -297,7 +297,8 @@ export async function buildManifestPayload(req) {
     .filter(
       (item) =>
         item.channels.includes("manual") &&
-        (!autoEntry || compareAppVersions(item.version, autoEntry.version) > 0)
+        platformVersion(item, platform) &&
+        (!autoEntry || compareAppVersions(platformVersion(item, platform), platformVersion(autoEntry, platform)) > 0)
     )
     .map((item) => {
       const manualPackage = withAbsolutePackageUrls(
@@ -308,7 +309,7 @@ export async function buildManifestPayload(req) {
         ? { [platform]: manualPackage }
         : {};
       return {
-        version: item.version,
+        version: platformVersion(item, platform),
         url: manualPackage.installer_url || manualPackage.package_url || "",
         changelog: item.changelog,
         // release-notes-i18n: per-language release notes. Empty {} for
@@ -374,7 +375,10 @@ export async function buildManifestPayload(req) {
   // The stable row's aggregation window is empty now that manual_versions
   // starts above the auto version, so its sections are joined here and the
   // client's fallback path renders them as-is.
-  const stableChangelogs = buildStableChangelogs(releasePolicy.versions, autoEntry);
+  const stableChangelogs = buildStableChangelogs(
+    releasePolicy.versions.map((item) => ({ ...item, version: platformVersion(item, platform), display_version: platform === "android" ? item.packages?.android?.version : item.version })).filter((item) => item.version),
+    autoEntry && platformVersion(autoEntry, platform) ? { ...autoEntry, version: platformVersion(autoEntry, platform) } : null
+  );
 
   appUrl = toAbsoluteManifestUrl(req, appUrl);
   lensUrl = toAbsoluteManifestUrl(req, lensUrl);
@@ -389,7 +393,7 @@ export async function buildManifestPayload(req) {
     selected_source: source.selectedSource,
     product_id: DEFAULT_PRODUCT_ID,
     app: {
-      version: autoEntry?.version || "",
+      version: platformVersion(autoEntry, platform),
       url: appUrl,
       changelog: stableChangelogs.changelog,
       // release-notes-i18n: same fallback semantics as the manual versions —
@@ -409,6 +413,15 @@ export async function buildManifestPayload(req) {
     plugins_source_ref: resolvedPluginSourceRef,
     plugins_source_tag: resolvedPluginSourceTag,
   };
+}
+
+function platformVersion(entry, platform) {
+  if (platform === "android") {
+    const version = String(entry?.packages?.android?.version || "").trim();
+    const code = coercePositiveInteger(entry?.packages?.android?.version_code);
+    return version && code ? `${version}-ni.${code}` : "";
+  }
+  return String(entry?.version || "").trim();
 }
 
 function normalizePolicyEntry(entry) {
@@ -641,7 +654,7 @@ function stableChangelogSections(covered, resolveText) {
     if (!text) {
       continue;
     }
-    sections.push({ version: String(item.version || "").trim(), text });
+    sections.push({ version: String(item.display_version || item.version || "").trim(), text });
     if (sections.length >= AGGREGATED_CHANGELOG_MAX_VERSIONS) {
       break;
     }
@@ -738,6 +751,8 @@ function normalizePackages(value) {
     }
     const normalized = {
       kind: String(rawValue.kind || defaultPackageKind(key)).trim(),
+      version: String(rawValue.version || "").trim(),
+      version_code: coercePositiveInteger(rawValue.version_code),
       installer_filename: String(rawValue.installer_filename || "").trim(),
       installer_sha256: String(rawValue.installer_sha256 || "").trim().toLowerCase(),
       installer_size: coercePositiveInteger(rawValue.installer_size),
@@ -775,6 +790,7 @@ function buildPlatformPackage(req, entry, source, platform) {
   }
 
   const platformPackage = {
+    ...(key === "android" ? { version: metadata.version || "", version_code: metadata.version_code || 0 } : {}),
     kind: metadata.kind || defaultPackageKind(key),
     package_url: urls.package_url || "",
     package_sha256: metadata.package_sha256 || "",
