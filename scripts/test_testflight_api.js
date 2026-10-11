@@ -111,6 +111,9 @@ test('The public invitation group is resolved and all build pages are read with 
     const parsed = new URL(url);
     requests.push(parsed);
     assert.match(options.headers.Authorization, /^Bearer /);
+    const token = options.headers.Authorization.slice('Bearer '.length);
+    const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url'));
+    assert.deepEqual(claims.scope, [`GET ${parsed.pathname}${parsed.search}`]);
     assert.equal(options.redirect, 'error');
     if (parsed.pathname === '/v1/betaGroups') {
       assert.equal(parsed.searchParams.get('filter[publicLink]'), TESTFLIGHT_URL);
