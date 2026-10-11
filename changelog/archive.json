@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.144",
+      "tag": "run-38140730158",
+      "published_at": "2026-10-11T15:00:38Z",
+      "changelog": "1. Fixed some bugs\n2. Added iOS version\n3. Added support for iPhone videos (Blackmagic Camera)",
+      "changelogs": {
+        "zh": "1. 修复一些bug\n2. 添加IOS版本\n3. 添加对iphone视频支持（blackmagic camera）",
+        "en": "1. Fixed some bugs\n2. Added iOS version\n3. Added support for iPhone videos (Blackmagic Camera)",
+        "ja": "1. いくつかのバグを修正\n2. iOS版を追加\n3. iPhone動画（Blackmagic Camera）のサポートを追加",
+        "ko": "1. 일부 버그 수정\n2. iOS 버전 추가\n3. iPhone 동영상(Blackmagic Camera) 지원 추가",
+        "de": "1. Einige Fehler behoben\n2. iOS-Version hinzugefügt\n3. Unterstützung für iPhone-Videos (Blackmagic Camera) hinzugefügt",
+        "fr": "1. Correction de quelques bugs\n2. Ajout de la version iOS\n3. Ajout de la prise en charge des vidéos iPhone (Blackmagic Camera)",
+        "es": "1. Corrección de algunos errores\n2. Añadida la versión para iOS\n3. Añadido soporte para vídeos de iPhone (Blackmagic Camera)",
+        "ru": "1. Исправлены некоторые ошибки\n2. Добавлена версия для iOS\n3. Добавлена поддержка видео с iPhone (Blackmagic Camera)",
+        "pt": "1. Correção de alguns bugs\n2. Adicionada versão para iOS\n3. Adicionado suporte para vídeos de iPhone (Blackmagic Camera)"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.140",
       "tag": "run-37947737818",
       "published_at": "2026-10-09T15:54:54Z",
