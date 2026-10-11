@@ -21,17 +21,18 @@ class FakeElement {
 }
 
 
-function loadDownloadPage(language, androidPackage = { version: '1.0.2' }) {
+function loadDownloadPage(language, androidPackage = { version: '1.0.2' }, testflightVersion = '1.0.4') {
   const html = fs.readFileSync(
     path.join(__dirname, '..', 'v2', language, 'download.html'),
     'utf8'
   );
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
   const elements = new Map(ids.map((id) => [id, new FakeElement()]));
-  for (const match of html.matchAll(/<p[^>]+id="(ver[^"]+)">([\s\S]*?)<\/p>/g)) {
+  for (const match of html.matchAll(/<(?:p|span)[^>]+id="(ver[^"]+)">([\s\S]*?)<\/(?:p|span)>/g)) {
     elements.get(match[1]).textContent = match[2].replace(/<[^>]*>/g, '');
   }
   const requestedPlatforms = [];
+  const requestedUrls = [];
   const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
     .map((match) => match[1])
     .filter((source) => source.trim());
@@ -49,6 +50,12 @@ function loadDownloadPage(language, androidPackage = { version: '1.0.2' }) {
     alert() {},
     document,
     fetch(url) {
+      requestedUrls.push(url);
+      if (url === '/api/testflight') {
+        return testflightVersion === null
+          ? Promise.reject(new Error('TestFlight API unavailable'))
+          : Promise.resolve({ ok: true, json: async () => ({ version: testflightVersion }) });
+      }
       const platform = new URL(url, 'https://example.test').searchParams.get('platform');
       requestedPlatforms.push(platform);
       return Promise.resolve({
@@ -68,7 +75,7 @@ function loadDownloadPage(language, androidPackage = { version: '1.0.2' }) {
   };
 
   vm.runInNewContext(inlineScripts[0], context);
-  return { elements, html, requestedPlatforms, window };
+  return { elements, html, requestedPlatforms, requestedUrls, window };
 }
 
 
@@ -115,8 +122,8 @@ for (const language of ['zh', 'en']) {
     const page = loadDownloadPage(language);
     await flushPromises();
 
-    assert.match(page.html, /id="verIos">(?:版本|Version) 1\.0\.0<br>TestFlight/);
-    assert.match(page.elements.get('verIos').textContent, /1\.0\.0/);
+    assert.equal(page.elements.get('verIos').textContent, language === 'zh' ? '版本 1.0.4' : 'Version 1.0.4');
+    assert.ok(page.requestedUrls.includes('/api/testflight'));
     assert.equal(page.elements.get('verAndroid').textContent, language === 'zh' ? '版本 1.0.2' : 'Version 1.0.2');
     assert.match(page.elements.get('verWindows').textContent, /9\.9\.9/);
     assert.match(page.html, /href="https:\/\/testflight\.apple\.com\/join\/MGh9AhgQ" id="btnIos"/);
@@ -150,5 +157,27 @@ for (const language of ['zh', 'en']) {
     const unknown = loadDownloadPage(language, { package_sha256: 'unknown' });
     await flushPromises();
     assert.equal(unknown.elements.get('verAndroid').textContent, language === 'zh' ? '版本信息暂不可用' : 'Version unavailable');
+  });
+}
+
+for (const language of ['zh', 'en']) {
+  test(`${language} iOS follows the TestFlight version independently of Android`, async () => {
+    for (const version of ['1.0.1', '1.0.3']) {
+      const page = loadDownloadPage(language, { version: '1.0.2' }, version);
+      await flushPromises();
+      assert.equal(page.elements.get('verIos').textContent, `${language === 'zh' ? '版本' : 'Version'} ${version}`);
+      assert.equal(page.elements.get('verAndroid').textContent, language === 'zh' ? '版本 1.0.2' : 'Version 1.0.2');
+    }
+  });
+
+  test(`${language} unavailable TestFlight metadata does not interfere with other downloads`, async () => {
+    for (const version of ['', null]) {
+      const page = loadDownloadPage(language, { version: '1.0.2' }, version);
+      await flushPromises();
+      assert.equal(page.elements.get('verIos').textContent, language === 'zh' ? '版本信息暂不可用' : 'Version unavailable');
+      assert.match(page.elements.get('verWindows').textContent, /9\.9\.9/);
+      assert.equal(page.elements.get('verAndroid').textContent, language === 'zh' ? '版本 1.0.2' : 'Version 1.0.2');
+      assert.match(page.html, /href="https:\/\/testflight\.apple\.com\/join\/MGh9AhgQ" id="btnIos"/);
+    }
   });
 }

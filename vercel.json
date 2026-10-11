@@ -5,6 +5,9 @@
     },
     "api/feedback.js": {
       "maxDuration": 30
+    },
+    "api/testflight.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -14,6 +17,23 @@
         {
           "key": "Cache-Control",
           "value": "private, max-age=300"
+        },
+        {
+          "key": "Vercel-CDN-Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/testflight",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
         },
         {
           "key": "Vercel-CDN-Cache-Control",
