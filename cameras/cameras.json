@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-09",
+  "generated_at": "2026-10-10",
   "brands": [
     {
       "id": "sony",
@@ -13,12 +13,10 @@
         "α7S III",
         "α7S II",
         "α7S",
-        "α7R VI",
         "α7R V",
         "α7R IV",
         "α7R III",
         "α7R II",
-        "α7 V",
         "α7 IV",
         "α7 III",
         "α7 II",
@@ -29,7 +27,6 @@
         "FX2",
         "FX30",
         "FX3",
-        "FX5",
         "FX6",
         "α6700",
         "α6600",
@@ -203,7 +200,7 @@
         "BGH1",
         "S9",
         "S1 II",
-        "S1R II",
+        "S1RM2",
         "S5 IIX",
         "S5 II",
         "S5",
@@ -230,6 +227,7 @@
         "L10",
         "LX100 II",
         "LX100",
+        "D-LUX (Typ 109)",
         "EVA1",
         "V35LT1",
         "LX10",
@@ -280,7 +278,8 @@
         "MAVO2 S35",
         "MAVO LF",
         "MAVO2 LF",
-        "TERRA 4K"
+        "TERRA 4K",
+        "VISTA"
       ]
     },
     {
@@ -330,6 +329,40 @@
         "E2-M4",
         "E2",
         "E2C"
+      ]
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "models": [
+        "iPhone 12",
+        "iPhone 12 mini",
+        "iPhone 12 Pro",
+        "iPhone 12 Pro Max",
+        "iPhone 13",
+        "iPhone 13 mini",
+        "iPhone 13 Pro",
+        "iPhone 13 Pro Max",
+        "iPhone 14",
+        "iPhone 14 Plus",
+        "iPhone 14 Pro",
+        "iPhone 14 Pro Max",
+        "iPhone 15",
+        "iPhone 15 Plus",
+        "iPhone 15 Pro",
+        "iPhone 15 Pro Max",
+        "iPhone 16",
+        "iPhone 16 Plus",
+        "iPhone 16 Pro",
+        "iPhone 16 Pro Max",
+        "iPhone 16e",
+        "iPhone 17",
+        "iPhone 17 Pro",
+        "iPhone 17 Pro Max",
+        "iPhone 17e",
+        "iPhone Air",
+        "iPhone 18 Pro",
+        "iPhone 18 Pro Max"
       ]
     }
   ]
