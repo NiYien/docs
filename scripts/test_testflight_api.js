@@ -126,7 +126,7 @@ test('The public invitation group is resolved and all build pages are read with 
   const result = await lookup();
   assert.equal(result.body.version, '1.0.3');
   assert.equal(result.body.build_number, '10');
-  assert.equal(result.cacheSeconds, 300);
+  assert.equal(result.cacheSeconds, 3600);
   assert.equal(requests.length, 3);
 });
 
@@ -140,7 +140,7 @@ test('Disabled, internal, or different invitation groups do not advertise a vers
   }
 });
 
-test('Concurrent requests share a lookup and both server and CDN cache expiry stay within five minutes', async () => {
+test('Concurrent requests share a lookup and both server and CDN cache expiry stay within one hour', async () => {
   const { createTestFlightLookup } = await api;
   let time = NOW;
   let requests = 0;
@@ -153,10 +153,15 @@ test('Concurrent requests share a lookup and both server and CDN cache expiry st
   await Promise.all([lookup(), lookup()]);
   assert.equal(requests, 2);
   time += 10000;
-  assert.equal((await lookup()).cacheSeconds, 290);
+  assert.equal((await lookup()).cacheSeconds, 3590);
   assert.equal(requests, 2);
-  time += 291000;
   publishedVersion = '1.0.2';
+  time += 3500000;
+  const cached = await lookup();
+  assert.equal(cached.body.version, '1.0.1');
+  assert.equal(cached.cacheSeconds, 90);
+  assert.equal(requests, 2);
+  time += 90000;
   assert.equal((await lookup()).body.version, '1.0.2');
   assert.equal(requests, 4);
 });
@@ -210,7 +215,7 @@ test('The HTTP endpoint exposes only public release metadata and supports GET on
   const result = fakeResponse();
   await handler({ method: 'GET' }, result);
   assert.equal(result.code, 200);
-  assert.equal(result.headers['Vercel-CDN-Cache-Control'], 'public, max-age=300');
+  assert.equal(result.headers['Vercel-CDN-Cache-Control'], 'public, max-age=3600');
   assert.deepEqual(result.body, { status: 'available', version: '1.0.2', build_number: '5.1', url: TESTFLIGHT_URL, checked_at: new Date(NOW).toISOString() });
 
   const rejected = fakeResponse();
@@ -233,14 +238,14 @@ test('TestFlight shares the existing manifest function and preserves regional do
     testFlightHandler: async (req, res) => {
       testflightRequests += 1;
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
-      res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=300');
+      res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=3600');
       return res.status(200).json({ version: '1.0.1' });
     },
   });
   const testflight = fakeResponse();
   await handler({ method: 'GET', query: { component: 'testflight' } }, testflight);
   assert.equal(testflight.body.version, '1.0.1');
-  assert.equal(testflight.headers['Vercel-CDN-Cache-Control'], 'public, max-age=300');
+  assert.equal(testflight.headers['Vercel-CDN-Cache-Control'], 'public, max-age=3600');
   assert.equal(manifestRequests, 0);
   assert.equal(testflightRequests, 1);
 
