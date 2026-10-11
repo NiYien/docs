@@ -6,7 +6,7 @@
     "api/feedback.js": {
       "maxDuration": 30
     },
-    "api/testflight.js": {
+    "api/manifest.js": {
       "maxDuration": 30
     }
   },
@@ -286,6 +286,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/testflight",
+      "destination": "/api/manifest?component=testflight"
+    },
     {
       "source": "/api/download/app/([^/]+)/(.+)",
       "destination": "/api/download?scope=app&tag=$1&path=$2"

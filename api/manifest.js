@@ -1,6 +1,11 @@
 import { buildManifestPayload } from "./_control-plane";
+import testFlightHandler from "../lib/testflight.js";
 
 export default async function handler(req, res) {
+  if (req.query?.component === "testflight") {
+    return testFlightHandler(req, res);
+  }
+
   // Browser caches 5min (same user reuses response); shared caches (Vercel
   // CDN / generic CDN) must not store, otherwise geo-specific responses leak
   // across users on the same edge node.

@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const { generateKeyPairSync, verify } = require('node:crypto');
 const test = require('node:test');
 
-const api = import('../api/testflight.js');
+const api = import('../lib/testflight.js');
 const NOW = Date.parse('2026-10-11T04:00:00Z');
 const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
 const pem = privateKey.export({ type: 'pkcs8', format: 'pem' });
@@ -217,4 +217,51 @@ test('The HTTP endpoint exposes only public release metadata and supports GET on
   await createTestFlightHandler(() => { throw new Error('Lookup must not run'); })({ method: 'POST' }, rejected);
   assert.equal(rejected.code, 405);
   assert.equal(rejected.headers.Allow, 'GET');
+});
+
+test('TestFlight shares the existing manifest function and preserves regional download cache behavior', async () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const vm = require('node:vm');
+  const source = fs.readFileSync(path.join(__dirname, '../api/manifest.js'), 'utf8')
+    .replace(/^import .*;\r?\n/gm, '')
+    .replace('export default async function handler', 'async function handler');
+  let manifestRequests = 0;
+  let testflightRequests = 0;
+  const handler = vm.runInNewContext(`${source}\nhandler;`, {
+    buildManifestPayload: async () => { manifestRequests += 1; return { app: { version: '1.6.3-ni.140' } }; },
+    testFlightHandler: async (req, res) => {
+      testflightRequests += 1;
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+      res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=300');
+      return res.status(200).json({ version: '1.0.1' });
+    },
+  });
+  const testflight = fakeResponse();
+  await handler({ method: 'GET', query: { component: 'testflight' } }, testflight);
+  assert.equal(testflight.body.version, '1.0.1');
+  assert.equal(testflight.headers['Vercel-CDN-Cache-Control'], 'public, max-age=300');
+  assert.equal(manifestRequests, 0);
+  assert.equal(testflightRequests, 1);
+
+  const manifest = fakeResponse();
+  await handler({ method: 'GET', query: { platform: 'android' } }, manifest);
+  assert.equal(manifest.body.app.version, '1.6.3-ni.140');
+  assert.equal(manifest.headers['Cache-Control'], 'private, max-age=300');
+  assert.equal(manifest.headers['Vercel-CDN-Cache-Control'], 'no-store');
+  assert.equal(manifest.headers['CDN-Cache-Control'], 'no-store');
+  assert.equal(manifestRequests, 1);
+  assert.equal(testflightRequests, 1);
+});
+
+test('The public TestFlight URL is a rewrite and does not add a serverless entry point', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const config = JSON.parse(fs.readFileSync(path.join(__dirname, '../vercel.json'), 'utf8'));
+  const route = config.rewrites.find(item => item.source === '/api/testflight');
+  assert.equal(route.destination, '/api/manifest?component=testflight');
+  assert.equal(config.functions['api/manifest.js'].maxDuration, 30);
+  assert.equal(config.functions['api/testflight.js'], undefined);
+  assert.equal(fs.existsSync(path.join(__dirname, '../api/testflight.js')), false);
+  assert.equal(fs.existsSync(path.join(__dirname, '../lib/testflight.js')), true);
 });
