@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.145",
+      "tag": "run-38505112500",
+      "published_at": "2026-10-14T04:15:45Z",
+      "changelog": "1. Fixed a bug where Sony BRAW could not be parsed.\n2. Improved translation stabilization\n3. Improved reconstruction stabilization",
+      "changelogs": {
+        "zh": "1. 修复sony braw无法解析的bug.\n2. 优化位移防抖功能\n3. 优化重建防抖功能",
+        "en": "1. Fixed a bug where Sony BRAW could not be parsed.\n2. Improved translation stabilization\n3. Improved reconstruction stabilization",
+        "ja": "1. Sony BRAW が解析できないバグを修正。\n2. 平行移動スタビライズを改善\n3. 再構築スタビライズを改善",
+        "ko": "1. Sony BRAW를 파싱할 수 없는 버그를 수정했습니다.\n2. 이동 스태빌라이즈 개선\n3. 재구성 스태빌라이즈 개선",
+        "de": "1. Bug behoben, bei dem Sony BRAW nicht geparst werden konnte.\n2. Translationsstabilisierung verbessert\n3. Rekonstruktionsstabilisierung verbessert",
+        "fr": "1. Correction d'un bug où Sony BRAW ne pouvait pas être analysé.\n2. Amélioration de la stabilisation de translation\n3. Amélioration de la stabilisation de reconstruction",
+        "es": "1. Corregido un bug por el que Sony BRAW no se podía analizar.\n2. Mejora de la estabilización de traslación\n3. Mejora de la estabilización de reconstrucción",
+        "ru": "1. Исправлен баг, из-за которого Sony BRAW не парсился.\n2. Улучшена стабилизация смещения\n3. Улучшена стабилизация реконструкции",
+        "pt": "1. Corrigido bug em que Sony BRAW não podia ser analisado.\n2. Melhoria da estabilização de translação\n3. Melhoria da estabilização de reconstrução"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.144",
       "tag": "run-38140730158",
       "published_at": "2026-10-11T15:00:38Z",
