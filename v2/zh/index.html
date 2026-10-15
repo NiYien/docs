@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NiYien A1 — 每一帧，都稳定</title>
-<meta name="description" content="NiYien A1 陀螺仪稳定系统：以真实传感器数据重建相机运动，拖入素材一键稳定。">
+<meta name="description" content="NiYien A1 陀螺仪稳定系统：支持位移防抖（包含 Z 轴防抖），结合真实传感器数据与画面分析，让移动拍摄更平稳。">
 <link rel="icon" href="../shared/img/niyien-logo.png">
-<link rel="stylesheet" href="../shared/style.css">
+<link rel="stylesheet" href="../shared/style.css?v=translation-20261015">
 </head>
 <body data-page="home">
 <div class="nav-mount"></div>
@@ -48,9 +48,28 @@
     </div>
     <div style="flex:1;min-width:300px">
       <div class="eyebrow" style="font-size:17px">真实传感器数据</div>
-      <h2 class="h2" style="margin-top:12px">不靠画面猜测，<br>靠物理数据重建运动</h2>
-      <p style="margin-top:14px">高频陀螺仪与加速度计记录相机的每一次真实运动，稳定不再依赖画面分析。</p>
+      <h2 class="h2" style="margin-top:12px">靠真实数据，<br>重建相机运动</h2>
+      <p style="margin-top:14px">以真实传感器数据校正转动，结合画面运动分析，进一步补偿位移抖动。</p>
     </div>
+  </div>
+</section>
+
+<section class="section translation-feature" id="feature-translation" aria-labelledby="translation-title">
+  <div class="container">
+    <h2 class="h2" id="translation-title">位移防抖<span>（包含 Z 轴防抖）</span></h2>
+    <p class="translation-copy">结合陀螺仪数据与画面分析，减轻走路拍摄的上下颠簸。</p>
+    <figure class="translation-demo">
+      <video id="translation-video" controls muted playsinline preload="none" width="1280" height="720"
+             poster="../shared/img/feature-translation-poster.webp"
+             aria-label="位移补偿原理演示：保留自然摇镜，减轻额外的上下颠簸">
+        <source src="../shared/videos/feature-translation.mp4" type="video/mp4">
+        <a href="../shared/videos/feature-translation.mp4">观看位移补偿原理演示</a>
+      </video>
+      <figcaption>
+        <span>原理演示</span>
+        <button class="btn-outline" type="button" aria-controls="translation-video" hidden>播放演示</button>
+      </figcaption>
+    </figure>
   </div>
 </section>
 
@@ -119,7 +138,7 @@
       <div class="card" style="padding:32px 30px">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="15" height="11" rx="2"/><path d="M7 19h5.5"/><path d="M9.5 15v4"/><rect x="18.5" y="9" width="3.5" height="10" rx="1.5"/></svg></div>
         <h3 class="h3">全平台</h3>
-        <p class="small" style="margin-top:8px;font-size:15px">Windows、macOS、Android 全覆盖，工作流不受设备限制。</p>
+        <p class="small" style="margin-top:8px;font-size:15px">Windows、macOS、Linux、iOS、Android 全覆盖，工作流不受设备限制。</p>
       </div>
     </div>
   </div>
@@ -128,5 +147,6 @@
 
 <div class="footer-mount"></div>
 <script src="../shared/site.js" defer></script>
+<script src="../shared/translation-demo.js?v=20261015-i18n" defer></script>
 </body>
 </html>
