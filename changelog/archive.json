@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.152",
+      "tag": "run-38869077226",
+      "published_at": "2026-10-16T11:24:11Z",
+      "changelog": "1. Improved R3D playback stuttering\n2. Support for FX3 BRAW format\n3. Fixed some bugs",
+      "changelogs": {
+        "zh": "1. 优化R3D播放卡顿问题\n2. 支持FX3 BRAW格式\n3. 修复一些bug",
+        "en": "1. Improved R3D playback stuttering\n2. Support for FX3 BRAW format\n3. Fixed some bugs",
+        "ja": "1. R3D再生時のカクつき問題を改善\n2. FX3 BRAWフォーマットに対応\n3. いくつかのバグを修正",
+        "ko": "1. R3D 재생 끊김 문제 개선\n2. FX3 BRAW 포맷 지원\n3. 일부 버그 수정",
+        "de": "1. Ruckeln bei der R3D-Wiedergabe verbessert\n2. Unterstützung für das FX3 BRAW-Format\n3. Einige Fehler behoben",
+        "fr": "1. Optimisation des saccades lors de la lecture R3D\n2. Prise en charge du format FX3 BRAW\n3. Correction de quelques bugs",
+        "es": "1. Optimización de los tirones en la reproducción de R3D\n2. Compatibilidad con el formato FX3 BRAW\n3. Corrección de algunos errores",
+        "ru": "1. Оптимизация подтормаживаний при воспроизведении R3D\n2. Поддержка формата FX3 BRAW\n3. Исправлены некоторые ошибки",
+        "pt": "1. Otimização dos engasgos na reprodução de R3D\n2. Suporte ao formato FX3 BRAW\n3. Correção de alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.151",
       "tag": "run-38838609667",
       "published_at": "2026-10-16T04:55:15Z",
