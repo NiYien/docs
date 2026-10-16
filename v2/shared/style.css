@@ -197,17 +197,13 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
 .translation-feature .h2 span { display: inline-block; font-size: .72em; }
 .translation-copy { margin-top: 14px; text-align: center; }
 .translation-demo { margin-top: 30px; }
-.translation-demo video {
-  width: 100%; height: auto; aspect-ratio: 16/9;
+.translation-demo img {
+  display: block; width: 100%; height: auto; aspect-ratio: 16/9;
   border-radius: var(--radius-img); background: #060D17;
 }
 .translation-demo figcaption {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; margin-top: 14px; color: var(--muted); font-size: 16px;
+  margin-top: 14px; color: var(--muted); font-size: 16px;
 }
-.translation-demo button { min-height: 44px; padding: 8px 20px; font-family: inherit; }
-.translation-demo button:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
-.translation-demo [hidden] { display: none; }
 
 /* ---------- footer (injected by site.js) ---------- */
 .site-footer {

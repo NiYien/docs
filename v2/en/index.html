@@ -5,7 +5,7 @@
 <title>NiYien A1 — Every Frame, Stable</title>
 <meta name="description" content="NiYien A1 combines real sensor data with frame analysis for translation stabilization, including Z-axis stabilization, and smoother moving shots.">
 <link rel="icon" href="../shared/img/niyien-logo.png">
-<link rel="stylesheet" href="../shared/style.css?v=translation-20261015">
+<link rel="stylesheet" href="../shared/style.css?v=translation-20261016-webp">
 </head>
 <body data-page="home">
 <div class="nav-mount"></div>
@@ -59,15 +59,15 @@
     <h2 class="h2" id="translation-title">Translation stabilization <span>(including Z-axis)</span></h2>
     <p class="translation-copy">Combine gyro data with frame analysis to reduce the up-and-down bounce of walking shots.</p>
     <figure class="translation-demo">
-      <video id="translation-video" controls muted playsinline preload="none" width="1280" height="720"
-             poster="../shared/img/feature-translation-poster-en.webp"
-             aria-label="Translation compensation illustration: natural pan and tilt remain while extra vertical bounce is reduced">
-        <source src="../shared/videos/feature-translation-en.mp4" type="video/mp4">
-        <a href="../shared/videos/feature-translation-en.mp4">Watch the translation compensation demo</a>
-      </video>
+      <picture>
+        <source media="(prefers-reduced-motion: reduce)"
+                srcset="../shared/img/feature-translation-poster-en.webp">
+        <img src="../shared/img/feature-translation-en.webp" width="800" height="450"
+             loading="lazy" decoding="async"
+             alt="Translation compensation illustration: natural pan and tilt remain while extra vertical bounce is reduced">
+      </picture>
       <figcaption>
         <span>Concept demo</span>
-        <button class="btn-outline" type="button" aria-controls="translation-video" hidden>Play demo</button>
       </figcaption>
     </figure>
   </div>
@@ -147,6 +147,5 @@
 
 <div class="footer-mount"></div>
 <script src="../shared/site.js" defer></script>
-<script src="../shared/translation-demo.js?v=20261015-i18n" defer></script>
 </body>
 </html>

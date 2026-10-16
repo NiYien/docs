@@ -5,7 +5,7 @@
 <title>NiYien A1 — 每一帧，都稳定</title>
 <meta name="description" content="NiYien A1 陀螺仪稳定系统：支持位移防抖（包含 Z 轴防抖），结合真实传感器数据与画面分析，让移动拍摄更平稳。">
 <link rel="icon" href="../shared/img/niyien-logo.png">
-<link rel="stylesheet" href="../shared/style.css?v=translation-20261015">
+<link rel="stylesheet" href="../shared/style.css?v=translation-20261016-webp">
 </head>
 <body data-page="home">
 <div class="nav-mount"></div>
@@ -59,15 +59,15 @@
     <h2 class="h2" id="translation-title">位移防抖<span>（包含 Z 轴防抖）</span></h2>
     <p class="translation-copy">结合陀螺仪数据与画面分析，减轻走路拍摄的上下颠簸。</p>
     <figure class="translation-demo">
-      <video id="translation-video" controls muted playsinline preload="none" width="1280" height="720"
-             poster="../shared/img/feature-translation-poster.webp"
-             aria-label="位移补偿原理演示：保留自然摇镜，减轻额外的上下颠簸">
-        <source src="../shared/videos/feature-translation.mp4" type="video/mp4">
-        <a href="../shared/videos/feature-translation.mp4">观看位移补偿原理演示</a>
-      </video>
+      <picture>
+        <source media="(prefers-reduced-motion: reduce)"
+                srcset="../shared/img/feature-translation-poster.webp">
+        <img src="../shared/img/feature-translation.webp" width="800" height="450"
+             loading="lazy" decoding="async"
+             alt="位移补偿原理演示：保留自然摇镜，减轻额外的上下颠簸">
+      </picture>
       <figcaption>
         <span>原理演示</span>
-        <button class="btn-outline" type="button" aria-controls="translation-video" hidden>播放演示</button>
       </figcaption>
     </figure>
   </div>
@@ -147,6 +147,5 @@
 
 <div class="footer-mount"></div>
 <script src="../shared/site.js" defer></script>
-<script src="../shared/translation-demo.js?v=20261015-i18n" defer></script>
 </body>
 </html>
