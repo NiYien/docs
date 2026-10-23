@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const source = (await readFile(new URL('../_control-plane.js', import.meta.url), 'utf8'))
+const source = (await readFile(new URL('../api/_control-plane.js', import.meta.url), 'utf8'))
   .replace('import { getGeo } from "./_geo";',
     'const getGeo = async (req) => ({ country: req.query.country || "US" });');
 const { buildManifestPayload } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
