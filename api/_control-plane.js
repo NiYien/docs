@@ -400,6 +400,9 @@ export async function buildManifestPayload(req) {
       // clients pick by locale, fall back to `changelog` when empty.
       changelogs: stableChangelogs.changelogs,
       manual_versions: manualVersions,
+      ...(req?.query?.include_history === "1"
+        ? { history_versions: buildHistoricalVersions(req, releasePolicy, source, platform, autoEntry) }
+        : {}),
       packages: appPackages,
     },
     lens: {
@@ -413,6 +416,33 @@ export async function buildManifestPayload(req) {
     plugins_source_ref: resolvedPluginSourceRef,
     plugins_source_tag: resolvedPluginSourceTag,
   };
+}
+
+function buildHistoricalVersions(req, policy, source, platform, autoEntry) {
+  const currentVersion = platformVersion(autoEntry, platform);
+  if (!currentVersion) return [];
+
+  const seen = new Set();
+  return policy.versions
+    .filter((entry) => {
+      const version = platformVersion(entry, platform);
+      return version && compareAppVersions(version, currentVersion) !== 0;
+    })
+    .sort((a, b) => compareAppVersions(platformVersion(b, platform), platformVersion(a, platform)))
+    .flatMap((entry) => {
+      const version = platformVersion(entry, platform);
+      if (seen.has(version)) return [];
+
+      // Only expose platforms recorded by the publisher; never invent historical packages.
+      if (!entry.packages?.[platform] && !entry.app_urls?.[platform]) return [];
+      const pkg = withAbsolutePackageUrls(req, buildPlatformPackage(req, entry, source, platform));
+      const url = pkg.installer_url || pkg.package_url || "";
+      if (!url) return [];
+
+      seen.add(version);
+      return [{ version, url, packages: { [platform]: pkg } }];
+    })
+    .slice(0, 10);
 }
 
 function platformVersion(entry, platform) {

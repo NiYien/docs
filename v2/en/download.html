@@ -12,8 +12,14 @@
   .dl-icon { height: 84px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
   .dl-icon svg { width: 74px; height: 74px; }
   .dl-name { font-size: 21px; font-weight: 700; color: var(--ink); }
-  .dl-ver { margin-top: 8px; margin-bottom: 24px; font-size: 15px; color: var(--muted); }
-  .dl-btn { margin-top: auto; padding: 12px 14px; width: 100%; max-width: 210px; font-size: 16px; }
+  .dl-ver { min-height: 3.6em; margin-top: 8px; margin-bottom: 24px; font-size: 15px; color: var(--muted); }
+  .dl-btn { margin-top: 0; padding: 12px 14px; width: 100%; max-width: 210px; font-size: 16px; }
+  .dl-history { width: 100%; margin-top: 18px; font-size: 14px; }
+  .dl-history summary { cursor: pointer; color: var(--muted); }
+  .dl-history summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  .dl-history-list { list-style: none; margin: 12px 0 0; padding: 0; max-height: 240px; overflow-y: auto; }
+  .dl-history-list a { display: block; padding: 8px 4px; overflow-wrap: anywhere; }
+  .dl-history-status { margin: 12px 0 0; color: var(--muted); }
   .dl-links { display: flex; gap: 28px; justify-content: center; margin-top: 36px; flex-wrap: wrap; font-size: 15.5px; }
   @media (max-width: 1024px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 640px) { .dl-grid { grid-template-columns: 1fr; } }
@@ -36,24 +42,44 @@
       <h3 class="dl-name">Windows</h3>
       <p class="dl-ver" id="verWindows">Fetching version…</p>
       <a class="btn dl-btn" href="#" id="btnWindows" data-platform="windows">Download</a>
+      <details class="dl-history" id="historyWindows">
+        <summary>Previous versions</summary>
+        <p class="dl-history-status" id="historyStatusWindows" role="status">Fetching previous versions…</p>
+        <ul class="dl-history-list" id="historyListWindows" hidden></ul>
+      </details>
     </div>
     <div class="card dl-card">
       <span class="dl-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#111827" d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.6-1-2.6-3.6zM14.1 5.6c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.2 1.9-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg></span>
       <h3 class="dl-name">macOS</h3>
       <p class="dl-ver" id="verMacos">Fetching version…</p>
       <a class="btn dl-btn" href="#" id="btnMacos" data-platform="macos">Download</a>
+      <details class="dl-history" id="historyMacos">
+        <summary>Previous versions</summary>
+        <p class="dl-history-status" id="historyStatusMacos" role="status">Fetching previous versions…</p>
+        <ul class="dl-history-list" id="historyListMacos" hidden></ul>
+      </details>
     </div>
     <div class="card dl-card">
       <span class="dl-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="17" rx="2.5" fill="#111827"/><path d="m7 8 3 3-3 3m5.5 0H17" fill="none" stroke="#F9FAFB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       <h3 class="dl-name">Linux</h3>
       <p class="dl-ver" id="verLinux">Fetching version…</p>
       <a class="btn dl-btn" href="#" id="btnLinux" data-platform="linux">Download</a>
+      <details class="dl-history" id="historyLinux">
+        <summary>Previous versions</summary>
+        <p class="dl-history-status" id="historyStatusLinux" role="status">Fetching previous versions…</p>
+        <ul class="dl-history-list" id="historyListLinux" hidden></ul>
+      </details>
     </div>
     <div class="card dl-card">
       <span class="dl-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#3DDC84" d="M17.5 8.5h-11A1.5 1.5 0 0 0 5 10v7a1.5 1.5 0 0 0 1.5 1.5H8V21a1 1 0 0 0 2 0v-2.5h4V21a1 1 0 0 0 2 0v-2.5h1.5A1.5 1.5 0 0 0 19 17v-7a1.5 1.5 0 0 0-1.5-1.5zM7.2 4.3l-1-1.7a.4.4 0 0 1 .7-.4l1 1.8a6.7 6.7 0 0 1 5.2 0l1-1.8a.4.4 0 0 1 .7.4l-1 1.7A5.6 5.6 0 0 1 17 8H7a5.6 5.6 0 0 1 .2-3.7z"/></svg></span>
       <h3 class="dl-name">Android</h3>
       <p class="dl-ver" id="verAndroid">Fetching version…</p>
       <a class="btn dl-btn" href="#" id="btnAndroid" data-platform="android">Download</a>
+      <details class="dl-history" id="historyAndroid">
+        <summary>Previous versions</summary>
+        <p class="dl-history-status" id="historyStatusAndroid" role="status">Fetching previous versions…</p>
+        <ul class="dl-history-list" id="historyListAndroid" hidden></ul>
+      </details>
     </div>
     <div class="card dl-card">
       <span class="dl-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#111827" d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.6-1-2.6-3.6zM14.1 5.6c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.2 1.9-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg></span>
@@ -83,6 +109,9 @@
 <script src="../shared/site.js" defer></script>
 <script>
 var MSG = { loading: 'Fetching version…', fail: 'Version unavailable', ver: 'Version ' , failAlert: 'Download link unavailable, please retry later.' };
+MSG.historyLoading = 'Fetching previous versions…';
+MSG.historyEmpty = 'No previous versions available';
+MSG.historyFail = 'Previous versions unavailable. Close and reopen to retry.';
 var downloadModal = document.getElementById('downloadModal');
 var downloadCancelBtn = document.getElementById('downloadCancelBtn');
 var downloadConfirmBtn = document.getElementById('downloadConfirmBtn');
@@ -130,12 +159,50 @@ function manifestAppVersion(data, platform) {
   }
   return app.version || '';
 }
-function fetchManifest(platform) {
-  return fetch('/api/manifest?platform=' + encodeURIComponent(platform))
+function fetchManifest(platform, includeHistory) {
+  return fetch('/api/manifest?platform=' + encodeURIComponent(platform) + (includeHistory ? '&include_history=1' : ''))
     .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); });
+}
+function setupHistory(platform, cap) {
+  var details = document.getElementById('history' + cap);
+  var status = document.getElementById('historyStatus' + cap);
+  var list = document.getElementById('historyList' + cap);
+  var loaded = false;
+  var loading = false;
+  details.addEventListener('toggle', function () {
+    if (!details.open || loaded || loading) return;
+    loading = true;
+    status.textContent = MSG.historyLoading;
+    fetchManifest(platform, true).then(function (data) {
+      var versions = (data && data.app && (data.app.history_versions || data.app.manual_versions)) || [];
+      versions.slice(0, 10).forEach(function (entry) {
+        var version = manifestAppVersion({ app: entry }, platform);
+        var url = manifestAppUrl({ app: entry }, platform);
+        if (!version || !url) return;
+        var item = document.createElement('li');
+        var link = document.createElement('a');
+        link.className = 'link';
+        link.textContent = MSG.ver + version;
+        link.href = url;
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          showDownloadModal(url);
+        });
+        item.appendChild(link);
+        list.appendChild(item);
+      });
+      list.hidden = !list.children.length;
+      status.hidden = !list.hidden;
+      status.textContent = MSG.historyEmpty;
+      loaded = true;
+    }).catch(function () {
+      status.textContent = MSG.historyFail;
+    }).finally(function () { loading = false; });
+  });
 }
 ['windows', 'macos', 'linux', 'android'].forEach(function (p) {
   var cap = p.charAt(0).toUpperCase() + p.slice(1);
+  setupHistory(p, cap);
   var verEl = document.getElementById('ver' + cap);
   fetchManifest(p).then(function (data) {
     var v = manifestAppVersion(data, p);

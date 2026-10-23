@@ -7,10 +7,11 @@ const vm = require('node:vm');
 
 class FakeElement {
   constructor() {
-    this.hidden = true;
+    this.hidden = false;
     this.listeners = new Map();
     this.style = {};
     this.textContent = '';
+    this.children = [];
   }
 
   addEventListener(type, listener) {
@@ -18,16 +19,22 @@ class FakeElement {
   }
 
   focus() {}
+
+  appendChild(child) { this.children.push(child); }
 }
 
 
-function loadDownloadPage(language, androidPackage = { version: '1.0.2' }, testflightVersion = '1.0.4') {
+function loadDownloadPage(language, androidPackage = { version: '1.0.2' }, testflightVersion = '1.0.4', history = {}) {
   const html = fs.readFileSync(
     path.join(__dirname, '..', 'v2', language, 'download.html'),
     'utf8'
   );
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
   const elements = new Map(ids.map((id) => [id, new FakeElement()]));
+  for (const match of html.matchAll(/<[^>]+\bid="([^"]+)"[^>]*>/g)) {
+    elements.get(match[1]).hidden = /\bhidden\b/.test(match[0]);
+  }
+  let historyFailures = history.failures || 0;
   for (const match of html.matchAll(/<(?:p|span)[^>]+id="(ver[^"]+)">([\s\S]*?)<\/(?:p|span)>/g)) {
     elements.get(match[1]).textContent = match[2].replace(/<[^>]*>/g, '');
   }
@@ -43,6 +50,7 @@ function loadDownloadPage(language, androidPackage = { version: '1.0.2' }, testf
     activeElement: null,
     body: { style: {} },
     addEventListener() {},
+    createElement() { return new FakeElement(); },
     getElementById(id) { return elements.get(id) || null; }
   };
   const window = { location: { href: '' } };
@@ -56,13 +64,20 @@ function loadDownloadPage(language, androidPackage = { version: '1.0.2' }, testf
           ? Promise.reject(new Error('TestFlight API unavailable'))
           : Promise.resolve({ ok: true, json: async () => ({ version: testflightVersion }) });
       }
-      const platform = new URL(url, 'https://example.test').searchParams.get('platform');
+      const params = new URL(url, 'https://example.test').searchParams;
+      const platform = params.get('platform');
       requestedPlatforms.push(platform);
+      if (params.has('include_history') && historyFailures-- > 0) {
+        return Promise.reject(new Error('History API unavailable'));
+      }
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({
           app: {
             version: '9.9.9',
+            ...(history.legacy
+              ? { manual_versions: history.versions || [] }
+              : { history_versions: history.versions || [] }),
             packages: {
               [platform]: { package_url: `https://downloads.example.test/${platform}`, ...(platform === 'android' ? androidPackage : {}) }
             }
@@ -83,6 +98,93 @@ async function flushPromises() {
   await new Promise((resolve) => setImmediate(resolve));
 }
 
+
+for (const language of ['zh', 'en']) {
+  test(`${language} recent test builds remain visible with the existing manifest API`, async () => {
+    const page = loadDownloadPage(language, undefined, undefined, { legacy: true, versions: [
+      { version: '1.6.3-ni.152', url: 'https://downloads.example.test/run-38869077226/setup.zip' },
+      { version: '1.6.3-ni.145', url: 'https://downloads.example.test/run-38505112500/setup.zip' }
+    ] });
+    const details = page.elements.get('historyWindows');
+    details.open = true;
+    details.listeners.get('toggle')();
+    await flushPromises();
+    const links = page.elements.get('historyListWindows').children.map((item) => item.children[0]);
+    assert.equal(links.length, 2);
+    assert.match(links[0].textContent, /1\.6\.3-ni\.152/);
+    assert.match(links[1].textContent, /1\.6\.3-ni\.145/);
+    links[0].listeners.get('click')({ preventDefault() {} });
+    page.elements.get('downloadConfirmBtn').listeners.get('click')();
+    assert.equal(page.window.location.href, links[0].href);
+  });
+
+  test(`${language} history loads on demand and downloads the selected version`, async () => {
+    const page = loadDownloadPage(language, undefined, undefined, { versions: [
+      { version: '1.6.4-ni.9', url: 'https://downloads.example.test/old-9.exe' },
+      { version: '1.6.4-ni.8', packages: { windows: { installer_url: 'https://downloads.example.test/old-8.exe' } } },
+      { version: '1.6.4-ni.7', url: '' }
+    ] });
+    await flushPromises();
+    assert.equal(page.requestedUrls.some((url) => url.includes('include_history')), false);
+    const details = page.elements.get('historyWindows');
+    details.open = true;
+    details.listeners.get('toggle')();
+    details.listeners.get('toggle')();
+    await flushPromises();
+    assert.equal(page.requestedUrls.filter((url) => url.includes('include_history')).length, 1);
+    const list = page.elements.get('historyListWindows');
+    assert.equal(list.hidden, false);
+    assert.equal(page.elements.get('historyStatusWindows').hidden, true);
+    assert.equal(list.children.length, 2);
+    const link = list.children[1].children[0];
+    assert.equal(link.href, 'https://downloads.example.test/old-8.exe');
+    assert.match(link.textContent, /1\.6\.4-ni\.8/);
+    link.listeners.get('click')({ preventDefault() {} });
+    assert.equal(page.elements.get('downloadModal').hidden, false);
+    page.elements.get('downloadConfirmBtn').listeners.get('click')();
+    assert.equal(page.window.location.href, link.href);
+    details.listeners.get('toggle')();
+    await flushPromises();
+    assert.equal(page.requestedUrls.filter((url) => url.includes('include_history')).length, 1);
+  });
+
+  test(`${language} history shows an empty state and retries failures independently`, async () => {
+    const page = loadDownloadPage(language, undefined, undefined, { failures: 1 });
+    const details = page.elements.get('historyLinux');
+    details.open = true;
+    details.listeners.get('toggle')();
+    await flushPromises();
+    assert.equal(page.elements.get('historyStatusLinux').textContent, language === 'zh'
+      ? '历史版本暂不可用，请收起后重试。'
+      : 'Previous versions unavailable. Close and reopen to retry.');
+    assert.match(page.elements.get('verWindows').textContent, /9\.9\.9/);
+    details.open = false;
+    details.listeners.get('toggle')();
+    details.open = true;
+    details.listeners.get('toggle')();
+    await flushPromises();
+    assert.equal(page.elements.get('historyListLinux').hidden, true);
+    assert.equal(page.elements.get('historyStatusLinux').hidden, false);
+    assert.equal(page.elements.get('historyStatusLinux').textContent, language === 'zh'
+      ? '暂无可下载的历史版本' : 'No previous versions available');
+    assert.equal(page.requestedUrls.filter((url) => url.includes('include_history')).length, 2);
+  });
+
+  test(`${language} Android history uses its package version`, async () => {
+    const page = loadDownloadPage(language, undefined, undefined, { versions: [{
+      version: '1.0.1-ni.42', url: 'https://downloads.example.test/old.apk',
+      packages: { android: { version: '1.0.1' } }
+    }] });
+    const details = page.elements.get('historyAndroid');
+    details.open = true;
+    details.listeners.get('toggle')();
+    await flushPromises();
+    const link = page.elements.get('historyListAndroid').children[0].children[0];
+    assert.equal(link.textContent, language === 'zh' ? '版本 1.0.1' : 'Version 1.0.1');
+    assert.equal(link.href, 'https://downloads.example.test/old.apk');
+    assert.equal(page.elements.has('historyIos'), false);
+  });
+}
 
 for (const language of ['zh', 'en']) {
   test(`${language} download page renders and wires every manifest platform`, async () => {
