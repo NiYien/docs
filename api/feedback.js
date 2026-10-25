@@ -29,6 +29,7 @@ const PENDING_TTL_SECONDS = 2400;
 const RATE_LIMIT_TTL_SECONDS = 86400;
 const RATE_LIMIT_PER_DAY = 10;
 const UPLOAD_TTL_SECONDS = 1800;
+const KV_TIMEOUT_MS = 5000;
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -126,7 +127,7 @@ export default async function handler(req, res) {
       JSON.stringify(pendingRecord),
       "EX",
       String(PENDING_TTL_SECONDS),
-    ]);
+    ], { timeoutMs: KV_TIMEOUT_MS });
   } catch (error) {
     return res.status(500).json({
       error: "KV write failed",
@@ -182,7 +183,7 @@ async function applyRateLimit(ip, yyyymmdd) {
     responses = await upstashPipeline([
       ["INCR", key],
       ["EXPIRE", key, String(RATE_LIMIT_TTL_SECONDS), "NX"],
-    ]);
+    ], { timeoutMs: KV_TIMEOUT_MS });
   } catch (error) {
     // KV outage — fail open (log and let through). Better than blocking all
     // submissions. Real protection still has cloudflare layer in front.

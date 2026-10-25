@@ -155,7 +155,7 @@ async function lookupGeoByIpInfo(req, ip) {
 async function fetchGeoByIpInfo(ip, token) {
   const url = `https://ipinfo.io/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
   try {
-    const response = await fetch(url, { method: "GET" });
+    const response = await fetch(url, { method: "GET", signal: AbortSignal.timeout(5000) });
     if (!response.ok) {
       return { city: "", country: "", source: "ipinfo_error", url, cache_hit: false };
     }

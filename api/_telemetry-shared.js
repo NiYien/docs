@@ -358,12 +358,12 @@ export function streamFieldsToObject(fields) {
   return obj;
 }
 
-export async function upstashCommand(command) {
-  const responses = await upstashPipeline([command]);
+export async function upstashCommand(command, options = {}) {
+  const responses = await upstashPipeline([command], options);
   return responses[0] || null;
 }
 
-export async function upstashPipeline(commands) {
+export async function upstashPipeline(commands, { timeoutMs } = {}) {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -378,6 +378,7 @@ export async function upstashPipeline(commands) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(commands),
+    ...(timeoutMs ? { signal: AbortSignal.timeout(timeoutMs) } : {}),
   });
 
   if (!response.ok) {
