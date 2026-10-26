@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.156",
+      "tag": "run-40323479791",
+      "published_at": "2026-10-26T14:07:33Z",
+      "changelog": "1. Fixed NEV decoding failures in some cases\n2. Fixed download timeout issues\n3. Sped up optical flow sync and translation stabilization calculations",
+      "changelogs": {
+        "zh": "1. 修复部分NEV解码失败问题\n2. 修复下载超时问题\n3. 加速光流同步和位移防抖计算",
+        "en": "1. Fixed NEV decoding failures in some cases\n2. Fixed download timeout issues\n3. Sped up optical flow sync and translation stabilization calculations",
+        "ja": "1. 一部のNEVデコード失敗を修正\n2. ダウンロードタイムアウトの問題を修正\n3. オプティカルフロー同期と並進手ぶれ補正の計算を高速化",
+        "ko": "1. 일부 NEV 디코딩 실패 문제 수정\n2. 다운로드 시간 초과 문제 수정\n3. 옵티컬 플로우 동기화 및 이동 스태빌라이즈 계산 속도 개선",
+        "de": "1. Fehler beim NEV-Decoding in einigen Fällen behoben\n2. Download-Timeouts behoben\n3. Berechnung von Optical-Flow-Sync und Verschiebungs-Stabilisierung beschleunigt",
+        "fr": "1. Correction des échecs de décodage NEV dans certains cas\n2. Correction des délais d'expiration de téléchargement\n3. Accélération du calcul de la synchronisation par flux optique et de la stabilisation en translation",
+        "es": "1. Corregidos los fallos de decodificación NEV en algunos casos\n2. Corregido el problema de tiempo de espera de descarga\n3. Acelerado el cálculo de la sincronización por flujo óptico y la estabilización de desplazamiento",
+        "ru": "1. Исправлены сбои декодирования NEV в некоторых случаях\n2. Исправлена проблема с тайм-аутом загрузки\n3. Ускорен расчёт синхронизации по оптическому потоку и стабилизации смещения",
+        "pt": "1. Corrigidas as falhas de decodificação de NEV em alguns casos\n2. Corrigido o problema de timeout de download\n3. Acelerado o cálculo de sincronização por fluxo óptico e estabilização de deslocamento"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.153",
       "tag": "run-39901757964",
       "published_at": "2026-10-23T06:48:49Z",
