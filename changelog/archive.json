@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.157",
+      "tag": "run-41026692455",
+      "published_at": "2026-10-30T09:44:13Z",
+      "changelog": "1. Fixed abnormal sync issue with long videos\n2. Fixed Braw parsing issue",
+      "changelogs": {
+        "zh": "1. 修复长视频同步异常问题\n2. 修复Braw 解析问题",
+        "en": "1. Fixed abnormal sync issue with long videos\n2. Fixed Braw parsing issue",
+        "ja": "1. 長い動画でのsync異常問題を修正\n2. Brawの解析問題を修正",
+        "ko": "1. 긴 영상의 sync 이상 문제 수정\n2. Braw 파싱 문제 수정",
+        "de": "1. Fehlerhaften sync bei langen Videos behoben\n2. Braw-Parsing-Problem behoben",
+        "fr": "1. Correction d'un problème de sync anormal avec les vidéos longues\n2. Correction d'un problème d'analyse Braw",
+        "es": "1. Corregido el problema de sync anómalo en vídeos largos\n2. Corregido el problema de análisis de Braw",
+        "ru": "1. Исправлена ошибка sync при работе с длинными видео\n2. Исправлена ошибка разбора Braw",
+        "pt": "1. Corrigido o problema de sync anormal em vídeos longos\n2. Corrigido o problema de análise do Braw"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.156",
       "tag": "run-40323479791",
       "published_at": "2026-10-26T14:07:33Z",
