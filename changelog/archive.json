@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.160",
+      "tag": "run-41632872825",
+      "published_at": "2026-11-03T14:19:21Z",
+      "changelog": "1. Added SONY RAW support.\n2. Fixed a bug where some computers could not load NEV R3D.",
+      "changelogs": {
+        "zh": "1. 添加SONY RAW支持.\n2. 修复部分电脑无法加载NEV R3D的bug.",
+        "en": "1. Added SONY RAW support.\n2. Fixed a bug where some computers could not load NEV R3D.",
+        "ja": "1. SONY RAWのサポートを追加。\n2. 一部のPCでNEV R3Dを読み込めないバグを修正。",
+        "ko": "1. SONY RAW 지원 추가.\n2. 일부 PC에서 NEV R3D를 불러오지 못하는 버그 수정.",
+        "de": "1. SONY RAW-Unterstützung hinzugefügt.\n2. Fehler behoben, bei dem einige Computer NEV R3D nicht laden konnten.",
+        "fr": "1. Ajout de la prise en charge de SONY RAW.\n2. Correction d'un bug empêchant certains ordinateurs de charger les fichiers NEV R3D.",
+        "es": "1. Añadido soporte para SONY RAW.\n2. Corregido un bug por el que algunos ordenadores no podían cargar NEV R3D.",
+        "ru": "1. Добавлена поддержка SONY RAW.\n2. Исправлена ошибка, из-за которой на некоторых компьютерах не загружались файлы NEV R3D.",
+        "pt": "1. Adicionado suporte a SONY RAW.\n2. Corrigido o bug em que alguns computadores não conseguiam carregar NEV R3D."
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.157",
       "tag": "run-41026692455",
       "published_at": "2026-10-30T09:44:13Z",
