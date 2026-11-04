@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.161",
+      "tag": "run-41794439634",
+      "published_at": "2026-11-04T09:53:06Z",
+      "changelog": "1. Fixed a bug where Sony RAW anamorphic lenses could not be processed\n2. Improved DaVinci plugin processing performance\n3. Improved translation stabilization",
+      "changelogs": {
+        "zh": "1. 修复sony raw变宽镜头无法处理的bug\n2. 优化达芬奇插件处理效率\n3. 优化位移防抖",
+        "en": "1. Fixed a bug where Sony RAW anamorphic lenses could not be processed\n2. Improved DaVinci plugin processing performance\n3. Improved translation stabilization",
+        "ja": "1. Sony RAWのアナモルフィックレンズを処理できないバグを修正\n2. DaVinciプラグインの処理効率を最適化\n3. 並進スタビライズを最適化",
+        "ko": "1. Sony RAW 아나모픽 렌즈를 처리할 수 없는 버그 수정\n2. DaVinci 플러그인 처리 효율 최적화\n3. 병진 스태빌라이즈 최적화",
+        "de": "1. Bug behoben, bei dem Sony RAW anamorphotische Objektive nicht verarbeitet werden konnten\n2. Verarbeitungseffizienz des DaVinci-Plugins optimiert\n3. Translationsstabilisierung optimiert",
+        "fr": "1. Correction d'un bug empêchant le traitement des objectifs anamorphiques Sony RAW\n2. Optimisation de l'efficacité de traitement du plugin DaVinci\n3. Optimisation de la stabilisation de translation",
+        "es": "1. Corregido un bug por el que no se podían procesar lentes anamórficas Sony RAW\n2. Optimizada la eficiencia de procesamiento del plugin de DaVinci\n3. Optimizada la estabilización de traslación",
+        "ru": "1. Исправлен баг, из-за которого нельзя было обработать анаморфные объективы Sony RAW\n2. Оптимизирована эффективность обработки плагина DaVinci\n3. Оптимизирована стабилизация смещения",
+        "pt": "1. Corrigido um bug em que lentes anamórficas Sony RAW não podiam ser processadas\n2. Otimizada a eficiência de processamento do plugin DaVinci\n3. Otimizada a estabilização de translação"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.160",
       "tag": "run-41632872825",
       "published_at": "2026-11-03T14:19:21Z",
