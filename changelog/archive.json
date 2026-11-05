@@ -3,6 +3,78 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.6.3-ni.161",
+      "tag": "run-41794439634",
+      "published_at": "2026-11-04T09:53:06Z",
+      "changelog": "1. Fixed a bug where Sony RAW anamorphic lenses could not be processed\n2. Improved DaVinci plugin processing performance\n3. Improved translation stabilization",
+      "changelogs": {
+        "zh": "1. 修复sony raw变宽镜头无法处理的bug\n2. 优化达芬奇插件处理效率\n3. 优化位移防抖",
+        "en": "1. Fixed a bug where Sony RAW anamorphic lenses could not be processed\n2. Improved DaVinci plugin processing performance\n3. Improved translation stabilization",
+        "ja": "1. Sony RAWのアナモルフィックレンズを処理できないバグを修正\n2. DaVinciプラグインの処理効率を最適化\n3. 並進スタビライズを最適化",
+        "ko": "1. Sony RAW 아나모픽 렌즈를 처리할 수 없는 버그 수정\n2. DaVinci 플러그인 처리 효율 최적화\n3. 병진 스태빌라이즈 최적화",
+        "de": "1. Bug behoben, bei dem Sony RAW anamorphotische Objektive nicht verarbeitet werden konnten\n2. Verarbeitungseffizienz des DaVinci-Plugins optimiert\n3. Translationsstabilisierung optimiert",
+        "fr": "1. Correction d'un bug empêchant le traitement des objectifs anamorphiques Sony RAW\n2. Optimisation de l'efficacité de traitement du plugin DaVinci\n3. Optimisation de la stabilisation de translation",
+        "es": "1. Corregido un bug por el que no se podían procesar lentes anamórficas Sony RAW\n2. Optimizada la eficiencia de procesamiento del plugin de DaVinci\n3. Optimizada la estabilización de traslación",
+        "ru": "1. Исправлен баг, из-за которого нельзя было обработать анаморфные объективы Sony RAW\n2. Оптимизирована эффективность обработки плагина DaVinci\n3. Оптимизирована стабилизация смещения",
+        "pt": "1. Corrigido um bug em que lentes anamórficas Sony RAW não podiam ser processadas\n2. Otimizada a eficiência de processamento do plugin DaVinci\n3. Otimizada a estabilização de translação"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.160",
+      "tag": "run-41632872825",
+      "published_at": "2026-11-03T14:19:21Z",
+      "changelog": "1. Added SONY RAW support.\n2. Fixed a bug where some computers could not load NEV R3D.",
+      "changelogs": {
+        "zh": "1. 添加SONY RAW支持.\n2. 修复部分电脑无法加载NEV R3D的bug.",
+        "en": "1. Added SONY RAW support.\n2. Fixed a bug where some computers could not load NEV R3D.",
+        "ja": "1. SONY RAWのサポートを追加。\n2. 一部のPCでNEV R3Dを読み込めないバグを修正。",
+        "ko": "1. SONY RAW 지원 추가.\n2. 일부 PC에서 NEV R3D를 불러오지 못하는 버그 수정.",
+        "de": "1. SONY RAW-Unterstützung hinzugefügt.\n2. Fehler behoben, bei dem einige Computer NEV R3D nicht laden konnten.",
+        "fr": "1. Ajout de la prise en charge de SONY RAW.\n2. Correction d'un bug empêchant certains ordinateurs de charger les fichiers NEV R3D.",
+        "es": "1. Añadido soporte para SONY RAW.\n2. Corregido un bug por el que algunos ordenadores no podían cargar NEV R3D.",
+        "ru": "1. Добавлена поддержка SONY RAW.\n2. Исправлена ошибка, из-за которой на некоторых компьютерах не загружались файлы NEV R3D.",
+        "pt": "1. Adicionado suporte a SONY RAW.\n2. Corrigido o bug em que alguns computadores não conseguiam carregar NEV R3D."
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.157",
+      "tag": "run-41026692455",
+      "published_at": "2026-10-30T09:44:13Z",
+      "changelog": "1. Fixed abnormal sync issue with long videos\n2. Fixed Braw parsing issue",
+      "changelogs": {
+        "zh": "1. 修复长视频同步异常问题\n2. 修复Braw 解析问题",
+        "en": "1. Fixed abnormal sync issue with long videos\n2. Fixed Braw parsing issue",
+        "ja": "1. 長い動画でのsync異常問題を修正\n2. Brawの解析問題を修正",
+        "ko": "1. 긴 영상의 sync 이상 문제 수정\n2. Braw 파싱 문제 수정",
+        "de": "1. Fehlerhaften sync bei langen Videos behoben\n2. Braw-Parsing-Problem behoben",
+        "fr": "1. Correction d'un problème de sync anormal avec les vidéos longues\n2. Correction d'un problème d'analyse Braw",
+        "es": "1. Corregido el problema de sync anómalo en vídeos largos\n2. Corregido el problema de análisis de Braw",
+        "ru": "1. Исправлена ошибка sync при работе с длинными видео\n2. Исправлена ошибка разбора Braw",
+        "pt": "1. Corrigido o problema de sync anormal em vídeos longos\n2. Corrigido o problema de análise do Braw"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.6.3-ni.156",
+      "tag": "run-40323479791",
+      "published_at": "2026-10-26T14:07:33Z",
+      "changelog": "1. Fixed NEV decoding failures in some cases\n2. Fixed download timeout issues\n3. Sped up optical flow sync and translation stabilization calculations",
+      "changelogs": {
+        "zh": "1. 修复部分NEV解码失败问题\n2. 修复下载超时问题\n3. 加速光流同步和位移防抖计算",
+        "en": "1. Fixed NEV decoding failures in some cases\n2. Fixed download timeout issues\n3. Sped up optical flow sync and translation stabilization calculations",
+        "ja": "1. 一部のNEVデコード失敗を修正\n2. ダウンロードタイムアウトの問題を修正\n3. オプティカルフロー同期と並進手ぶれ補正の計算を高速化",
+        "ko": "1. 일부 NEV 디코딩 실패 문제 수정\n2. 다운로드 시간 초과 문제 수정\n3. 옵티컬 플로우 동기화 및 이동 스태빌라이즈 계산 속도 개선",
+        "de": "1. Fehler beim NEV-Decoding in einigen Fällen behoben\n2. Download-Timeouts behoben\n3. Berechnung von Optical-Flow-Sync und Verschiebungs-Stabilisierung beschleunigt",
+        "fr": "1. Correction des échecs de décodage NEV dans certains cas\n2. Correction des délais d'expiration de téléchargement\n3. Accélération du calcul de la synchronisation par flux optique et de la stabilisation en translation",
+        "es": "1. Corregidos los fallos de decodificación NEV en algunos casos\n2. Corregido el problema de tiempo de espera de descarga\n3. Acelerado el cálculo de la sincronización por flujo óptico y la estabilización de desplazamiento",
+        "ru": "1. Исправлены сбои декодирования NEV в некоторых случаях\n2. Исправлена проблема с тайм-аутом загрузки\n3. Ускорен расчёт синхронизации по оптическому потоку и стабилизации смещения",
+        "pt": "1. Corrigidas as falhas de decodificação de NEV em alguns casos\n2. Corrigido o problema de timeout de download\n3. Acelerado o cálculo de sincronização por fluxo óptico e estabilização de deslocamento"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.153",
       "tag": "run-39901757964",
       "published_at": "2026-10-23T06:48:49Z",
