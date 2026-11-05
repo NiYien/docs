@@ -275,8 +275,29 @@ export async function buildManifestPayload(req) {
   )
     .trim()
     .toLowerCase();
-  const resolvedPluginSourceRef = String(pluginEntry?.plugins_source_ref || "").trim();
-  const resolvedPluginSourceTag = String(pluginEntry?.plugins_source_tag || "").trim();
+  const pluginUsesEnv = ![
+    pluginEntry?.plugin_tag, pluginEntry?.plugins_source_mode, pluginEntry?.plugins_source_ref,
+    pluginEntry?.plugins_source_tag, pluginEntry?.global_plugins_base,
+  ].some(Boolean);
+  const envPluginRun = String(process.env.NIYIEN_PLUGINS_RUN_ID || "").trim();
+  const envPluginRef = resolvedPluginSourceMode === "artifact"
+    ? /^[1-9]\d*$/.test(envPluginRun) ? `actions-run-${envPluginRun}` : ""
+    : String(process.env.NIYIEN_PLUGINS_TAG || "").trim();
+  const resolvedPluginSourceRef = String(pluginEntry?.plugins_source_ref || (pluginUsesEnv ? envPluginRef : "")).trim();
+  const resolvedPluginSourceTag = String(pluginEntry?.plugins_source_tag || (pluginUsesEnv
+    ? resolvedPluginSourceMode === "artifact" ? process.env.NIYIEN_PLUGINS_ARTIFACT_NAME || envPluginRef : envPluginRef
+    : "")).trim();
+  const pluginsDisabled = /^(1|true|yes|on)$/i.test(String(process.env.NIYIEN_PLUGINS_DISABLED || "").trim());
+  const envPackageRecord = safeJsonParse(process.env.NIYIEN_PLUGINS_PACKAGES_JSON || "", null);
+  const envPackageMatches = pluginUsesEnv && Boolean(envPluginRef && resolvedPluginTagBundle)
+    && envPackageRecord?.plugin_tag === resolvedPluginTagBundle
+    && envPackageRecord?.plugin_source_ref === envPluginRef
+    && !isEntryPluginHidden({ plugin_tag: resolvedPluginTagBundle,
+      plugins_source_mode: resolvedPluginSourceMode, plugins_source_ref: envPluginRef }, hiddenPlugins);
+  // Package metadata must follow the selected plugin bundle, including hidden fallbacks.
+  const pluginPackages = pluginsDisabled ? {} : pluginUsesEnv
+    ? envPackageMatches ? normalizePluginPackages(envPackageRecord.packages) : {}
+    : pluginEntry?.plugins_packages || {};
   // gyroflow client deserializes lens.version as u64 — coerceScalarValue
   // returns "" when no source has a value, which breaks `serde_json` parse
   // ("expected u64, got string"). Coerce empty string to 0 so the client
@@ -367,6 +388,7 @@ export async function buildManifestPayload(req) {
       : "";
     pluginsBase = `${stripTrailingSlash(
       pluginEntry?.global_plugins_base ||
+        (envPackageMatches ? envPackageRecord.global_plugins_base : "") ||
         process.env.NIYIEN_GLOBAL_PLUGINS_BASE ||
         DEFAULT_GLOBAL_PLUGINS_BASE
     )}/`;
@@ -383,6 +405,7 @@ export async function buildManifestPayload(req) {
   appUrl = toAbsoluteManifestUrl(req, appUrl);
   lensUrl = toAbsoluteManifestUrl(req, lensUrl);
   sdkBase = toAbsoluteManifestUrl(req, sdkBase);
+  if (pluginsDisabled) pluginsBase = "";
   pluginsBase = toAbsoluteManifestUrl(req, pluginsBase);
 
   return {
@@ -415,6 +438,7 @@ export async function buildManifestPayload(req) {
     plugins_source_mode: resolvedPluginSourceMode,
     plugins_source_ref: resolvedPluginSourceRef,
     plugins_source_tag: resolvedPluginSourceTag,
+    plugins_packages: pluginPackages,
   };
 }
 
@@ -496,11 +520,25 @@ function normalizePolicyEntry(entry) {
       typeof entry.plugins_source_ref === "string" ? entry.plugins_source_ref.trim() : "",
     plugins_source_tag:
       typeof entry.plugins_source_tag === "string" ? entry.plugins_source_tag.trim() : "",
+    plugins_packages: normalizePluginPackages(entry.plugins_packages),
     global_sdk_base:
       typeof entry.global_sdk_base === "string" ? entry.global_sdk_base.trim() : "",
     global_plugins_base:
       typeof entry.global_plugins_base === "string" ? entry.global_plugins_base.trim() : "",
   };
+}
+
+function normalizePluginPackages(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const packages = {};
+  for (const [filename, info] of Object.entries(value)) {
+    if (!/^GyroflowNiyien-[A-Za-z0-9-]+\.(zip|aex)$/.test(filename)) continue;
+    if (!info || typeof info !== "object") continue;
+    if (typeof info.sha256 !== "string" || !/^[a-fA-F0-9]{64}$/.test(info.sha256)) continue;
+    if (!Number.isSafeInteger(info.size) || info.size <= 0) continue;
+    packages[filename] = { sha256: info.sha256.toLowerCase(), size: info.size };
+  }
+  return packages;
 }
 
 // Multi-language release notes (release-notes-i18n). Input is a free-form
