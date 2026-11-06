@@ -98,6 +98,7 @@ export default async function handler(req, res) {
       };
     }
   } catch (error) {
+    console.error("[feedback] upload signing failed", { id, region, detail: error.message || String(error) });
     return res.status(500).json({
       error: "Upload signing failed",
       detail: error.message || String(error),
@@ -129,6 +130,7 @@ export default async function handler(req, res) {
       String(PENDING_TTL_SECONDS),
     ], { timeoutMs: KV_TIMEOUT_MS });
   } catch (error) {
+    console.error("[feedback] pending record write failed", { id, region, detail: error.message || String(error) });
     return res.status(500).json({
       error: "KV write failed",
       detail: error.message || String(error),

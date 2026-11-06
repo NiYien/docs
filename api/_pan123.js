@@ -3,6 +3,8 @@ const DEFAULT_PLATFORM = "open_platform";
 const TOKEN_REFRESH_MARGIN_MS = 60 * 1000;
 const LIST_CACHE_TTL_MS = 5 * 60 * 1000;
 const PATH_CACHE_TTL_MS = 5 * 60 * 1000;
+const FEEDBACK_API_TIMEOUT_MS = 15_000;
+const FEEDBACK_API_BUDGET_MS = 40_000;
 
 const tokenCache = {
   accessToken: "",
@@ -53,7 +55,7 @@ const FEEDBACK_DIR_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 //   1. If PAN123_FEEDBACK_ROOT_ID is set as an integer, use it directly.
 //   2. Else walk PAN123_FEEDBACK_ROOT path components from the user's root
 //      (parent fileId 0 in 123) and locate or create the directory chain.
-async function getFeedbackRootFileId() {
+async function getFeedbackRootFileId(requestContext) {
   const explicitId = parsePositiveInteger(process.env.PAN123_FEEDBACK_ROOT_ID);
   if (Number.isFinite(explicitId) && explicitId > 0) {
     return explicitId;
@@ -70,27 +72,28 @@ async function getFeedbackRootFileId() {
 
   let parentId = 0; // 123 user root has id 0.
   for (const name of segments) {
-    parentId = await ensureDirectory(parentId, name);
+    parentId = await ensureDirectory(parentId, name, requestContext);
   }
   return parentId;
 }
 
 // Find or create a child directory under `parentFileId`. Caches lookups for
 // 24h to avoid hammering the 123 list endpoint on every feedback call.
-async function ensureDirectory(parentFileId, name) {
+async function ensureDirectory(parentFileId, name, requestContext) {
   const cacheKey = `${parentFileId}|${name}`;
   const cached = readCache(FEEDBACK_DIR_CACHE, cacheKey);
   if (cached) {
     return cached;
   }
 
-  const existing = await findChildByName(parentFileId, name, 1);
+  const existing = await findChildByName(parentFileId, name, 1, requestContext);
   if (existing) {
     writeCache(FEEDBACK_DIR_CACHE, cacheKey, existing.fileId, FEEDBACK_DIR_CACHE_TTL_MS);
     return existing.fileId;
   }
 
   const data = await pan123Request("POST", "/upload/v1/file/mkdir", {
+    requestContext,
     auth: true,
     body: {
       parentID: Number(parentFileId),
@@ -131,10 +134,11 @@ export async function signPan123UploadInit(dailyDir, filename) {
     throw new Error(`Invalid pan123 filename: ${filename}`);
   }
 
-  const feedbackRootId = await getFeedbackRootFileId();
-  const dailyId = await ensureDirectory(feedbackRootId, dailyDir);
-
-  const accessToken = await getAccessToken();
+  // Leave room for geo lookup, rate limiting and the pending-record write.
+  const requestContext = { deadlineMs: Date.now() + FEEDBACK_API_BUDGET_MS };
+  const accessToken = await getAccessToken(requestContext);
+  const feedbackRootId = await getFeedbackRootFileId(requestContext);
+  const dailyId = await ensureDirectory(feedbackRootId, dailyDir, requestContext);
   const expiresAt = new Date(tokenCache.expiresAt || Date.now() + 30 * 60 * 1000).toISOString();
   const openApiBase = stripTrailingSlash(
     process.env.PAN123_OPEN_API_BASE || DEFAULT_OPEN_API_BASE
@@ -297,8 +301,8 @@ async function searchTagFolder(releasesRootId, tag) {
   }
 }
 
-async function findChildByName(parentFileId, name, type) {
-  const children = await listDirectory(parentFileId);
+async function findChildByName(parentFileId, name, type, requestContext) {
+  const children = await listDirectory(parentFileId, requestContext);
   return (
     children.find(
       (item) =>
@@ -309,7 +313,7 @@ async function findChildByName(parentFileId, name, type) {
   );
 }
 
-async function listDirectory(parentFileId) {
+async function listDirectory(parentFileId, requestContext) {
   const normalizedParent = parsePositiveInteger(parentFileId, true);
   const cached = readCache(listCache, normalizedParent);
   if (cached) {
@@ -329,6 +333,7 @@ async function listDirectory(parentFileId) {
     }
 
     const data = await pan123Request("GET", "/api/v2/file/list", {
+      requestContext,
       auth: true,
       query,
     });
@@ -366,7 +371,7 @@ async function getDownloadInfoUrl(fileId) {
   return String(data.downloadUrl || "").trim();
 }
 
-async function getAccessToken() {
+async function getAccessToken(requestContext) {
   const now = Date.now();
   if (
     tokenCache.accessToken &&
@@ -384,6 +389,7 @@ async function getAccessToken() {
       }
 
       const data = await pan123Request("POST", "/api/v1/access_token", {
+        requestContext,
         auth: false,
         body: {
           clientID: clientId,
@@ -429,53 +435,74 @@ async function pan123Request(method, path, options = {}) {
   }
 
   if (options.auth !== false) {
-    headers.Authorization = `Bearer ${await getAccessToken()}`;
+    headers.Authorization = `Bearer ${await getAccessToken(options.requestContext)}`;
   }
 
   // Bound every 123 open-API call so a hung cross-border fetch surfaces as a
   // normal error through the caller's handling instead of running until the
   // platform kills the function (FUNCTION_INVOCATION_TIMEOUT).
-  const timeoutMs = parsePositiveInteger(process.env.PAN123_API_TIMEOUT_MS) || 8000;
-  let response;
-  try {
-    response = await fetch(url.toString(), {
-      method,
-      headers,
-      body,
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (error) {
-    if (error && (error.name === "TimeoutError" || error.name === "AbortError")) {
-      throw new Error(`123 API timeout after ${timeoutMs}ms: ${path}`);
+  const requestContext = options.requestContext;
+  const configuredTimeout = parsePositiveInteger(process.env.PAN123_API_TIMEOUT_MS) || 8000;
+  const timeoutMs = requestContext
+    ? Math.max(configuredTimeout, FEEDBACK_API_TIMEOUT_MS)
+    : configuredTimeout;
+  // Token retrieval and reads are safe to repeat; never retry directory creation.
+  const attempts = requestContext && (method === "GET" || path === "/api/v1/access_token") ? 2 : 1;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const remainingMs = requestContext ? requestContext.deadlineMs - Date.now() : timeoutMs;
+    if (remainingMs <= 0) {
+      throw new Error(`123 feedback preparation exceeded ${FEEDBACK_API_BUDGET_MS}ms: ${path}`);
     }
-    throw error;
-  }
+    const attemptTimeoutMs = Math.min(timeoutMs, remainingMs);
+    try {
+      const response = await fetch(url.toString(), {
+        method,
+        headers,
+        body,
+        signal: AbortSignal.timeout(attemptTimeoutMs),
+      });
+      const text = await response.text();
+      let payload = null;
+      try {
+        payload = text ? JSON.parse(text) : null;
+      } catch (error) {}
 
-  const text = await response.text();
-  let payload = null;
-  try {
-    payload = text ? JSON.parse(text) : null;
-  } catch (error) {
-    payload = null;
+      if (!response.ok) {
+        const error = new Error(
+          payload?.message
+            ? `123 API ${response.status}: ${payload.message}`
+            : `123 API ${response.status}`
+        );
+        error.status = response.status;
+        throw error;
+      }
+      if (!payload || typeof payload !== "object") {
+        throw new Error("123 API returned an invalid response body");
+      }
+      if (Number(payload.code) !== 0) {
+        throw new Error(`123 API error ${payload.code}: ${payload.message || "unknown error"}`);
+      }
+      return payload.data ?? {};
+    } catch (error) {
+      const timedOut = error?.name === "TimeoutError" || error?.name === "AbortError";
+      const failure = timedOut
+        ? new Error(`123 API timeout after ${attemptTimeoutMs}ms: ${path}`, { cause: error })
+        : error;
+      const code = error?.cause?.code || error?.code;
+      const retryable = timedOut
+        || [500, 502, 503, 504].includes(error?.status)
+        || ["EAI_AGAIN", "ECONNRESET", "ETIMEDOUT", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET"].includes(code);
+      if (attempt >= attempts || !retryable || Date.now() >= requestContext.deadlineMs) {
+        throw failure;
+      }
+      console.warn("[feedback] 123 API retry", {
+        path,
+        attempt,
+        timeoutMs: attemptTimeoutMs,
+        reason: timedOut ? "timeout" : (error?.status || code),
+      });
+    }
   }
-
-  if (!response.ok) {
-    throw new Error(
-      payload?.message
-        ? `123 API ${response.status}: ${payload.message}`
-        : `123 API ${response.status}`
-    );
-  }
-
-  if (!payload || typeof payload !== "object") {
-    throw new Error("123 API returned an invalid response body");
-  }
-
-  if (Number(payload.code) !== 0) {
-    throw new Error(`123 API error ${payload.code}: ${payload.message || "unknown error"}`);
-  }
-
-  return payload.data ?? {};
 }
 
 function normalizeRelativePath(value) {
