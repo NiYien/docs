@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.7.0-ni.166",
+      "tag": "run-42369520202",
+      "published_at": "2026-11-07T13:45:57Z",
+      "changelog": "1. Fixed an issue where the CapCut plugin could not be installed",
+      "changelogs": {
+        "zh": "1.修复剪映插件无法安装问题",
+        "en": "1. Fixed an issue where the CapCut plugin could not be installed",
+        "ja": "1. CapCutプラグインがインストールできない問題を修正",
+        "ko": "1. CapCut 플러그인이 설치되지 않는 문제 수정",
+        "de": "1. Problem behoben, dass das CapCut-Plugin nicht installiert werden konnte",
+        "fr": "1. Correction du problème empêchant l'installation du plugin CapCut",
+        "es": "1. Corregido el problema por el que el plugin de CapCut no se podía instalar",
+        "ru": "1. Исправлена проблема, из-за которой плагин CapCut не устанавливался",
+        "pt": "1. Corrigido o problema que impedia a instalação do plugin do CapCut"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.7.0",
       "tag": "v1.7.0",
       "published_at": "2026-11-07T08:32:47Z",
