@@ -3,6 +3,42 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.7.0-ni.166",
+      "tag": "run-42369520202",
+      "published_at": "2026-11-07T13:45:57Z",
+      "changelog": "1. Fixed an issue where the CapCut plugin could not be installed",
+      "changelogs": {
+        "zh": "1.修复剪映插件无法安装问题",
+        "en": "1. Fixed an issue where the CapCut plugin could not be installed",
+        "ja": "1. CapCutプラグインがインストールできない問題を修正",
+        "ko": "1. CapCut 플러그인이 설치되지 않는 문제 수정",
+        "de": "1. Problem behoben, dass das CapCut-Plugin nicht installiert werden konnte",
+        "fr": "1. Correction du problème empêchant l'installation du plugin CapCut",
+        "es": "1. Corregido el problema por el que el plugin de CapCut no se podía instalar",
+        "ru": "1. Исправлена проблема, из-за которой плагин CapCut не устанавливался",
+        "pt": "1. Corrigido o problema que impedia a instalação do plugin do CapCut"
+      },
+      "recommended": true
+    },
+    {
+      "version": "1.7.0",
+      "tag": "v1.7.0",
+      "published_at": "2026-11-07T08:32:47Z",
+      "changelog": "- Added CapCut plugin\n- Fixed stuttering bug when playing certain Panasonic videos",
+      "changelogs": {
+        "zh": "1. 增加剪映插件\n2. 修复部分松下视频播放卡顿bug",
+        "en": "- Added CapCut plugin\n- Fixed stuttering bug when playing certain Panasonic videos",
+        "ja": "- CapCut プラグインを追加\n- 一部の Panasonic 動画の再生時に発生するカクつきバグを修正",
+        "ko": "- CapCut 플러그인 추가\n- 일부 Panasonic 동영상 재생 시 발생하는 끊김 버그 수정",
+        "de": "- CapCut-Plugin hinzugefügt\n- Ruckel-Bug bei der Wiedergabe bestimmter Panasonic-Videos behoben",
+        "fr": "- Ajout du plugin CapCut\n- Correction du bug de saccades lors de la lecture de certaines vidéos Panasonic",
+        "es": "- Añadido el plugin de CapCut\n- Corregido el bug de tirones al reproducir algunos vídeos de Panasonic",
+        "ru": "- Добавлен плагин CapCut\n- Исправлен баг с подвисанием при воспроизведении некоторых видео Panasonic",
+        "pt": "- Adicionado o plugin do CapCut\n- Corrigido o bug de travamento na reprodução de alguns vídeos Panasonic"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.6.3-ni.161",
       "tag": "run-41794439634",
       "published_at": "2026-11-04T09:53:06Z",
