@@ -205,6 +205,28 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
   margin-top: 14px; color: var(--muted); font-size: 16px;
 }
 
+/* ---------- editor plugins (homepage) ---------- */
+.plugin-feature {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+  padding: 48px; background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+}
+.plugin-label { color: var(--brand); font-weight: 600; margin-bottom: 12px; }
+.plugin-copy > p:last-child { margin-top: 18px; }
+.plugin-editors {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+  list-style: none;
+}
+.plugin-editors li {
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  min-width: 0; min-height: 116px; padding: 20px;
+  border: 1px solid var(--line); border-top: 3px solid var(--brand);
+  border-radius: var(--radius-btn); background: var(--bg-alt);
+}
+.plugin-editors strong { color: var(--ink); font-size: 18px; line-height: 1.4; }
+.plugin-editors span { color: var(--muted); font-size: 14px; }
+.capabilities-grid > :last-child { grid-column: 1 / -1; }
+
 /* ---------- footer (injected by site.js) ---------- */
 .site-footer {
   background: var(--ink); color: #D1D5DB; margin-top: 88px;
@@ -253,6 +275,10 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
   .h2 { font-size: 26px; }
   .section { padding: 56px 0; }
   .grid-2 { grid-template-columns: 1fr; }
+  .plugin-feature { grid-template-columns: 1fr; gap: 28px; padding: 28px; }
+  .plugin-editors { gap: 12px; }
+  .plugin-editors li { min-height: 108px; padding: 16px; }
+  .plugin-editors strong { font-size: 16px; }
   .nav-links { display: none; }
   .nav-links.nav-links-open {
     display: flex; flex-direction: column; gap: 0;
@@ -262,4 +288,10 @@ h1, h2, h3 { color: var(--ink); font-weight: 700; }
   .nav-links.nav-links-open a { padding: 12px 0; border-bottom: none; font-size: 15px; }
   .nav-burger { display: block; }
   .footer-cols { gap: 36px; flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  .plugin-feature { padding: 24px 20px; }
+  .plugin-editors { grid-template-columns: 1fr; }
+  .plugin-editors li { min-height: 88px; }
 }
