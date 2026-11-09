@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.7.0-ni.167",
+      "tag": "run-42535202139",
+      "published_at": "2026-11-09T00:27:27Z",
+      "changelog": "1. Fixed vertical shooting issue in the CapCut plugin\n2. Optimized deep search efficiency\n3. Fixed issue where installation failed on some Windows systems\n4. Improved plugin computation efficiency",
+      "changelogs": {
+        "zh": "1. 修复剪映插件竖拍问题\n2. 优化深度搜索效率\n3. 修复部分windows无法安装问题\n4. 提高插件计算效率",
+        "en": "1. Fixed vertical shooting issue in the CapCut plugin\n2. Optimized deep search efficiency\n3. Fixed issue where installation failed on some Windows systems\n4. Improved plugin computation efficiency",
+        "ja": "1. CapCutプラグインの縦撮影問題を修正\n2. ディープサーチの効率を最適化\n3. 一部のWindowsでインストールできない問題を修正\n4. プラグインの計算効率を向上",
+        "ko": "1. CapCut 플러그인의 세로 촬영 문제 수정\n2. 딥 서치 효율 최적화\n3. 일부 Windows에서 설치할 수 없는 문제 수정\n4. 플러그인 계산 효율 개선",
+        "de": "1. Problem mit vertikaler Aufnahme im CapCut-Plugin behoben\n2. Effizienz der Deep Search optimiert\n3. Problem behoben, bei dem die Installation unter manchen Windows-Systemen fehlschlug\n4. Berechnungseffizienz des Plugins verbessert",
+        "fr": "1. Correction du problème de prise de vue verticale dans le plugin CapCut\n2. Optimisation de l'efficacité de la recherche approfondie\n3. Correction du problème empêchant l'installation sur certains systèmes Windows\n4. Amélioration de l'efficacité de calcul du plugin",
+        "es": "1. Corregido el problema de grabación vertical en el plugin de CapCut\n2. Optimizada la eficiencia de la búsqueda profunda\n3. Corregido el problema que impedía la instalación en algunos sistemas Windows\n4. Mejorada la eficiencia de cálculo del plugin",
+        "ru": "1. Исправлена проблема с вертикальной съемкой в плагине CapCut\n2. Оптимизирована эффективность глубокого поиска\n3. Исправлена проблема с невозможностью установки в некоторых системах Windows\n4. Повышена эффективность вычислений плагина",
+        "pt": "1. Corrigido o problema de gravação vertical no plugin do CapCut\n2. Otimizada a eficiência da busca profunda\n3. Corrigido o problema que impedia a instalação em alguns sistemas Windows\n4. Melhorada a eficiência de cálculo do plugin"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.7.0-ni.166",
       "tag": "run-42369520202",
       "published_at": "2026-11-07T13:45:57Z",
