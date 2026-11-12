@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.7.0-ni.170",
+      "tag": "run-43039114342",
+      "published_at": "2026-11-12T00:11:33Z",
+      "changelog": "1. Optimize stabilization reconstruction\n2. Fix some issues",
+      "changelogs": {
+        "zh": "1. 优化防抖重建功能\n2. 解决一些问题",
+        "en": "1. Optimize stabilization reconstruction\n2. Fix some issues",
+        "ja": "1. 手ブレ補正再構築機能を最適化\n2. いくつかの問題を修正",
+        "ko": "1. 손떨림 보정 재구성 기능 최적화\n2. 일부 문제 수정",
+        "de": "1. Stabilisierungs-Rekonstruktion optimieren\n2. Einige Probleme beheben",
+        "fr": "1. Optimiser la fonction de reconstruction de la stabilisation\n2. Corriger quelques problèmes",
+        "es": "1. Optimizar la función de reconstrucción de estabilización\n2. Corregir algunos problemas",
+        "ru": "1. Оптимизировать функцию реконструкции стабилизации\n2. Исправить некоторые проблемы",
+        "pt": "1. Otimizar a função de reconstrução de estabilização\n2. Corrigir alguns problemas"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.7.0-ni.167",
       "tag": "run-42535202139",
       "published_at": "2026-11-09T00:27:27Z",
