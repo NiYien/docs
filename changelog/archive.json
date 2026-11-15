@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.7.0-ni.173",
+      "tag": "run-43686519000",
+      "published_at": "2026-11-15T12:00:10Z",
+      "changelog": "1. Fixed the jelly/rolling-shutter effect bug on some Panasonic external recordings\n2. Fixed a bug where the CapCut plugin could not be installed on some Windows systems",
+      "changelogs": {
+        "zh": "1. 修复部分松下外录有果冻效应的bug\n2. 修复部分win无法安装剪映插件的bug",
+        "en": "1. Fixed the jelly/rolling-shutter effect bug on some Panasonic external recordings\n2. Fixed a bug where the CapCut plugin could not be installed on some Windows systems",
+        "ja": "1. 一部のパナソニック製カメラの外部収録でゼリー状の歪みが発生する不具合を修正\n2. 一部のWindows環境でCapCutプラグインをインストールできない不具合を修正",
+        "ko": "1. 일부 파나소닉 외부 녹화 영상에서 젤리 현상이 발생하는 버그 수정\n2. 일부 Windows 환경에서 CapCut 플러그인을 설치할 수 없는 버그 수정",
+        "de": "1. Fehler behoben, der bei einigen externen Panasonic-Aufnahmen einen Rolling-Shutter-Effekt verursachte\n2. Fehler behoben, durch den sich das CapCut-Plugin auf einigen Windows-Systemen nicht installieren ließ",
+        "fr": "1. Correction d’un bug provoquant un effet de déformation de type rolling shutter sur certains enregistrements externes Panasonic\n2. Correction d’un bug empêchant l’installation du plugin CapCut sur certains systèmes Windows",
+        "es": "1. Corregido un error que provocaba un efecto gelatina en algunas grabaciones externas de Panasonic\n2. Corregido un error que impedía instalar el plugin de CapCut en algunos sistemas Windows",
+        "ru": "1. Исправлена ошибка, вызывавшая эффект желе в некоторых внешних записях камер Panasonic\n2. Исправлена ошибка, из-за которой плагин CapCut не устанавливался на некоторых системах Windows",
+        "pt": "1. Corrigido um erro que causava efeito gelatina em algumas gravações externas de câmeras Panasonic\n2. Corrigido um erro que impedia a instalação do plugin do CapCut em alguns sistemas Windows"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.7.0-ni.170",
       "tag": "run-43039114342",
       "published_at": "2026-11-12T00:11:33Z",
