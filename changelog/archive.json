@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.7.0-ni.175",
+      "tag": "run-44240890909",
+      "published_at": "2026-11-18T08:50:13Z",
+      "changelog": "1. Fixed some bugs",
+      "changelogs": {
+        "zh": "1. 修复一些bug",
+        "en": "1. Fixed some bugs",
+        "ja": "1. いくつかのバグを修正",
+        "ko": "1. 일부 버그 수정",
+        "de": "1. Einige Bugs behoben",
+        "fr": "1. Correction de quelques bugs",
+        "es": "1. Corrección de algunos bugs",
+        "ru": "1. Исправлены некоторые ошибки",
+        "pt": "1. Correção de alguns bugs"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.7.0-ni.174",
       "tag": "run-43786629746",
       "published_at": "2026-11-16T02:46:48Z",
