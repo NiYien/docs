@@ -3,6 +3,24 @@
   "product": "gyroflow-niyien",
   "entries": [
     {
+      "version": "1.7.0-ni.176",
+      "tag": "run-44709151956",
+      "published_at": "2026-11-20T13:12:02Z",
+      "changelog": "1. Improved sync accuracy\n2. Fixed the JianYing (CapCut) plugin and the FCPX plugin",
+      "changelogs": {
+        "zh": "1. 优化同步精度\n2. 修复剪映插件和FCPX插件",
+        "en": "1. Improved sync accuracy\n2. Fixed the JianYing (CapCut) plugin and the FCPX plugin",
+        "ja": "1. 同期精度を向上\n2. JianYing(CapCut)プラグインとFCPXプラグインを修正",
+        "ko": "1. 싱크 정확도 개선\n2. JianYing(CapCut) 플러그인 및 FCPX 플러그인 수정",
+        "de": "1. Synchronisierungsgenauigkeit verbessert\n2. JianYing-(CapCut-)Plugin und FCPX-Plugin repariert",
+        "fr": "1. Précision de la synchronisation améliorée\n2. Correction du plugin JianYing (CapCut) et du plugin FCPX",
+        "es": "1. Precisión de sincronización mejorada\n2. Corregidos el plugin de JianYing (CapCut) y el plugin de FCPX",
+        "ru": "1. Повышена точность синхронизации\n2. Исправлены плагин JianYing (CapCut) и плагин FCPX",
+        "pt": "1. Precisão de sincronização aprimorada\n2. Corrigidos o plugin do JianYing (CapCut) e o plugin do FCPX"
+      },
+      "recommended": true
+    },
+    {
       "version": "1.7.0-ni.175",
       "tag": "run-44240890909",
       "published_at": "2026-11-18T08:50:13Z",
